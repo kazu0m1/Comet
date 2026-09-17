@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Windows;
@@ -25,6 +26,8 @@ public partial class MainWindow : Window
 
     private IBookSource? _book;
     private PageImageCache? _imageCache;
+    private PageImageCache? _thumbnailImageCache;
+    private readonly ObservableCollection<ThumbnailItem> _thumbnailItems = new();
     private AppSettings _settings;
     private List<Bookmark> _bookmarks = new();
     private readonly Stack<int> _navigationHistory = new();
@@ -32,11 +35,13 @@ public partial class MainWindow : Window
     private int _displayedPageCount = 1;
     private CancellationTokenSource? _openCts;
     private CancellationTokenSource? _renderCts;
+    private CancellationTokenSource? _thumbnailCts;
     private CancellationTokenSource? _stateSaveCts;
     private long _renderGeneration;
     private bool _fullscreen;
     private bool _uiHidden;
     private bool _isClosing;
+    private bool _updatingThumbnailSelection;
 
     public MainWindow(
         IBookSourceFactory sourceFactory,
@@ -53,8 +58,10 @@ public partial class MainWindow : Window
         _zoom = new ZoomSessionState(settings.FitMode);
 
         InitializeComponent();
+        ThumbnailList.ItemsSource = _thumbnailItems;
         LocalizeUi();
         ApplySettingsToViewport();
+        ApplyThumbnailSidebarVisibility();
         UpdateMenuChecks();
         UpdateZoomText();
         StatusText.Text = _text["Ready"];
@@ -126,6 +133,7 @@ public partial class MainWindow : Window
                 _pageIndex = SpreadPlanner.NormalizeStartIndex(_pageIndex, source.Descriptor.Pages.Count, _settings.PageLayoutMode);
 
             await RenderCurrentAsync(cancellationToken).ConfigureAwait(true);
+            InitializeThumbnailSidebar(source);
         }
         catch (OperationCanceledException)
         {
@@ -201,6 +209,7 @@ public partial class MainWindow : Window
             Viewport.ResetScroll();
             UpdateStatus();
             PrefetchNeighbors(targetWidth, renderPageIndex, _displayedPageCount);
+            UpdateThumbnailSelection();
             ScheduleStateSave();
         }
         catch (OperationCanceledException)
@@ -244,6 +253,129 @@ public partial class MainWindow : Window
         var next = pageIndex + displayedPageCount;
         var pages = new[] { next, next + 1, pageIndex - 1, pageIndex - 2 };
         _imageCache.Prefetch(pages, targetWidth);
+    }
+
+    private void InitializeThumbnailSidebar(IBookSource source)
+    {
+        _thumbnailCts?.Cancel();
+        _thumbnailCts?.Dispose();
+        _thumbnailCts = new CancellationTokenSource();
+
+        _thumbnailImageCache?.Dispose();
+        _thumbnailImageCache = new PageImageCache(
+            source,
+            _decoder,
+            capacity: 48,
+            minimumBucketWidth: 128,
+            maximumBucketWidth: 512);
+
+        _thumbnailItems.Clear();
+        foreach (var page in source.Descriptor.Pages)
+            _thumbnailItems.Add(new ThumbnailItem(page.Index, page.Name));
+
+        ApplyThumbnailSidebarVisibility();
+        UpdateThumbnailSelection();
+    }
+
+    private async Task EnsureThumbnailLoadedAsync(ThumbnailItem item)
+    {
+        if (item.Image is not null || item.IsLoading || _thumbnailImageCache is null || _thumbnailCts is null)
+            return;
+
+        item.IsLoading = true;
+        try
+        {
+            var requestedWidth = (int)Math.Clamp(Math.Round(_settings.ThumbnailWidth), 96, 384);
+            var image = await _thumbnailImageCache
+                .GetAsync(item.PageIndex, requestedWidth, _thumbnailCts.Token)
+                .ConfigureAwait(true);
+            if (!_thumbnailCts.IsCancellationRequested)
+                item.Image = image;
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch
+        {
+            // A broken thumbnail must not interrupt reading.
+        }
+        finally
+        {
+            item.IsLoading = false;
+        }
+    }
+
+    private void UpdateThumbnailSelection()
+    {
+        if (_thumbnailItems.Count == 0 || _pageIndex < 0 || _pageIndex >= _thumbnailItems.Count)
+            return;
+
+        _updatingThumbnailSelection = true;
+        try
+        {
+            ThumbnailList.SelectedItem = _thumbnailItems[_pageIndex];
+            if (ThumbnailSidebar.Visibility == Visibility.Visible)
+                ThumbnailList.ScrollIntoView(_thumbnailItems[_pageIndex]);
+        }
+        finally
+        {
+            _updatingThumbnailSelection = false;
+        }
+    }
+
+    private void ApplyThumbnailSidebarVisibility()
+    {
+        var show = _settings.ShowThumbnails && !_fullscreen && !_uiHidden;
+        ThumbnailSidebar.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+        ThumbnailSplitter.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+        ThumbnailColumn.Width = show
+            ? new GridLength(Math.Clamp(_settings.ThumbnailWidth + 24, 140, 360))
+            : new GridLength(0);
+        ThumbnailSplitterColumn.Width = show ? new GridLength(5) : new GridLength(0);
+    }
+
+    private void ToggleThumbnailSidebar()
+    {
+        _settings = _settings with { ShowThumbnails = !_settings.ShowThumbnails };
+        ApplyThumbnailSidebarVisibility();
+        UpdateMenuChecks();
+        _ = SaveSettingsSafeAsync();
+    }
+
+    private async Task HandleArrowKeyAsync(Key key)
+    {
+        var moved = key switch
+        {
+            Key.Down => Viewport.ScrollBy(0, _settings.ArrowScrollPixels),
+            Key.Up => Viewport.ScrollBy(0, -_settings.ArrowScrollPixels),
+            Key.Left => Viewport.ScrollBy(-_settings.ArrowScrollPixels, 0),
+            Key.Right => Viewport.ScrollBy(_settings.ArrowScrollPixels, 0),
+            _ => false
+        };
+
+        if (moved) return;
+
+        if (key == Key.Down)
+        {
+            await NextAsync();
+            return;
+        }
+
+        if (key == Key.Up)
+        {
+            await PreviousAsync();
+            return;
+        }
+
+        var manga = _settings.ReadingDirection == ReadingDirection.RightToLeft;
+        if (key == Key.Left)
+        {
+            if (manga) await NextAsync(); else await PreviousAsync();
+        }
+        else if (key == Key.Right)
+        {
+            if (manga) await PreviousAsync(); else await NextAsync();
+        }
     }
 
     private async Task NextAsync(bool onePage = false)
@@ -398,6 +530,7 @@ public partial class MainWindow : Window
         MainMenu.Visibility = visibility;
         MainToolbarTray.Visibility = visibility;
         MainStatusBar.Visibility = visibility;
+        ApplyThumbnailSidebarVisibility();
     }
 
     private void ApplySettingsToViewport()
@@ -417,6 +550,7 @@ public partial class MainWindow : Window
         DoublePageMenuItem.IsChecked = _settings.PageLayoutMode == PageLayoutMode.DoublePage;
         MangaModeMenuItem.IsChecked = _settings.ReadingDirection == ReadingDirection.RightToLeft;
         StretchMenuItem.IsChecked = _settings.StretchSmallImages;
+        ThumbnailSidebarMenuItem.IsChecked = _settings.ShowThumbnails;
     }
 
     private void LocalizeUi()
@@ -438,6 +572,8 @@ public partial class MainWindow : Window
         DoublePageMenuItem.Header = _text["DoublePage"];
         MangaModeMenuItem.Header = _text["MangaMode"];
         StretchMenuItem.Header = _text["Stretch"];
+        ThumbnailSidebarMenuItem.Header = _text["Thumbnails"];
+        ThumbnailsTitle.Text = _text["Thumbnails"];
         FullscreenMenuItem.Header = _text["Fullscreen"];
         BookmarksMenu.Header = _text["Bookmarks"];
         AddBookmarkMenuItem.Header = _text["AddBookmark"];
@@ -538,6 +674,13 @@ public partial class MainWindow : Window
         Interlocked.Increment(ref _renderGeneration);
         if (_book is null) return;
         if (saveState) await SaveCurrentStateNowAsync().ConfigureAwait(true);
+        _thumbnailCts?.Cancel();
+        _thumbnailCts?.Dispose();
+        _thumbnailCts = null;
+        _thumbnailImageCache?.Dispose();
+        _thumbnailImageCache = null;
+        _thumbnailItems.Clear();
+
         _imageCache?.Dispose();
         _imageCache = null;
         await _book.DisposeAsync().ConfigureAwait(true);
@@ -555,15 +698,18 @@ public partial class MainWindow : Window
         _isClosing = true;
         _openCts?.Cancel();
         _renderCts?.Cancel();
+        _thumbnailCts?.Cancel();
         Interlocked.Increment(ref _renderGeneration);
         _stateSaveCts?.Cancel();
         try { SaveCurrentStateNowAsync().GetAwaiter().GetResult(); } catch { }
+        _thumbnailImageCache?.Dispose();
         _imageCache?.Dispose();
         if (_book is not null)
         {
             try { _book.DisposeAsync().AsTask().GetAwaiter().GetResult(); } catch { }
         }
         _openCts?.Dispose();
+        _thumbnailCts?.Dispose();
         _stateSaveCts?.Dispose();
         base.OnClosing(e);
     }
@@ -616,10 +762,12 @@ public partial class MainWindow : Window
             return;
         }
 
-        if (key == Key.Down) { Viewport.ScrollBy(0, _settings.ArrowScrollPixels); e.Handled = true; return; }
-        if (key == Key.Up) { Viewport.ScrollBy(0, -_settings.ArrowScrollPixels); e.Handled = true; return; }
-        if (key == Key.Left) { Viewport.ScrollBy(-_settings.ArrowScrollPixels, 0); e.Handled = true; return; }
-        if (key == Key.Right) { Viewport.ScrollBy(_settings.ArrowScrollPixels, 0); e.Handled = true; return; }
+        if (key is Key.Down or Key.Up or Key.Left or Key.Right)
+        {
+            await HandleArrowKeyAsync(key);
+            e.Handled = true;
+            return;
+        }
 
         if (key == Key.B) { SetFit(FitMode.BestFit); e.Handled = true; return; }
         if (key == Key.W) { SetFit(FitMode.FitWidth); e.Handled = true; return; }
@@ -645,6 +793,21 @@ public partial class MainWindow : Window
 
         await SmartScrollOrFlipAsync(e.Delta < 0 ? 1 : -1);
         e.Handled = true;
+    }
+
+    private async void ThumbnailItem_Loaded(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement element && element.DataContext is ThumbnailItem item)
+            await EnsureThumbnailLoadedAsync(item);
+    }
+
+    private async void ThumbnailList_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        if (_updatingThumbnailSelection || ThumbnailList.SelectedItem is not ThumbnailItem item || item.PageIndex == _pageIndex)
+            return;
+
+        await GoToPageAsync(item.PageIndex);
+        Viewport.Focus();
     }
 
     private async void Viewport_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
@@ -694,6 +857,7 @@ public partial class MainWindow : Window
     private async void DoublePage_Click(object sender, RoutedEventArgs e) => await ToggleDoublePageAsync();
     private void MangaMode_Click(object sender, RoutedEventArgs e) => ToggleManga();
     private void Stretch_Click(object sender, RoutedEventArgs e) => ToggleStretch();
+    private void ThumbnailSidebar_Click(object sender, RoutedEventArgs e) => ToggleThumbnailSidebar();
     private void Fullscreen_Click(object sender, RoutedEventArgs e) => ToggleFullscreen();
     private void AddBookmark_Click(object sender, RoutedEventArgs e) => AddBookmark();
     private async void EditBookmarks_Click(object sender, RoutedEventArgs e) => await ShowBookmarksAsync();
