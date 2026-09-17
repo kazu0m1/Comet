@@ -1,0 +1,53 @@
+#define MyAppName "Comet"
+#ifndef MyAppVersion
+  #define MyAppVersion "0.1.0"
+#endif
+#define MyAppExeName "Comet.exe"
+
+[Setup]
+AppId={{D8F62919-24FD-46DF-88CE-4EE9B6FA580B}
+AppName={#MyAppName}
+AppVersion={#MyAppVersion}
+AppPublisher=Comet contributors
+DefaultDirName={localappdata}\Programs\Comet
+DefaultGroupName=Comet
+OutputDir=..\artifacts\installer
+OutputBaseFilename=Comet-v{#MyAppVersion}-win-x64-Setup
+Compression=lzma2
+SolidCompression=yes
+ArchitecturesAllowed=x64compatible
+ArchitecturesInstallIn64BitMode=x64compatible
+PrivilegesRequired=lowest
+ChangesAssociations=yes
+DisableProgramGroupPage=yes
+WizardStyle=modern
+UninstallDisplayIcon={app}\{#MyAppExeName}
+
+[Files]
+Source: "..\artifacts\win-x64\*"; DestDir: "{app}"; Flags: recursesubdirs ignoreversion
+
+[Icons]
+Name: "{group}\Comet"; Filename: "{app}\{#MyAppExeName}"
+Name: "{userdesktop}\Comet"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
+
+[Tasks]
+Name: "assoc"; Description: "Register Comet as an available app for ZIP/CBZ files"; Flags: unchecked
+Name: "desktopicon"; Description: "Create a desktop shortcut"; Flags: unchecked
+
+[Registry]
+Root: HKCU; Subkey: "Software\Comet\Capabilities"; ValueType: string; ValueName: "ApplicationName"; ValueData: "Comet"; Tasks: assoc; Flags: uninsdeletekeyifempty
+Root: HKCU; Subkey: "Software\Comet\Capabilities"; ValueType: string; ValueName: "ApplicationDescription"; ValueData: "Fast comic archive viewer"; Tasks: assoc
+Root: HKCU; Subkey: "Software\Comet\Capabilities\FileAssociations"; ValueType: string; ValueName: ".zip"; ValueData: "Comet.Zip"; Tasks: assoc
+Root: HKCU; Subkey: "Software\Comet\Capabilities\FileAssociations"; ValueType: string; ValueName: ".cbz"; ValueData: "Comet.Cbz"; Tasks: assoc
+Root: HKCU; Subkey: "Software\RegisteredApplications"; ValueType: string; ValueName: "Comet"; ValueData: "Software\Comet\Capabilities"; Tasks: assoc; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Classes\Comet.Zip"; ValueType: string; ValueName: ""; ValueData: "Comet ZIP comic"; Tasks: assoc; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\Classes\Comet.Zip\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\{#MyAppExeName},0"; Tasks: assoc
+Root: HKCU; Subkey: "Software\Classes\Comet.Zip\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" ""%1"""; Tasks: assoc
+Root: HKCU; Subkey: "Software\Classes\Comet.Cbz"; ValueType: string; ValueName: ""; ValueData: "Comet CBZ comic"; Tasks: assoc; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\Classes\Comet.Cbz\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\{#MyAppExeName},0"; Tasks: assoc
+Root: HKCU; Subkey: "Software\Classes\Comet.Cbz\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" ""%1"""; Tasks: assoc
+Root: HKCU; Subkey: "Software\Classes\.zip\OpenWithProgids"; ValueType: none; ValueName: "Comet.Zip"; Tasks: assoc; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Classes\.cbz\OpenWithProgids"; ValueType: none; ValueName: "Comet.Cbz"; Tasks: assoc; Flags: uninsdeletevalue
+
+[Run]
+Filename: "ms-settings:defaultapps?registeredAppUser=Comet"; Description: "Open Windows Default Apps settings for Comet"; Flags: postinstall shellexec skipifsilent; Tasks: assoc

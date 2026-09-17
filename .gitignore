@@ -1,0 +1,13 @@
+bin/
+obj/
+artifacts/
+.vs/
+.idea/
+*.user
+*.suo
+*.nupkg
+*.snupkg
+*.tmp
+Thumbs.db
+.DS_Store
+installer/Output/

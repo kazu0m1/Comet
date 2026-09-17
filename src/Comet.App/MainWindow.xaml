@@ -1,0 +1,68 @@
+<Window x:Class="Comet.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:Comet.App.Controls"
+        Title="Comet" Width="1200" Height="850" MinWidth="640" MinHeight="480"
+        Background="Black" AllowDrop="True"
+        KeyDown="Window_KeyDown" PreviewMouseWheel="Window_PreviewMouseWheel"
+        Drop="Window_Drop">
+    <DockPanel>
+        <Menu x:Name="MainMenu" DockPanel.Dock="Top">
+            <MenuItem x:Name="FileMenu">
+                <MenuItem x:Name="OpenMenuItem" InputGestureText="Ctrl+O" Click="Open_Click" />
+                <MenuItem x:Name="OpenFolderMenuItem" Click="OpenFolder_Click" />
+                <Separator />
+                <MenuItem Header="Close" InputGestureText="Ctrl+W" Click="CloseBook_Click" />
+                <Separator />
+                <MenuItem x:Name="ExitMenuItem" InputGestureText="Ctrl+Q" Click="Exit_Click" />
+            </MenuItem>
+            <MenuItem x:Name="NavigateMenu">
+                <MenuItem x:Name="PreviousPageMenuItem" InputGestureText="PageUp" Click="Previous_Click" />
+                <MenuItem x:Name="NextPageMenuItem" InputGestureText="PageDown" Click="Next_Click" />
+                <Separator />
+                <MenuItem x:Name="PreviousArchiveMenuItem" InputGestureText="Ctrl+Shift+P" Click="PreviousArchive_Click" />
+                <MenuItem x:Name="NextArchiveMenuItem" InputGestureText="Ctrl+Shift+N" Click="NextArchive_Click" />
+            </MenuItem>
+            <MenuItem x:Name="ViewMenu">
+                <MenuItem x:Name="BestFitMenuItem" IsCheckable="True" InputGestureText="B" Click="BestFit_Click" />
+                <MenuItem x:Name="FitWidthMenuItem" IsCheckable="True" InputGestureText="W" Click="FitWidth_Click" />
+                <MenuItem x:Name="FitHeightMenuItem" IsCheckable="True" InputGestureText="H" Click="FitHeight_Click" />
+                <MenuItem x:Name="ManualMenuItem" IsCheckable="True" InputGestureText="A" Click="Manual_Click" />
+                <Separator />
+                <MenuItem x:Name="DoublePageMenuItem" IsCheckable="True" InputGestureText="D" Click="DoublePage_Click" />
+                <MenuItem x:Name="MangaModeMenuItem" IsCheckable="True" InputGestureText="M" Click="MangaMode_Click" />
+                <MenuItem x:Name="StretchMenuItem" IsCheckable="True" InputGestureText="Y" Click="Stretch_Click" />
+                <Separator />
+                <MenuItem x:Name="FullscreenMenuItem" InputGestureText="F / F11" Click="Fullscreen_Click" />
+            </MenuItem>
+            <MenuItem x:Name="BookmarksMenu">
+                <MenuItem x:Name="AddBookmarkMenuItem" InputGestureText="Ctrl+D" Click="AddBookmark_Click" />
+                <MenuItem x:Name="EditBookmarksMenuItem" InputGestureText="Ctrl+B" Click="EditBookmarks_Click" />
+            </MenuItem>
+        </Menu>
+
+        <ToolBarTray x:Name="MainToolbarTray" DockPanel.Dock="Top">
+            <ToolBar>
+                <Button Content="◀" ToolTip="Previous" Click="Previous_Click" />
+                <Button Content="▶" ToolTip="Next" Click="Next_Click" />
+                <Separator />
+                <Button Content="Best" Click="BestFit_Click" />
+                <Button Content="Width" Click="FitWidth_Click" />
+                <Button Content="Height" Click="FitHeight_Click" />
+                <Separator />
+                <Button Content="2p" Click="DoublePage_Click" />
+                <Button Content="Manga" Click="MangaMode_Click" />
+            </ToolBar>
+        </ToolBarTray>
+
+        <StatusBar x:Name="MainStatusBar" DockPanel.Dock="Bottom">
+            <StatusBarItem><TextBlock x:Name="StatusText" Text="Ready" /></StatusBarItem>
+            <Separator />
+            <StatusBarItem><TextBlock x:Name="ZoomText" /></StatusBarItem>
+        </StatusBar>
+
+        <Grid>
+            <controls:PageViewport x:Name="Viewport" MouseLeftButtonUp="Viewport_MouseLeftButtonUp" />
+        </Grid>
+    </DockPanel>
+</Window>

@@ -1,0 +1,29 @@
+name: Bug report
+description: Report a reproducible Comet problem
+title: "[Bug] "
+labels: [bug]
+body:
+  - type: textarea
+    attributes:
+      label: What happened?
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Reproduction steps
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Comet version
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Windows version
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Notes
+      description: Do not upload private comic archives. Describe the archive structure instead when possible.

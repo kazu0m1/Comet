@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\Comet.ico</ApplicationIcon>
+    <AssemblyName>Comet</AssemblyName>
+    <RootNamespace>Comet.App</RootNamespace>
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Comet.Core\Comet.Core.csproj" />
+    <ProjectReference Include="..\Comet.Infrastructure\Comet.Infrastructure.csproj" />
+    <ProjectReference Include="..\Comet.Platform.Windows\Comet.Platform.Windows.csproj" />
+  </ItemGroup>
+</Project>

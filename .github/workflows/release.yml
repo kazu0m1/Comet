@@ -1,0 +1,56 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+      - name: Resolve version
+        shell: pwsh
+        run: |
+          $version = "${{ github.ref_name }}".TrimStart('v')
+          "COMET_VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Append
+      - name: Restore
+        run: dotnet restore .\Comet.sln
+      - name: Build
+        run: dotnet build .\Comet.sln -c Release --no-restore
+      - name: Smoke tests
+        run: dotnet run --project .\tests\Comet.SmokeTests\Comet.SmokeTests.csproj -c Release --no-build
+      - name: Install Inno Setup
+        run: choco install innosetup --yes --no-progress
+      - name: Package release assets
+        shell: pwsh
+        run: .\scripts\package-release.ps1 -Version $env:COMET_VERSION -BuildInstaller
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: Comet-${{ github.ref_name }}
+          path: artifacts/release/*
+          if-no-files-found: error
+      - name: Create GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $assets = Get-ChildItem artifacts/release -File | ForEach-Object { $_.FullName }
+          $ghArgs = @(
+            "release", "create", "${{ github.ref_name }}"
+          ) + $assets + @(
+            "--title", "Comet ${{ github.ref_name }}",
+            "--notes-file", "RELEASE_NOTES.md"
+          )
+          if ($env:COMET_VERSION.StartsWith("0.") -or $env:COMET_VERSION.Contains("-")) {
+            $ghArgs += "--prerelease"
+          }
+          gh @ghArgs

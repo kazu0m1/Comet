@@ -1,0 +1,79 @@
+using System.Collections.Concurrent;
+using System.Windows.Media.Imaging;
+using Comet.Core.Abstractions;
+using Comet.Core.Services;
+using Comet.Platform.Windows.Imaging;
+
+namespace Comet.App.Services;
+
+public sealed class PageImageCache : IDisposable
+{
+    private readonly IBookSource _source;
+    private readonly WpfBitmapDecoder _decoder;
+    private readonly LruCache<(int Page, int Width), BitmapSource> _cache = new(6);
+    private readonly ConcurrentDictionary<(int Page, int Width), Lazy<Task<BitmapSource>>> _inflight = new();
+    private readonly CancellationTokenSource _lifetime = new();
+
+    public PageImageCache(IBookSource source, WpfBitmapDecoder decoder)
+    {
+        _source = source;
+        _decoder = decoder;
+    }
+
+    public async Task<BitmapSource> GetAsync(int pageIndex, int targetPixelWidth, CancellationToken cancellationToken = default)
+    {
+        var width = BucketWidth(targetPixelWidth);
+        var key = (pageIndex, width);
+        if (_cache.TryGet(key, out var cached) && cached is not null)
+            return cached;
+
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _lifetime.Token);
+        var lazy = _inflight.GetOrAdd(key, _ => new Lazy<Task<BitmapSource>>(
+            () => LoadAsync(pageIndex, width, _lifetime.Token), LazyThreadSafetyMode.ExecutionAndPublication));
+
+        try
+        {
+            var image = await lazy.Value.WaitAsync(linked.Token).ConfigureAwait(false);
+            _cache.Set(key, image);
+            return image;
+        }
+        finally
+        {
+            if (lazy.IsValueCreated && lazy.Value.IsCompleted)
+                _inflight.TryRemove(key, out _);
+        }
+    }
+
+    public void Prefetch(IEnumerable<int> pageIndices, int targetPixelWidth)
+    {
+        foreach (var index in pageIndices.Distinct().Where(i => i >= 0 && i < _source.Descriptor.Pages.Count))
+            _ = PrefetchOneAsync(index, targetPixelWidth);
+    }
+
+    private async Task PrefetchOneAsync(int pageIndex, int targetPixelWidth)
+    {
+        try { await GetAsync(pageIndex, targetPixelWidth, _lifetime.Token).ConfigureAwait(false); }
+        catch (OperationCanceledException) { }
+        catch { /* Prefetch must never surface as a reader failure. */ }
+    }
+
+    private async Task<BitmapSource> LoadAsync(int pageIndex, int targetPixelWidth, CancellationToken cancellationToken)
+    {
+        var bytes = await _source.ReadPageBytesAsync(pageIndex, cancellationToken).ConfigureAwait(false);
+        return await Task.Run(() => _decoder.Decode(bytes, targetPixelWidth), cancellationToken).ConfigureAwait(false);
+    }
+
+    private static int BucketWidth(int width)
+    {
+        if (width <= 0) return 0;
+        width = Math.Clamp(width, 512, 4096);
+        return ((width + 255) / 256) * 256;
+    }
+
+    public void Dispose()
+    {
+        _lifetime.Cancel();
+        _lifetime.Dispose();
+        _cache.Clear();
+    }
+}
