@@ -41,6 +41,7 @@ public partial class MainWindow : Window
     private bool _fullscreen;
     private bool _uiHidden;
     private bool _isClosing;
+    private bool _allowClose;
     private bool _updatingThumbnailSelection;
 
     public MainWindow(
@@ -695,25 +696,50 @@ public partial class MainWindow : Window
         Title = "Comet";
     }
 
-    protected override void OnClosing(CancelEventArgs e)
+    protected override async void OnClosing(CancelEventArgs e)
     {
+        if (_allowClose)
+        {
+            base.OnClosing(e);
+            return;
+        }
+
+        e.Cancel = true;
+        if (_isClosing)
+            return;
+
         _isClosing = true;
+        IsEnabled = false;
+        StatusText.Text = _text["Closing"];
+
         _openCts?.Cancel();
         _renderCts?.Cancel();
         _thumbnailCts?.Cancel();
-        Interlocked.Increment(ref _renderGeneration);
         _stateSaveCts?.Cancel();
-        try { SaveCurrentStateNowAsync().GetAwaiter().GetResult(); } catch { }
-        _thumbnailImageCache?.Dispose();
-        _imageCache?.Dispose();
-        if (_book is not null)
+        Interlocked.Increment(ref _renderGeneration);
+
+        try
         {
-            try { _book.DisposeAsync().AsTask().GetAwaiter().GetResult(); } catch { }
+            await SaveCurrentStateNowAsync().ConfigureAwait(true);
+            await CloseCurrentBookAsync(saveState: false).ConfigureAwait(true);
         }
-        _openCts?.Dispose();
-        _thumbnailCts?.Dispose();
-        _stateSaveCts?.Dispose();
-        base.OnClosing(e);
+        catch
+        {
+            // Shutdown must proceed even if persistence or archive cleanup fails.
+        }
+        finally
+        {
+            _openCts?.Dispose();
+            _openCts = null;
+            _thumbnailCts?.Dispose();
+            _thumbnailCts = null;
+            _stateSaveCts?.Dispose();
+            _stateSaveCts = null;
+
+            _allowClose = true;
+            IsEnabled = true;
+            Close();
+        }
     }
 
     private async void Window_KeyDown(object sender, KeyEventArgs e)
