@@ -4,7 +4,7 @@
         xmlns:controls="clr-namespace:Comet.App.Controls"
         Title="Comet" Width="1200" Height="850" MinWidth="640" MinHeight="480"
         Background="Black" AllowDrop="True"
-        KeyDown="Window_KeyDown" PreviewMouseWheel="Window_PreviewMouseWheel"
+        PreviewKeyDown="Window_KeyDown" PreviewMouseWheel="Window_PreviewMouseWheel"
         Drop="Window_Drop">
     <DockPanel>
         <Menu x:Name="MainMenu" DockPanel.Dock="Top">
