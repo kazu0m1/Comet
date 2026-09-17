@@ -10,14 +10,24 @@ public sealed class PageImageCache : IDisposable
 {
     private readonly IBookSource _source;
     private readonly WpfBitmapDecoder _decoder;
-    private readonly LruCache<(int Page, int Width), BitmapSource> _cache = new(6);
+    private readonly LruCache<(int Page, int Width), BitmapSource> _cache;
     private readonly ConcurrentDictionary<(int Page, int Width), Lazy<Task<BitmapSource>>> _inflight = new();
     private readonly CancellationTokenSource _lifetime = new();
+    private readonly int _minimumBucketWidth;
+    private readonly int _maximumBucketWidth;
 
-    public PageImageCache(IBookSource source, WpfBitmapDecoder decoder)
+    public PageImageCache(
+        IBookSource source,
+        WpfBitmapDecoder decoder,
+        int capacity = 6,
+        int minimumBucketWidth = 512,
+        int maximumBucketWidth = 4096)
     {
         _source = source;
         _decoder = decoder;
+        _cache = new LruCache<(int Page, int Width), BitmapSource>(Math.Max(1, capacity));
+        _minimumBucketWidth = Math.Max(1, minimumBucketWidth);
+        _maximumBucketWidth = Math.Max(_minimumBucketWidth, maximumBucketWidth);
     }
 
     public async Task<BitmapSource> GetAsync(int pageIndex, int targetPixelWidth, CancellationToken cancellationToken = default)
@@ -63,11 +73,12 @@ public sealed class PageImageCache : IDisposable
         return await Task.Run(() => _decoder.Decode(bytes, targetPixelWidth), cancellationToken).ConfigureAwait(false);
     }
 
-    private static int BucketWidth(int width)
+    private int BucketWidth(int width)
     {
         if (width <= 0) return 0;
-        width = Math.Clamp(width, 512, 4096);
-        return ((width + 255) / 256) * 256;
+        width = Math.Clamp(width, _minimumBucketWidth, _maximumBucketWidth);
+        const int bucket = 64;
+        return ((width + bucket - 1) / bucket) * bucket;
     }
 
     public void Dispose()
