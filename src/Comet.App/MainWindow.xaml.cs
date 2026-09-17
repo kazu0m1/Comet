@@ -279,17 +279,19 @@ public partial class MainWindow : Window
 
     private async Task EnsureThumbnailLoadedAsync(ThumbnailItem item)
     {
-        if (item.Image is not null || item.IsLoading || _thumbnailImageCache is null || _thumbnailCts is null)
+        var cache = _thumbnailImageCache;
+        var lifetime = _thumbnailCts;
+        if (item.Image is not null || item.IsLoading || cache is null || lifetime is null)
             return;
 
         item.IsLoading = true;
         try
         {
             var requestedWidth = (int)Math.Clamp(Math.Round(_settings.ThumbnailWidth), 96, 384);
-            var image = await _thumbnailImageCache
-                .GetAsync(item.PageIndex, requestedWidth, _thumbnailCts.Token)
+            var image = await cache
+                .GetAsync(item.PageIndex, requestedWidth, lifetime.Token)
                 .ConfigureAwait(true);
-            if (!_thumbnailCts.IsCancellationRequested)
+            if (!lifetime.IsCancellationRequested)
                 item.Image = image;
         }
         catch (OperationCanceledException)
