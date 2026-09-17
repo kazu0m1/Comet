@@ -814,11 +814,17 @@ public partial class MainWindow : Window
 
     private async void Viewport_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
     {
-        if (e.ChangedButton == MouseButton.Left)
-        {
+        if (e.ChangedButton != MouseButton.Left)
+            return;
+
+        Viewport.Focus();
+        var position = e.GetPosition(Viewport);
+        if (position.X < Viewport.ActualWidth / 2)
             await NextAsync();
-            e.Handled = true;
-        }
+        else
+            await PreviousAsync();
+
+        e.Handled = true;
     }
 
     private async void Window_Drop(object sender, DragEventArgs e)
