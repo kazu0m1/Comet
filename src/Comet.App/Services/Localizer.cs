@@ -15,7 +15,7 @@ public sealed class Localizer
         ["Manual"] = "Manual 100%", ["DoublePage"] = "Double Page", ["MangaMode"] = "Manga Mode", ["Stretch"] = "Stretch Small Images",
         ["Fullscreen"] = "Fullscreen", ["Thumbnails"] = "Thumbnails", ["Bookmarks"] = "_Bookmarks", ["AddBookmark"] = "Add Bookmark", ["EditBookmarks"] = "Edit Bookmarks...",
         ["Navigate"] = "_Navigate", ["PreviousPage"] = "Previous Page", ["NextPage"] = "Next Page", ["PreviousArchive"] = "Previous Archive",
-        ["NextArchive"] = "Next Archive", ["Ready"] = "Ready", ["Opening"] = "Opening...", ["NoImages"] = "No supported images found.",
+        ["NextArchive"] = "Next Archive", ["Ready"] = "Ready", ["Opening"] = "Opening...", ["Closing"] = "Closing...", ["NoImages"] = "No supported images found.",
         ["OpenComic"] = "Open comic archive", ["Error"] = "Error", ["BookmarksTitle"] = "Bookmarks", ["NoBookmarks"] = "No bookmarks yet.",
         ["Page"] = "Page", ["BookmarkAdded"] = "Bookmark added", ["Zoom"] = "Zoom"
     };
@@ -27,7 +27,7 @@ public sealed class Localizer
         ["Manual"] = "原寸 100%", ["DoublePage"] = "見開き", ["MangaMode"] = "漫画モード（右綴じ）", ["Stretch"] = "小さい画像も拡大",
         ["Fullscreen"] = "全画面", ["Thumbnails"] = "サムネイル", ["Bookmarks"] = "ブックマーク(_B)", ["AddBookmark"] = "ブックマーク追加", ["EditBookmarks"] = "ブックマーク一覧...",
         ["Navigate"] = "移動(_N)", ["PreviousPage"] = "前のページ", ["NextPage"] = "次のページ", ["PreviousArchive"] = "前の書庫",
-        ["NextArchive"] = "次の書庫", ["Ready"] = "準備完了", ["Opening"] = "読み込み中...", ["NoImages"] = "対応画像がありません。",
+        ["NextArchive"] = "次の書庫", ["Ready"] = "準備完了", ["Opening"] = "読み込み中...", ["Closing"] = "終了処理中...", ["NoImages"] = "対応画像がありません。",
         ["OpenComic"] = "漫画書庫を開く", ["Error"] = "エラー", ["BookmarksTitle"] = "ブックマーク", ["NoBookmarks"] = "ブックマークはありません。",
         ["Page"] = "ページ", ["BookmarkAdded"] = "ブックマークを追加しました", ["Zoom"] = "ズーム"
     };
