@@ -32,6 +32,7 @@
                 <MenuItem x:Name="DoublePageMenuItem" IsCheckable="True" InputGestureText="D" Click="DoublePage_Click" />
                 <MenuItem x:Name="MangaModeMenuItem" IsCheckable="True" InputGestureText="M" Click="MangaMode_Click" />
                 <MenuItem x:Name="StretchMenuItem" IsCheckable="True" InputGestureText="Y" Click="Stretch_Click" />
+                <MenuItem x:Name="ThumbnailSidebarMenuItem" IsCheckable="True" Click="ThumbnailSidebar_Click" />
                 <Separator />
                 <MenuItem x:Name="FullscreenMenuItem" InputGestureText="F / F11" Click="Fullscreen_Click" />
             </MenuItem>
@@ -62,7 +63,72 @@
         </StatusBar>
 
         <Grid>
-            <controls:PageViewport x:Name="Viewport" MouseLeftButtonUp="Viewport_MouseLeftButtonUp" />
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="ThumbnailColumn" Width="204" />
+                <ColumnDefinition x:Name="ThumbnailSplitterColumn" Width="5" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Border x:Name="ThumbnailSidebar"
+                    Grid.Column="0"
+                    Background="#1B1B1B"
+                    BorderBrush="#3A3A3A"
+                    BorderThickness="0,0,1,0">
+                <DockPanel>
+                    <TextBlock x:Name="ThumbnailsTitle"
+                               DockPanel.Dock="Top"
+                               Margin="10,8,10,8"
+                               Foreground="White"
+                               FontWeight="SemiBold" />
+                    <ListBox x:Name="ThumbnailList"
+                             SelectionChanged="ThumbnailList_SelectionChanged"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             Foreground="White"
+                             HorizontalContentAlignment="Stretch"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                             ScrollViewer.VerticalScrollBarVisibility="Auto"
+                             ScrollViewer.CanContentScroll="True"
+                             VirtualizingPanel.IsVirtualizing="True"
+                             VirtualizingPanel.VirtualizationMode="Recycling">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Border Loaded="ThumbnailItem_Loaded"
+                                        Margin="5"
+                                        Padding="5"
+                                        Background="#242424"
+                                        CornerRadius="3">
+                                    <StackPanel>
+                                        <Border Background="#0D0D0D" MinHeight="80">
+                                            <Image Source="{Binding Image}"
+                                                   MaxHeight="220"
+                                                   Stretch="Uniform"
+                                                   RenderOptions.BitmapScalingMode="HighQuality" />
+                                        </Border>
+                                        <TextBlock Text="{Binding PageLabel}"
+                                                   HorizontalAlignment="Center"
+                                                   Margin="0,5,0,0"
+                                                   Foreground="#E6E6E6" />
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </DockPanel>
+            </Border>
+
+            <GridSplitter x:Name="ThumbnailSplitter"
+                          Grid.Column="1"
+                          Width="5"
+                          HorizontalAlignment="Stretch"
+                          VerticalAlignment="Stretch"
+                          Background="#333333"
+                          ResizeDirection="Columns"
+                          ResizeBehavior="PreviousAndNext" />
+
+            <Grid Grid.Column="2">
+                <controls:PageViewport x:Name="Viewport" MouseLeftButtonUp="Viewport_MouseLeftButtonUp" />
+            </Grid>
         </Grid>
     </DockPanel>
 </Window>
