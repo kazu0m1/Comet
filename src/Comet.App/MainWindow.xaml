@@ -59,9 +59,13 @@
         <StatusBar x:Name="MainStatusBar" DockPanel.Dock="Bottom">
             <StatusBarItem><TextBlock x:Name="StatusText" Text="Ready" /></StatusBarItem>
             <Separator />
-            <StatusBarItem><TextBlock x:Name="ImageSizeText" /></StatusBarItem>
+            <StatusBarItem><TextBlock x:Name="PageMetricsText" /></StatusBarItem>
             <Separator />
-            <StatusBarItem><TextBlock x:Name="ZoomText" /></StatusBarItem>
+            <StatusBarItem><TextBlock x:Name="BookNameText" MaxWidth="260" TextTrimming="CharacterEllipsis" /></StatusBarItem>
+            <Separator />
+            <StatusBarItem><TextBlock x:Name="PageNameText" MaxWidth="320" TextTrimming="CharacterEllipsis" /></StatusBarItem>
+            <Separator />
+            <StatusBarItem><TextBlock x:Name="FileSizeText" /></StatusBarItem>
         </StatusBar>
 
         <Grid>
