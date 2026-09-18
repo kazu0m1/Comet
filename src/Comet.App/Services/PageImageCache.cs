@@ -96,13 +96,20 @@ public sealed class PageImageCache : IDisposable
             if (_captureSourcePixelSize)
             {
                 var probeStartedAt = PerformanceTrace.Start();
-                _sourcePixelSizes[pageIndex] = _decoder.Probe(bytes);
-                PerformanceTrace.Elapsed("page.probe", probeStartedAt, $"page={pageIndex + 1}");
+                var sourceSize = _decoder.Probe(bytes);
+                _sourcePixelSizes[pageIndex] = sourceSize;
+                PerformanceTrace.Elapsed(
+                    "page.probe",
+                    probeStartedAt,
+                    $"page={pageIndex + 1}; source={sourceSize.Width}x{sourceSize.Height}");
             }
 
             var bitmapDecodeStartedAt = PerformanceTrace.Start();
             var bitmap = _decoder.Decode(bytes, targetPixelWidth);
-            PerformanceTrace.Elapsed("page.bitmap-decode", bitmapDecodeStartedAt, $"page={pageIndex + 1}; target={targetPixelWidth}");
+            PerformanceTrace.Elapsed(
+                "page.bitmap-decode",
+                bitmapDecodeStartedAt,
+                $"page={pageIndex + 1}; target={targetPixelWidth}; decoded={bitmap.PixelWidth}x{bitmap.PixelHeight}");
             return bitmap;
         }, cancellationToken).ConfigureAwait(false);
         PerformanceTrace.Elapsed("page.decode", decodeStartedAt, $"page={pageIndex + 1}; target={targetPixelWidth}");
