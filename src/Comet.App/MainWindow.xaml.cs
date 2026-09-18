@@ -683,7 +683,7 @@ public partial class MainWindow : Window
         if (_book is null) return;
         var end = Math.Min(_book.Descriptor.Pages.Count, _pageIndex + _displayedPageCount);
         StatusText.Text = _displayedPageCount > 1
-            ? $"{_pageIndex + 1}-{end} / {_book.Descriptor.Pages.Count}"
+            ? $"{_pageIndex + 1},{end} / {_book.Descriptor.Pages.Count}"
             : $"{_pageIndex + 1} / {_book.Descriptor.Pages.Count}";
         UpdateImageInfo();
     }
@@ -693,27 +693,63 @@ public partial class MainWindow : Window
         if (_book is null || _imageCache is null || Viewport.FirstPage is null
             || !_imageCache.TryGetSourcePixelSize(_pageIndex, out var firstSize))
         {
-            ImageSizeText.Text = string.Empty;
-            ZoomText.Text = string.Empty;
+            PageMetricsText.Text = string.Empty;
+            BookNameText.Text = string.Empty;
+            PageNameText.Text = string.Empty;
+            FileSizeText.Text = string.Empty;
             return;
         }
 
-        var sizeText = $"{firstSize.Width} × {firstSize.Height}";
+        var dpiScale = VisualTreeHelper.GetDpi(Viewport).DpiScaleX;
+        var firstZoom = DpiScaleCalculator.PhysicalZoom(
+            Viewport.CurrentFirstPageDisplayWidthDip,
+            firstSize.Width,
+            dpiScale);
+
+        var metrics = new List<string>
+        {
+            $"{firstSize.Width}x{firstSize.Height} ({firstZoom * 100:0.#}%)"
+        };
+        var pageNames = new List<string>
+        {
+            Path.GetFileName(_book.Descriptor.Pages[_pageIndex].Name)
+        };
+        var fileSizes = new List<string>
+        {
+            FormatBinarySize(_book.Descriptor.Pages[_pageIndex].UncompressedLength)
+        };
+
         if (_displayedPageCount > 1
             && _pageIndex + 1 < _book.Descriptor.Pages.Count
             && _imageCache.TryGetSourcePixelSize(_pageIndex + 1, out var secondSize))
         {
-            sizeText += $" + {secondSize.Width} × {secondSize.Height}";
+            var secondZoom = DpiScaleCalculator.PhysicalZoom(
+                Viewport.CurrentSecondPageDisplayWidthDip,
+                secondSize.Width,
+                dpiScale);
+            metrics.Add($"{secondSize.Width}x{secondSize.Height} ({secondZoom * 100:0.#}%)");
+            pageNames.Add(Path.GetFileName(_book.Descriptor.Pages[_pageIndex + 1].Name));
+            fileSizes.Add(FormatBinarySize(_book.Descriptor.Pages[_pageIndex + 1].UncompressedLength));
         }
 
-        ImageSizeText.Text = $"{_text["ImageSize"]}: {sizeText} px";
+        PageMetricsText.Text = string.Join(", ", metrics);
+        BookNameText.Text = File.Exists(_book.Descriptor.Path)
+            ? Path.GetFileName(_book.Descriptor.Path)
+            : _book.Descriptor.DisplayName;
+        PageNameText.Text = string.Join(", ", pageNames);
+        FileSizeText.Text = string.Join(", ", fileSizes);
+    }
 
-        var dpiScale = VisualTreeHelper.GetDpi(Viewport).DpiScaleX;
-        var actualZoom = DpiScaleCalculator.PhysicalZoom(
-            Viewport.CurrentFirstPageDisplayWidthDip,
-            firstSize.Width,
-            dpiScale);
-        ZoomText.Text = $"{_text["Zoom"]}: {actualZoom * 100:0.#}%";
+    private static string FormatBinarySize(long bytes)
+    {
+        if (bytes < 0) return string.Empty;
+        if (bytes < 1024) return $"{bytes} B";
+
+        var kib = bytes / 1024d;
+        if (kib < 1024)
+            return $"{kib:0.#} KiB";
+
+        return $"{kib / 1024d:0.##} MiB";
     }
 
     private void AddBookmark()
@@ -819,8 +855,10 @@ public partial class MainWindow : Window
         Viewport.SecondPage = null;
         Viewport.ErrorMessage = null;
         Viewport.Refresh();
-        ImageSizeText.Text = string.Empty;
-        ZoomText.Text = string.Empty;
+        PageMetricsText.Text = string.Empty;
+        BookNameText.Text = string.Empty;
+        PageNameText.Text = string.Empty;
+        FileSizeText.Text = string.Empty;
         Title = "Comet";
     }
 
