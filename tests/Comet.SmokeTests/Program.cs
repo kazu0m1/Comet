@@ -1,3 +1,4 @@
+using System.IO;
 using System.IO.Compression;
 using Comet.Core.Models;
 using Comet.Core.Services;
