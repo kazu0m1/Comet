@@ -4,6 +4,7 @@ using Comet.Core.Services;
 using Comet.Infrastructure.Navigation;
 using Comet.Infrastructure.Persistence;
 using Comet.Infrastructure.Sources;
+using Comet.Platform.Windows.Imaging;
 
 var failures = new List<string>();
 
@@ -55,6 +56,15 @@ Check(SupportedImages.IsSupported("PAGE.JPG"), "supported image extension is cas
 Check(SupportedImages.IsSupported("page.tiff"), "tiff supported");
 Check(SupportedImages.IsSupported("page.webp"), "webp supported extension");
 Check(!SupportedImages.IsSupported("notes.txt"), "non-image rejected");
+
+var webpFixture = Convert.FromBase64String("UklGRhwAAABXRUJQVlA4TA8AAAAvAYAAAAcQ/Y/+ByKi/wEA");
+var windowsDecoder = new WpfBitmapDecoder();
+var webpSize = windowsDecoder.Probe(webpFixture);
+Equal(2, webpSize.Width, "webp probe width");
+Equal(3, webpSize.Height, "webp probe height");
+var decodedWebp = windowsDecoder.Decode(webpFixture, 1);
+Equal(1, decodedWebp.PixelWidth, "webp decode-to-size width");
+Equal(2, decodedWebp.PixelHeight, "webp decode-to-size height");
 
 var temp = Path.Combine(Path.GetTempPath(), $"comet-smoke-{Guid.NewGuid():N}");
 Directory.CreateDirectory(temp);
