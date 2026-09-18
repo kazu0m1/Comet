@@ -68,3 +68,10 @@ sacrificing the responsiveness established in v0.1.0.
 - A broken page does not block moving to the next/previous valid page.
 - Reading position round-trips across reopen in automated tests and hands-on validation.
 - v0.2.0 remains self-contained win-x64 and installable with the existing Inno Setup path.
+
+
+## Performance rollback decision
+
+The page/thumbnail separation and foreground-priority experiments after CI #45 were reverted after Windows hands-on testing showed worse subjective responsiveness and a render-page median regression from 1.9 ms to about 60 ms.
+
+The runtime behavior is restored to the CI #45 baseline. Performance tracing, CMD/PowerShell measurement helpers, and the recorded baseline remain available for diagnostics, but no further cache/prefetch tuning is applied before the v0.2.0 release candidate unless a reproducible defect appears.

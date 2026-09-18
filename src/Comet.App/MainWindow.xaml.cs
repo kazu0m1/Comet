@@ -37,9 +37,7 @@ public partial class MainWindow : Window
     private int _displayedPageCount = 1;
     private CancellationTokenSource? _openCts;
     private CancellationTokenSource? _renderCts;
-    private CancellationTokenSource? _prefetchCts;
     private CancellationTokenSource? _thumbnailCts;
-    private CancellationTokenSource? _thumbnailWarmupCts;
     private CancellationTokenSource? _stateSaveCts;
     private long _renderGeneration;
     private bool _fullscreen;
@@ -105,7 +103,7 @@ public partial class MainWindow : Window
                 cancellationToken.ThrowIfCancellationRequested();
             }
             _book = source;
-            _imageCache = new PageImageCache(source, _decoder, traceName: "page");
+            _imageCache = new PageImageCache(source, _decoder);
             _navigationHistory.Clear();
             Title = $"Comet — {source.Descriptor.DisplayName}";
 
@@ -165,10 +163,6 @@ public partial class MainWindow : Window
     {
         if (_book is null || _imageCache is null || _book.Descriptor.Pages.Count == 0)
             return;
-
-        _prefetchCts?.Cancel();
-        _prefetchCts?.Dispose();
-        _prefetchCts = null;
 
         var renderStartedAt = PerformanceTrace.Start();
         _pageIndex = Math.Clamp(_pageIndex, 0, _book.Descriptor.Pages.Count - 1);
@@ -280,21 +274,13 @@ public partial class MainWindow : Window
     private void PrefetchNeighbors(int targetWidth, int pageIndex, int displayedPageCount)
     {
         if (_book is null || _imageCache is null) return;
-
-        _prefetchCts?.Cancel();
-        _prefetchCts?.Dispose();
-        _prefetchCts = new CancellationTokenSource();
-
         var next = pageIndex + displayedPageCount;
-        var pages = new[] { next, next + 1, pageIndex - 1 };
-        _imageCache.Prefetch(pages, targetWidth, _prefetchCts.Token);
+        var pages = new[] { next, next + 1, pageIndex - 1, pageIndex - 2 };
+        _imageCache.Prefetch(pages, targetWidth);
     }
 
     private async Task InitializeThumbnailSidebarAsync(IBookSource source, CancellationToken cancellationToken)
     {
-        _thumbnailWarmupCts?.Cancel();
-        _thumbnailWarmupCts?.Dispose();
-        _thumbnailWarmupCts = null;
         _thumbnailCts?.Cancel();
         _thumbnailCts?.Dispose();
         _thumbnailCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -326,39 +312,22 @@ public partial class MainWindow : Window
             capacity: 64,
             minimumBucketWidth: 64,
             maximumBucketWidth: 192,
-            captureSourcePixelSize: false,
-            maxEstimatedBytes: 32L * 1024 * 1024,
-            traceName: "thumbnail",
-            maxConcurrentDecodes: 1);
+            captureSourcePixelSize: false);
 
         // Realized items may have fired Loaded before the secondary source was ready.
         // Force the current neighborhood to populate immediately, then Loaded handles
         // any other items as the user scrolls the sidebar.
         ThumbnailList.Items.Refresh();
-        StartThumbnailWarmup(_pageIndex, delayed: false);
+        _ = WarmThumbnailNeighborhoodAsync(_pageIndex, _thumbnailCts.Token);
     }
 
-    private void StartThumbnailWarmup(int centerPage, bool delayed)
-    {
-        if (_thumbnailItems.Count == 0 || _thumbnailCts is null || _thumbnailImageCache is null)
-            return;
-
-        _thumbnailWarmupCts?.Cancel();
-        _thumbnailWarmupCts?.Dispose();
-        _thumbnailWarmupCts = CancellationTokenSource.CreateLinkedTokenSource(_thumbnailCts.Token);
-        _ = WarmThumbnailNeighborhoodAsync(centerPage, delayed, _thumbnailWarmupCts.Token);
-    }
-
-    private async Task WarmThumbnailNeighborhoodAsync(int centerPage, bool delayed, CancellationToken cancellationToken)
+    private async Task WarmThumbnailNeighborhoodAsync(int centerPage, CancellationToken cancellationToken)
     {
         if (_thumbnailItems.Count == 0)
             return;
 
         try
         {
-            if (delayed)
-                await Task.Delay(75, cancellationToken).ConfigureAwait(true);
-
             const int radius = 8;
             var order = new List<int>(radius * 2 + 1) { centerPage };
             for (var distance = 1; distance <= radius; distance++)
@@ -426,6 +395,8 @@ public partial class MainWindow : Window
             _updatingThumbnailSelection = false;
         }
 
+        if (_thumbnailCts is not null && _thumbnailImageCache is not null)
+            _ = WarmThumbnailNeighborhoodAsync(_pageIndex, _thumbnailCts.Token);
     }
 
     private void ApplyThumbnailSidebarVisibility()
@@ -824,15 +795,9 @@ public partial class MainWindow : Window
     private async Task CloseCurrentBookAsync(bool saveState)
     {
         _renderCts?.Cancel();
-        _prefetchCts?.Cancel();
-        _prefetchCts?.Dispose();
-        _prefetchCts = null;
         Interlocked.Increment(ref _renderGeneration);
         if (_book is null) return;
         if (saveState) await SaveCurrentStateNowAsync().ConfigureAwait(true);
-        _thumbnailWarmupCts?.Cancel();
-        _thumbnailWarmupCts?.Dispose();
-        _thumbnailWarmupCts = null;
         _thumbnailCts?.Cancel();
         _thumbnailCts?.Dispose();
         _thumbnailCts = null;
@@ -876,8 +841,6 @@ public partial class MainWindow : Window
 
         _openCts?.Cancel();
         _renderCts?.Cancel();
-        _prefetchCts?.Cancel();
-        _thumbnailWarmupCts?.Cancel();
         _thumbnailCts?.Cancel();
         _stateSaveCts?.Cancel();
         Interlocked.Increment(ref _renderGeneration);
@@ -910,10 +873,6 @@ public partial class MainWindow : Window
 
         _openCts?.Dispose();
         _openCts = null;
-        _prefetchCts?.Dispose();
-        _prefetchCts = null;
-        _thumbnailWarmupCts?.Dispose();
-        _thumbnailWarmupCts = null;
         _thumbnailCts?.Dispose();
         _thumbnailCts = null;
         _stateSaveCts?.Dispose();

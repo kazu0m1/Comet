@@ -18,8 +18,6 @@ public sealed class PageImageCache : IDisposable
     private readonly int _minimumBucketWidth;
     private readonly int _maximumBucketWidth;
     private readonly bool _captureSourcePixelSize;
-    private readonly string _traceName;
-    private readonly SemaphoreSlim _decodeGate;
 
     public PageImageCache(
         IBookSource source,
@@ -28,9 +26,7 @@ public sealed class PageImageCache : IDisposable
         int minimumBucketWidth = 512,
         int maximumBucketWidth = 4096,
         bool captureSourcePixelSize = true,
-        long maxEstimatedBytes = 192L * 1024 * 1024,
-        string traceName = "page",
-        int maxConcurrentDecodes = 2)
+        long maxEstimatedBytes = 192L * 1024 * 1024)
     {
         _source = source;
         _decoder = decoder;
@@ -41,30 +37,23 @@ public sealed class PageImageCache : IDisposable
         _minimumBucketWidth = Math.Max(1, minimumBucketWidth);
         _maximumBucketWidth = Math.Max(_minimumBucketWidth, maximumBucketWidth);
         _captureSourcePixelSize = captureSourcePixelSize;
-        _traceName = string.IsNullOrWhiteSpace(traceName) ? "page" : traceName.Trim();
-        _decodeGate = new SemaphoreSlim(Math.Max(1, maxConcurrentDecodes), Math.Max(1, maxConcurrentDecodes));
     }
 
-    public async Task<BitmapSource> GetAsync(
-        int pageIndex,
-        int targetPixelWidth,
-        CancellationToken cancellationToken = default,
-        bool isPrefetch = false)
+    public async Task<BitmapSource> GetAsync(int pageIndex, int targetPixelWidth, CancellationToken cancellationToken = default)
     {
         var width = BucketWidth(targetPixelWidth);
         var key = (pageIndex, width);
-        var traceName = isPrefetch ? $"{_traceName}.prefetch" : _traceName;
         if (_cache.TryGet(key, out var cached) && cached is not null)
         {
-            PerformanceTrace.Event($"{traceName}.cache.hit", $"page={pageIndex + 1}; width={width}");
+            PerformanceTrace.Event("cache.hit", $"page={pageIndex + 1}; width={width}");
             return cached;
         }
 
-        PerformanceTrace.Event($"{traceName}.cache.miss", $"page={pageIndex + 1}; width={width}");
+        PerformanceTrace.Event("cache.miss", $"page={pageIndex + 1}; width={width}");
 
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _lifetime.Token);
         var lazy = _inflight.GetOrAdd(key, _ => new Lazy<Task<BitmapSource>>(
-            () => LoadAsync(pageIndex, width, _lifetime.Token, traceName), LazyThreadSafetyMode.ExecutionAndPublication));
+            () => LoadAsync(pageIndex, width, _lifetime.Token), LazyThreadSafetyMode.ExecutionAndPublication));
 
         try
         {
@@ -82,63 +71,34 @@ public sealed class PageImageCache : IDisposable
     public bool TryGetSourcePixelSize(int pageIndex, out PixelSize size)
         => _sourcePixelSizes.TryGetValue(pageIndex, out size);
 
-    public void Prefetch(
-        IEnumerable<int> pageIndices,
-        int targetPixelWidth,
-        CancellationToken cancellationToken = default)
+    public void Prefetch(IEnumerable<int> pageIndices, int targetPixelWidth)
     {
-        _ = PrefetchSequentialAsync(pageIndices, targetPixelWidth, cancellationToken);
+        foreach (var index in pageIndices.Distinct().Where(i => i >= 0 && i < _source.Descriptor.Pages.Count))
+            _ = PrefetchOneAsync(index, targetPixelWidth);
     }
 
-    private async Task PrefetchSequentialAsync(
-        IEnumerable<int> pageIndices,
-        int targetPixelWidth,
-        CancellationToken cancellationToken)
+    private async Task PrefetchOneAsync(int pageIndex, int targetPixelWidth)
     {
-        try
-        {
-            foreach (var index in pageIndices.Distinct().Where(i => i >= 0 && i < _source.Descriptor.Pages.Count))
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                await GetAsync(index, targetPixelWidth, cancellationToken, isPrefetch: true).ConfigureAwait(false);
-            }
-        }
-        catch (OperationCanceledException)
-        {
-        }
-        catch
-        {
-            // Prefetch must never surface as a reader failure.
-        }
+        try { await GetAsync(pageIndex, targetPixelWidth, _lifetime.Token).ConfigureAwait(false); }
+        catch (OperationCanceledException) { }
+        catch { /* Prefetch must never surface as a reader failure. */ }
     }
 
-    private async Task<BitmapSource> LoadAsync(
-        int pageIndex,
-        int targetPixelWidth,
-        CancellationToken cancellationToken,
-        string traceName)
+    private async Task<BitmapSource> LoadAsync(int pageIndex, int targetPixelWidth, CancellationToken cancellationToken)
     {
         var readStartedAt = PerformanceTrace.Start();
         var bytes = await _source.ReadPageBytesAsync(pageIndex, cancellationToken).ConfigureAwait(false);
-        PerformanceTrace.Elapsed($"{traceName}.read", readStartedAt, $"page={pageIndex + 1}; bytes={bytes.Length}");
+        PerformanceTrace.Elapsed("page.read", readStartedAt, $"page={pageIndex + 1}; bytes={bytes.Length}");
 
-        await _decodeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        var decodeStartedAt = PerformanceTrace.Start();
+        var result = await Task.Run(() =>
         {
-            var decodeStartedAt = PerformanceTrace.Start();
-            var result = await Task.Run(() =>
-            {
-                if (_captureSourcePixelSize)
-                    _sourcePixelSizes[pageIndex] = _decoder.Probe(bytes);
-                return _decoder.Decode(bytes, targetPixelWidth);
-            }, cancellationToken).ConfigureAwait(false);
-            PerformanceTrace.Elapsed($"{traceName}.decode", decodeStartedAt, $"page={pageIndex + 1}; target={targetPixelWidth}");
-            return result;
-        }
-        finally
-        {
-            _decodeGate.Release();
-        }
+            if (_captureSourcePixelSize)
+                _sourcePixelSizes[pageIndex] = _decoder.Probe(bytes);
+            return _decoder.Decode(bytes, targetPixelWidth);
+        }, cancellationToken).ConfigureAwait(false);
+        PerformanceTrace.Elapsed("page.decode", decodeStartedAt, $"page={pageIndex + 1}; target={targetPixelWidth}");
+        return result;
     }
 
     private static long EstimateBitmapBytes(BitmapSource image)

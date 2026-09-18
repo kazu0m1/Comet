@@ -11,8 +11,7 @@ All notable changes to Comet are documented here.
 - Explicit DPI-change refresh/re-render handling plus CI coverage for 100/125/150/200% Manual 100% calculations.
 - Opt-in performance diagnostics for source open, first render, page read/decode, cache hit/miss, and DPI changes, plus a PowerShell summary script.
 - Byte-aware full-page LRU budgeting (192 MiB default in addition to the six-item cap) to limit decoded-image memory pressure.
-- Separate full-page and thumbnail performance traces, with independent cache hit-rate reporting.
-- Prioritized foreground page rendering after field measurements: stale prefetch queues are cancelled, page prefetch runs sequentially with a smaller neighborhood, thumbnail decode concurrency is capped at one, and thumbnail neighborhood warmup only runs at book open.
+- Performance experiments after the CI #45 baseline were reverted after Windows hands-on testing showed worse page-turn responsiveness; the faster CI #45 cache/prefetch behavior is retained for v0.2.0.
 - RAR/CBR and 7z/CB7 direct-reading infrastructure via SharpCompress 0.50.4 while preserving the existing ZIP/CBZ fast path.
 - Optional Windows associations and adjacent-archive navigation for RAR/CBR/7z/CB7.
 - Real RAR fixture coverage for CBR factory routing, image extraction, and JPEG decode.
