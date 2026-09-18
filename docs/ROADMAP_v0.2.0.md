@@ -16,14 +16,17 @@ sacrificing the responsiveness established in v0.1.0.
    - Windows CI covers WebP probe and decode-to-size.
    - Windows 11 hands-on validation passed for ZIP display, thumbnails, portrait/landscape pages, and page turns.
 
-2. **Damaged-page resilience — implemented, hands-on validation pending**
+2. **Damaged-page resilience — implemented and Windows validated**
    - A failed page shows a localized placeholder explaining that navigation can continue.
    - Thumbnail selection and reading-state updates remain usable on the failed page.
    - Windows CI covers a ZIP sequence with valid image → broken image → valid image and confirms the page after the failure still decodes.
+   - Windows 11 hands-on validation passed for error placeholder and continued forward/back navigation.
 
-3. **Reading-state validation**
-   - Add repeatable tests for last-page restoration and bookmarks across reopen/restart.
-   - Keep per-book JSON; no database is introduced.
+3. **Reading-state validation — in progress**
+   - JSON round-trip coverage already verifies last-page and bookmark persistence.
+   - Source size/last-write metadata is now validated before restoring state.
+   - If a ZIP/CBZ is replaced at the same path, stale reading position/bookmarks are discarded.
+   - Hands-on restart/reopen validation remains before this item is complete.
 
 4. **DPI / multi-monitor hardening**
    - Re-check Best Fit, Fit Width, Fit Height, Manual 100%, sidebar toggling, and fullscreen

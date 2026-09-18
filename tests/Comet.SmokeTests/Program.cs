@@ -164,6 +164,19 @@ try
         Equal(123456L, loaded.SourceLength, "book state source length");
     }
 
+    var trackedBookPath = Path.Combine(temp, "tracked-book.zip");
+    await File.WriteAllBytesAsync(trackedBookPath, new byte[] { 1, 2, 3, 4, 5 });
+    var trackedInfo = new FileInfo(trackedBookPath);
+    var matchingState = new BookState(
+        7,
+        Array.Empty<Bookmark>(),
+        trackedInfo.Length,
+        trackedInfo.LastWriteTimeUtc);
+    Check(BookStateSourceValidator.Matches(matchingState, trackedBookPath), "book state matches unchanged source");
+
+    await File.AppendAllTextAsync(trackedBookPath, "changed");
+    Check(!BookStateSourceValidator.Matches(matchingState, trackedBookPath), "book state rejected after source changes");
+
     var settingsRoot = Path.Combine(temp, "settings");
     Directory.CreateDirectory(settingsRoot);
     var settingsStore = new JsonSettingsStore(settingsRoot);

@@ -10,6 +10,7 @@ using Comet.Core.Abstractions;
 using Comet.Core.Models;
 using Comet.Core.Services;
 using Comet.Infrastructure.Navigation;
+using Comet.Infrastructure.Persistence;
 using Comet.Platform.Windows.Imaging;
 
 namespace Comet.App;
@@ -104,6 +105,9 @@ public partial class MainWindow : Window
             Title = $"Comet — {source.Descriptor.DisplayName}";
 
             var savedState = await _stateStore.LoadAsync(source.Descriptor.Path, cancellationToken).ConfigureAwait(true);
+            if (savedState is not null && !BookStateSourceValidator.Matches(savedState, source.Descriptor.Path))
+                savedState = null;
+
             _bookmarks = savedState?.Bookmarks?.ToList() ?? new List<Bookmark>();
 
             if (source.Descriptor.Pages.Count == 0)
