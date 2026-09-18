@@ -9,10 +9,14 @@ Highlights:
 - Best Fit, Fit Width, Fit Height, Manual 100%, and temporary zoom.
 - Double-page reading with the cover shown alone and right-to-left page placement.
 - MComix-style keyboard controls for the implemented reader functions.
-- Smart scroll, adjacent archive navigation, reading-position memory, bookmarks,
-  fullscreen, and drag-and-drop.
+- Smart scroll, automatic rollover into the next/previous ZIP or CBZ, reading-position memory,
+  bookmarks, fullscreen, and drag-and-drop.
+- Compact MComix-style thumbnail sidebar with prioritized asynchronous loading.
+- Arrow-key navigation and left/right click zones for forward/back navigation.
+- DPI-correct Manual 100% mode plus image size and actual zoom in the status bar.
 - Self-contained Windows x64 portable package and Inno Setup installer produced by
   the release workflow.
 
-This is a pre-1.0 release. RAR/7z/PDF and the thumbnail sidebar are intentionally
-outside this milestone.
+This is a pre-1.0 release. WebP, RAR/CBR, 7z/CB7, and PDF are outside this milestone.
+Before the final v0.1.0 tag, the generated installer, ZIP/CBZ registration, default-app
+selection, and uninstall behavior are validated on Windows 11.

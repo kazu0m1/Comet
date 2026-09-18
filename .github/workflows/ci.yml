@@ -32,3 +32,14 @@ jobs:
           name: Comet-win-x64
           path: artifacts/win-x64
           if-no-files-found: error
+      - name: Install Inno Setup
+        run: choco install innosetup --yes --no-progress
+      - name: Package v0.1.0 release candidate
+        shell: pwsh
+        run: .\scripts\package-release.ps1 -Version 0.1.0-rc.1 -BuildInstaller
+      - name: Upload release candidate
+        uses: actions/upload-artifact@v7
+        with:
+          name: Comet-v0.1.0-rc.1
+          path: artifacts/release/*
+          if-no-files-found: error

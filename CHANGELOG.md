@@ -23,12 +23,15 @@ All notable changes to Comet are documented here.
 - Japanese/English UI selected from the Windows UI culture.
 - Windows file-association registration through the installer.
 - GitHub Actions CI and tag-based release packaging.
+- MComix-style thumbnail sidebar with compact, prioritized asynchronous loading.
+- Arrow-key and click-zone page navigation.
+- Automatic rollover to adjacent ZIP/CBZ archives at the reading edge.
+- DPI-correct Manual 100% display.
+- Image dimensions and actual display zoom in the status bar.
+- Fast shutdown that does not wait on archive cleanup.
+- End-user packages omit the .NET `createdump.exe` diagnostic helper.
 
 ### Known limitations
-- Thumbnail sidebar is intentionally deferred to the next milestone to keep the
-  first functional build focused on startup, archive loading, display, fit, zoom,
-  and navigation performance.
-- RAR/CBR, 7z/CB7, and PDF are not supported in v0.1.0.
-- The generated repository has been statically checked in the authoring
-  environment, but the final Windows build gate is the included GitHub Actions
-  workflow or a local Windows 11 + .NET 10 SDK build.
+- WebP, RAR/CBR, 7z/CB7, and PDF are not yet supported.
+- Core reading UX has passed Windows x64 CI and iterative Windows 11 hands-on
+  validation; installer/association/uninstall validation remains the release gate.

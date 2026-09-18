@@ -13,14 +13,14 @@ This document maps the v1.0 requirements baseline to the first release candidate
 | Manga / right-to-left | Implemented | Default ON; spread placement and Alt+arrow direction follow reading direction. |
 | Best Fit | Implemented | Default; small images stretch by default. |
 | Fit Width / Fit Height | Implemented | Viewport-based scaling. |
-| Manual Zoom | Implemented | 100% mode plus temporary zoom controls. |
+| Manual Zoom | Implemented + Windows tested | DPI-correct physical-pixel 100% mode plus temporary zoom controls. |
 | Ctrl+mouse-wheel temporary zoom | Implemented | Persists to adjacent archives, resets after process restart. |
-| Smart Scroll | Implemented (basic) | Reading-flow horizontal/vertical scrolling and flip-at-edge. Needs Windows UX tuning. |
-| Previous/next archive | Implemented | Ctrl+Shift+P/N, natural archive sort. |
+| Smart Scroll | Implemented + Windows tested | Reading-flow scrolling, page flip at edge, and adjacent-archive rollover. |
+| Previous/next archive | Implemented + Windows tested | Ctrl+Shift+P/N and reading-edge rollover, natural archive sort. |
 | Bounded prefetch cache | Implemented | 6-item LRU, nearby pages prefetched. |
 | Natural sort | Implemented + smoke test | Numeric runs sorted naturally. |
-| Fullscreen | Implemented | F/F11. |
-| Thumbnail sidebar | **Deferred** | Next milestone; deliberately excluded from v0.1.0 startup path. |
+| Fullscreen | Implemented + Windows tested | F/F11. |
+| Thumbnail sidebar | Implemented + Windows tested | Compact MComix-style sidebar, visible-neighborhood priority loading. |
 | Reading position | Implemented | Per source JSON in LocalAppData. |
 | Bookmark | Implemented | Add and open bookmark list. |
 | Settings | Implemented | Base fit, reading direction, layout and stretch settings. |
@@ -31,16 +31,17 @@ This document maps the v1.0 requirements baseline to the first release candidate
 
 ## Build-validation state
 
-Static checks completed in the authoring environment:
-- XML/XAML well-formedness.
-- GitHub workflow YAML parsing.
-- XAML event-handler ↔ code-behind matching.
-- C# structural brace checks.
-- Source archive integrity.
+Completed:
+- Windows GitHub Actions restore/build/smoke-test/self-contained publish.
+- Windows 11 hands-on validation of startup, ZIP image display, Best Fit, manga mode,
+  fullscreen, thumbnail sidebar, keyboard/click navigation, Manual 100%, fast shutdown,
+  center-gap removal, and adjacent-archive rollover.
+- Repeated CI packaging of the portable Windows x64 build.
 
-Not possible in the authoring environment because no .NET SDK / Windows Desktop build chain is installed:
-- `dotnet build` of WPF projects.
-- Inno Setup compilation.
-- Windows runtime/UX testing.
+Current release-candidate gate:
+- Compile the Inno Setup installer in CI.
+- Install/uninstall on Windows 11.
+- Register ZIP/CBZ as available associations and confirm Windows Default Apps selection.
+- Confirm uninstall removes Comet registration without disturbing other ZIP handlers.
 
-Those gates are encoded in `scripts/verify.ps1`, `.github/workflows/ci.yml`, and `docs/RELEASE_CHECKLIST.md`.
+These gates are encoded in `scripts/verify.ps1`, `.github/workflows/ci.yml`, and `docs/RELEASE_CHECKLIST.md`.
