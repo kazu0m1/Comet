@@ -51,6 +51,14 @@ Near(0.5, DpiScaleCalculator.ManualDipScale(2.0), "manual 100 at 200 percent DPI
 Near(1.0, DpiScaleCalculator.PhysicalZoom(800, 1200, 1.5), "physical zoom reports true 100 percent");
 Near(0.75, DpiScaleCalculator.PhysicalZoom(600, 1200, 1.5), "physical zoom reports true 75 percent");
 
+var weightedCache = new LruCache<int, string>(capacity: 3, maxWeight: 5, weightSelector: value => value.Length);
+weightedCache.Set(1, "aaa");
+weightedCache.Set(2, "bbb");
+Check(!weightedCache.TryGet(1, out _), "weighted cache evicts least-recent item when over budget");
+Check(weightedCache.TryGet(2, out var keptWeighted) && keptWeighted == "bbb", "weighted cache keeps newest item");
+weightedCache.Set(3, "1234567");
+Check(!weightedCache.TryGet(2, out _), "oversized newest item evicts older entries");
+Check(weightedCache.TryGet(3, out var oversizedWeighted) && oversizedWeighted == "1234567", "weighted cache keeps one oversized newest item");
 Equal(0, SpreadPlanner.NormalizeStartIndex(0, 10, PageLayoutMode.DoublePage), "cover alone");
 Equal(1, SpreadPlanner.NormalizeStartIndex(2, 10, PageLayoutMode.DoublePage), "double spread normalize");
 Equal(3, SpreadPlanner.NextStartIndex(1, 2, 10), "next spread");

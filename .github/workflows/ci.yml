@@ -23,6 +23,18 @@ jobs:
         run: dotnet build .\Comet.sln -c Release --no-restore
       - name: Smoke tests
         run: dotnet run --project .\tests\Comet.SmokeTests\Comet.SmokeTests.csproj -c Release --no-build
+      - name: Verify performance summary script
+        shell: pwsh
+        run: |
+          $sample = Join-Path $env:RUNNER_TEMP "comet-performance-sample.log"
+          $tab = [char]9
+          @(
+            "2026-09-18T00:00:00+00:00${tab}open.first-render${tab}120.5 ms${tab}10 pages",
+            "2026-09-18T00:00:01+00:00${tab}page.decode${tab}12.0 ms${tab}page=1",
+            "2026-09-18T00:00:02+00:00${tab}cache.hit${tab}- ms${tab}page=2",
+            "2026-09-18T00:00:03+00:00${tab}cache.miss${tab}- ms${tab}page=3"
+          ) | Set-Content -Path $sample
+          .\scripts\summarize-performance.ps1 -Path $sample
       - name: Publish Windows x64
         shell: pwsh
         run: .\scripts\publish-win-x64.ps1 -Version 0.2.0-dev
