@@ -40,7 +40,9 @@ sacrificing the responsiveness established in v0.1.0.
    - The full-page LRU uses both a six-item cap and an estimated 192 MiB decoded-bitmap budget, retaining at least the most-recent page.
    - Logging failures are swallowed and never affect reading.
    - First Windows field measurement: first render ~36 ms average, render-page median 1.9 ms, P95 ~114 ms.
-   - Main-page and thumbnail traces are now separated, and stale thumbnail warmups are cancelled/debounced to reduce decode contention during rapid navigation.
+   - Main-page, page-prefetch, and thumbnail traces are separated.
+   - Field measurement showed worse subjective responsiveness despite a 1.35 ms render median: page decode rose to ~62 ms average and render P95 to ~126 ms.
+   - Follow-up change prioritizes demand rendering: stale prefetch queues are cancelled, prefetch is sequential, page prefetch depth is reduced, thumbnail decode concurrency is capped at one, and recurrent thumbnail neighborhood warmup is removed.
 
 6. **Archive-format expansion — implemented and Windows validated**
    - RAR/CBR and 7z/CB7 use SharpCompress 0.50.4 while ZIP/CBZ stays on the existing System.IO.Compression path.

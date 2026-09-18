@@ -37,6 +37,7 @@ public partial class MainWindow : Window
     private int _displayedPageCount = 1;
     private CancellationTokenSource? _openCts;
     private CancellationTokenSource? _renderCts;
+    private CancellationTokenSource? _prefetchCts;
     private CancellationTokenSource? _thumbnailCts;
     private CancellationTokenSource? _thumbnailWarmupCts;
     private CancellationTokenSource? _stateSaveCts;
@@ -165,6 +166,10 @@ public partial class MainWindow : Window
         if (_book is null || _imageCache is null || _book.Descriptor.Pages.Count == 0)
             return;
 
+        _prefetchCts?.Cancel();
+        _prefetchCts?.Dispose();
+        _prefetchCts = null;
+
         var renderStartedAt = PerformanceTrace.Start();
         _pageIndex = Math.Clamp(_pageIndex, 0, _book.Descriptor.Pages.Count - 1);
         var renderPageIndex = _pageIndex;
@@ -275,9 +280,14 @@ public partial class MainWindow : Window
     private void PrefetchNeighbors(int targetWidth, int pageIndex, int displayedPageCount)
     {
         if (_book is null || _imageCache is null) return;
+
+        _prefetchCts?.Cancel();
+        _prefetchCts?.Dispose();
+        _prefetchCts = new CancellationTokenSource();
+
         var next = pageIndex + displayedPageCount;
-        var pages = new[] { next, next + 1, pageIndex - 1, pageIndex - 2 };
-        _imageCache.Prefetch(pages, targetWidth);
+        var pages = new[] { next, next + 1, pageIndex - 1 };
+        _imageCache.Prefetch(pages, targetWidth, _prefetchCts.Token);
     }
 
     private async Task InitializeThumbnailSidebarAsync(IBookSource source, CancellationToken cancellationToken)
@@ -318,7 +328,8 @@ public partial class MainWindow : Window
             maximumBucketWidth: 192,
             captureSourcePixelSize: false,
             maxEstimatedBytes: 32L * 1024 * 1024,
-            traceName: "thumbnail");
+            traceName: "thumbnail",
+            maxConcurrentDecodes: 1);
 
         // Realized items may have fired Loaded before the secondary source was ready.
         // Force the current neighborhood to populate immediately, then Loaded handles
@@ -415,8 +426,6 @@ public partial class MainWindow : Window
             _updatingThumbnailSelection = false;
         }
 
-        if (_thumbnailCts is not null && _thumbnailImageCache is not null)
-            StartThumbnailWarmup(_pageIndex, delayed: true);
     }
 
     private void ApplyThumbnailSidebarVisibility()
@@ -815,6 +824,9 @@ public partial class MainWindow : Window
     private async Task CloseCurrentBookAsync(bool saveState)
     {
         _renderCts?.Cancel();
+        _prefetchCts?.Cancel();
+        _prefetchCts?.Dispose();
+        _prefetchCts = null;
         Interlocked.Increment(ref _renderGeneration);
         if (_book is null) return;
         if (saveState) await SaveCurrentStateNowAsync().ConfigureAwait(true);
@@ -864,6 +876,7 @@ public partial class MainWindow : Window
 
         _openCts?.Cancel();
         _renderCts?.Cancel();
+        _prefetchCts?.Cancel();
         _thumbnailWarmupCts?.Cancel();
         _thumbnailCts?.Cancel();
         _stateSaveCts?.Cancel();
@@ -897,6 +910,8 @@ public partial class MainWindow : Window
 
         _openCts?.Dispose();
         _openCts = null;
+        _prefetchCts?.Dispose();
+        _prefetchCts = null;
         _thumbnailWarmupCts?.Dispose();
         _thumbnailWarmupCts = null;
         _thumbnailCts?.Dispose();
