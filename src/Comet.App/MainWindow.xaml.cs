@@ -735,7 +735,6 @@ public partial class MainWindow : Window
             return;
 
         _isClosing = true;
-        IsEnabled = false;
         StatusText.Text = _text["Closing"];
 
         _openCts?.Cancel();
@@ -744,27 +743,53 @@ public partial class MainWindow : Window
         _stateSaveCts?.Cancel();
         Interlocked.Increment(ref _renderGeneration);
 
+        // Hide immediately so closing feels instantaneous. Persist the small JSON
+        // state/settings files, but never let a slow archive read hold the UI open.
+        Hide();
+
         try
         {
-            await SaveCurrentStateNowAsync().ConfigureAwait(true);
-            await CloseCurrentBookAsync(saveState: false).ConfigureAwait(true);
+            var saveBook = SaveCurrentStateNowAsync();
+            var saveSettings = SaveSettingsSafeAsync();
+            var saveAll = Task.WhenAll(saveBook, saveSettings);
+            await Task.WhenAny(saveAll, Task.Delay(400)).ConfigureAwait(true);
         }
         catch
         {
-            // Shutdown must proceed even if persistence or archive cleanup fails.
+            // Shutdown must proceed even if persistence fails.
         }
-        finally
-        {
-            _openCts?.Dispose();
-            _openCts = null;
-            _thumbnailCts?.Dispose();
-            _thumbnailCts = null;
-            _stateSaveCts?.Dispose();
-            _stateSaveCts = null;
 
-            _allowClose = true;
-            IsEnabled = true;
-            Close();
+        var book = _book;
+        _book = null;
+
+        _thumbnailImageCache?.Dispose();
+        _thumbnailImageCache = null;
+        _imageCache?.Dispose();
+        _imageCache = null;
+
+        _openCts?.Dispose();
+        _openCts = null;
+        _thumbnailCts?.Dispose();
+        _thumbnailCts = null;
+        _stateSaveCts?.Dispose();
+        _stateSaveCts = null;
+
+        if (book is not null)
+            _ = DisposeBookQuietlyAsync(book);
+
+        _allowClose = true;
+        Close();
+    }
+
+    private static async Task DisposeBookQuietlyAsync(IBookSource book)
+    {
+        try
+        {
+            await book.DisposeAsync().ConfigureAwait(false);
+        }
+        catch
+        {
+            // Process shutdown will release any remaining OS handles.
         }
     }
 

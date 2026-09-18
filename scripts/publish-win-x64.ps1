@@ -18,6 +18,11 @@ dotnet publish $project `
   -p:Version=$Version `
   -o $out
 
+# createdump.exe is a .NET diagnostics helper. Comet does not enable
+# automatic crash-dump generation, so omit it from end-user packages.
+$createDump = Join-Path $out "createdump.exe"
+if (Test-Path $createDump) { Remove-Item $createDump -Force }
+
 Copy-Item (Join-Path $root "LICENSE") $out
 Copy-Item (Join-Path $root "NOTICE.md") $out
 Write-Host "Published to $out"
