@@ -5,14 +5,14 @@
         Title="Comet" Width="1200" Height="850" MinWidth="640" MinHeight="480"
         Background="Black" AllowDrop="True"
         PreviewKeyDown="Window_KeyDown" PreviewMouseWheel="Window_PreviewMouseWheel"
-        Drop="Window_Drop">
+        DpiChanged="Window_DpiChanged" Drop="Window_Drop">
     <DockPanel>
         <Menu x:Name="MainMenu" DockPanel.Dock="Top">
             <MenuItem x:Name="FileMenu">
                 <MenuItem x:Name="OpenMenuItem" InputGestureText="Ctrl+O" Click="Open_Click" />
                 <MenuItem x:Name="OpenFolderMenuItem" Click="OpenFolder_Click" />
                 <Separator />
-                <MenuItem Header="Close" InputGestureText="Ctrl+W" Click="CloseBook_Click" />
+                <MenuItem x:Name="CloseBookMenuItem" InputGestureText="Ctrl+W" Click="CloseBook_Click" />
                 <Separator />
                 <MenuItem x:Name="ExitMenuItem" InputGestureText="Ctrl+Q" Click="Exit_Click" />
             </MenuItem>
@@ -44,15 +44,15 @@
 
         <ToolBarTray x:Name="MainToolbarTray" DockPanel.Dock="Top">
             <ToolBar>
-                <Button Content="◀" ToolTip="Previous" Click="Previous_Click" />
-                <Button Content="▶" ToolTip="Next" Click="Next_Click" />
+                <Button x:Name="PreviousToolbarButton" Content="◀" Click="Previous_Click" />
+                <Button x:Name="NextToolbarButton" Content="▶" Click="Next_Click" />
                 <Separator />
-                <Button Content="Best" Click="BestFit_Click" />
-                <Button Content="Width" Click="FitWidth_Click" />
-                <Button Content="Height" Click="FitHeight_Click" />
+                <Button x:Name="BestFitToolbarButton" Click="BestFit_Click" />
+                <Button x:Name="FitWidthToolbarButton" Click="FitWidth_Click" />
+                <Button x:Name="FitHeightToolbarButton" Click="FitHeight_Click" />
                 <Separator />
-                <Button Content="2p" Click="DoublePage_Click" />
-                <Button Content="Manga" Click="MangaMode_Click" />
+                <Button x:Name="DoublePageToolbarButton" Content="2p" Click="DoublePage_Click" />
+                <Button x:Name="MangaToolbarButton" Click="MangaMode_Click" />
             </ToolBar>
         </ToolBarTray>
 

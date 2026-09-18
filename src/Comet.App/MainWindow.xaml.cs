@@ -627,6 +627,7 @@ public partial class MainWindow : Window
         FileMenu.Header = _text["File"];
         OpenMenuItem.Header = _text["Open"];
         OpenFolderMenuItem.Header = _text["OpenFolder"];
+        CloseBookMenuItem.Header = _text["Close"];
         ExitMenuItem.Header = _text["Exit"];
         NavigateMenu.Header = _text["Navigate"];
         PreviousPageMenuItem.Header = _text["PreviousPage"];
@@ -647,6 +648,12 @@ public partial class MainWindow : Window
         BookmarksMenu.Header = _text["Bookmarks"];
         AddBookmarkMenuItem.Header = _text["AddBookmark"];
         EditBookmarksMenuItem.Header = _text["EditBookmarks"];
+        PreviousToolbarButton.ToolTip = _text["Previous"];
+        NextToolbarButton.ToolTip = _text["Next"];
+        BestFitToolbarButton.Content = _text["ToolbarBest"];
+        FitWidthToolbarButton.Content = _text["ToolbarWidth"];
+        FitHeightToolbarButton.Content = _text["ToolbarHeight"];
+        MangaToolbarButton.Content = _text["ToolbarManga"];
     }
 
     private void UpdateStatus()
@@ -947,6 +954,14 @@ public partial class MainWindow : Window
 
         await SmartScrollOrFlipAsync(e.Delta < 0 ? 1 : -1);
         e.Handled = true;
+    }
+
+    private void Window_DpiChanged(object sender, DpiChangedEventArgs e)
+    {
+        Viewport.Refresh();
+        UpdateImageInfo();
+        if (_book is not null)
+            _ = RenderCurrentAsync();
     }
 
     private void Viewport_SizeChanged(object sender, SizeChangedEventArgs e)
