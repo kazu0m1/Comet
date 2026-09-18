@@ -57,8 +57,7 @@ $result = foreach ($group in $groups) {
 
 $result | Format-Table -AutoSize
 
-$cacheRows = @($rows | Where-Object { $_.Operation -match '^(?<role>.+)\.cache\.(?<result>hit|miss)
- })
+$cacheRows = @($rows | Where-Object { $_.Operation -match '^(?<role>.+)\.cache\.(?<result>hit|miss)\z' })
 if ($cacheRows.Count -gt 0) {
     Write-Host ""
     foreach ($roleGroup in ($cacheRows | Group-Object { ($_.Operation -split '\.cache\.')[0] } | Sort-Object Name)) {
