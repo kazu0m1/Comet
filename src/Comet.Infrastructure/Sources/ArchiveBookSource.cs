@@ -2,6 +2,7 @@ using Comet.Core.Abstractions;
 using Comet.Core.Models;
 using Comet.Core.Services;
 using SharpCompress.Archives;
+using SharpCompress.Common;
 using SharpCompress.Readers;
 
 namespace Comet.Infrastructure.Sources;
@@ -21,7 +22,7 @@ public sealed class ArchiveBookSource : IBookSource
         _path = path;
         _archive = archive;
         _entries = entries;
-        _useSequentialReader = archive.IsSolid;
+        _useSequentialReader = archive.Type == ArchiveType.Rar && archive.IsSolid;
         Descriptor = new BookDescriptor(
             path,
             path,
