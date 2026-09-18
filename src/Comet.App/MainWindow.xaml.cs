@@ -164,6 +164,7 @@ public partial class MainWindow : Window
         if (_book is null || _imageCache is null || _book.Descriptor.Pages.Count == 0)
             return;
 
+        var renderStartedAt = PerformanceTrace.Start();
         _pageIndex = Math.Clamp(_pageIndex, 0, _book.Descriptor.Pages.Count - 1);
         var renderPageIndex = _pageIndex;
         var generation = Interlocked.Increment(ref _renderGeneration);
@@ -221,6 +222,10 @@ public partial class MainWindow : Window
             PrefetchNeighbors(targetWidth, renderPageIndex, _displayedPageCount);
             UpdateThumbnailSelection();
             ScheduleStateSave();
+            PerformanceTrace.Elapsed(
+                "render.page",
+                renderStartedAt,
+                $"page={renderPageIndex + 1}; displayed={_displayedPageCount}; success=true");
         }
         catch (OperationCanceledException)
         {
@@ -240,6 +245,10 @@ public partial class MainWindow : Window
             UpdateImageInfo();
             UpdateThumbnailSelection();
             ScheduleStateSave();
+            PerformanceTrace.Elapsed(
+                "render.page",
+                renderStartedAt,
+                $"page={renderPageIndex + 1}; displayed=0; success=false");
         }
         finally
         {
