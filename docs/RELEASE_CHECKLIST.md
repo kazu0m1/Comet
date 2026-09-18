@@ -42,14 +42,16 @@
 
 ## v0.2.0 RC gate
 
+- [x] RC2 memory-pressure check on the same 844x1200 double-page ZIP: about 200 MiB idle, 600 MiB peak during rapid paging, 250-350 MiB after stopping, with no perceived speed regression.
+
 - [ ] Build the final v0.2.0 RC package from the release-preparation commit.
 - [ ] Install the RC with Setup.exe.
 - [ ] Confirm ZIP/CBZ/RAR/CBR/7z/CB7 are offered as optional handlers.
 - [ ] Open representative ZIP/CBZ/CBR/CB7 books from the installed build.
-- [ ] Re-check page turns, thumbnails, fullscreen, double-page, manga mode, and fit modes.
-- [ ] Re-check reading-position restore after restart.
-- [ ] Confirm the MComix-style status bar values are correct.
-- [ ] Confirm fast shutdown with no lingering Comet process.
+- [x] Re-check page turns, thumbnails, fullscreen, double-page, manga mode, and fit modes.
+- [x] Re-check reading-position restore after restart.
+- [x] Confirm the MComix-style status bar values are correct and visually spaced close to MComix.
+- [x] Confirm fast shutdown with no lingering Comet process.
 - [ ] Uninstall successfully.
 - [ ] Confirm existing archive handling remains intact after uninstall.
 - [ ] Confirm release ZIP and installer are not corrupted.
