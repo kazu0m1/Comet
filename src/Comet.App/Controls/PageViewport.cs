@@ -184,12 +184,16 @@ public sealed class PageViewport : FrameworkElement
         var first = new PixelSize(FirstPage!.PixelWidth, FirstPage.PixelHeight);
         PixelSize? second = SecondPage is null ? null : new PixelSize(SecondPage.PixelWidth, SecondPage.PixelHeight);
         var combined = FitCalculator.CombineSpread(first, second, (int)Gap);
+        var dpiScale = VisualTreeHelper.GetDpi(this).DpiScaleX;
+        var manualScale = FitMode == FitMode.Manual
+            ? 1.0 / Math.Max(0.01, dpiScale)
+            : 1.0;
         var baseScale = FitCalculator.CalculateScale(
             combined,
             new ViewportSize(Math.Max(1, ActualWidth), Math.Max(1, ActualHeight)),
             FitMode,
             StretchSmallImages,
-            manualScale: 1.0);
+            manualScale);
         var scale = baseScale * TemporaryZoomFactor;
         var firstWidth = first.Width * scale;
         var firstHeight = first.Height * scale;
