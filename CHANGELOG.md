@@ -2,6 +2,12 @@
 
 All notable changes to Comet are documented here.
 
+## [Unreleased] — v0.2.0
+
+### Added
+- Expanded regression coverage for zoom-session lifecycle, reading-state persistence, settings migration/corrupt-file fallback, Unicode natural ordering, and adjacent archive navigation.
+- v0.2.0 hardening roadmap.
+
 ## [0.1.0] - 2026-09-18
 
 ### Added

@@ -2,7 +2,11 @@
 
 Comet is a Windows comic viewer focused on the parts of the MComix reading experience that matter most for this project: **fast startup, direct ZIP/CBZ reading, reliable fit modes, temporary zoom, and right-to-left manga reading**.
 
-> Status: **v0.1.0 pre-1.0 preview**. The repository is structured so it can be pushed to GitHub and released through the included Actions workflow.
+> Status: **v0.1.0 released; v0.2.0 hardening in development**. The repository is structured for repeatable Windows CI, installer validation, and tagged prereleases.
+
+## v0.2.0 development focus
+
+v0.2.0 hardens the existing reader before broader format expansion: regression tests for state/zoom/navigation, damaged-page resilience, DPI/resize validation, cache/performance diagnostics, localization cleanup, and a WebP codec decision. See `docs/ROADMAP_v0.2.0.md`.
 
 ## v0.1.0 scope
 
@@ -21,7 +25,7 @@ Comet is a Windows comic viewer focused on the parts of the MComix reading exper
 - Fullscreen, drag-and-drop, Japanese/English UI.
 - Optional ZIP/CBZ file-association registration through the installer.
 
-The thumbnail sidebar, RAR/7z/PDF, and library management are intentionally outside this first functional milestone; see `CHANGELOG.md` and the v1.0 requirements in `docs/`.
+RAR/7z/PDF and library management remain intentionally deferred; see `CHANGELOG.md`, `docs/ROADMAP_v0.2.0.md`, and the v1.0 requirements in `docs/`.
 
 ## Build on Windows
 
