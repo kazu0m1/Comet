@@ -19,26 +19,54 @@
 - [x] Uninstall successfully.
 - [x] Confirm ZIP handling remains intact after uninstall.
 
-## Follow-up validation after v0.1.0
+## v0.2.0 implementation and hands-on validation
 
-- [ ] Move the running app between monitors with different DPI scaling and re-check all fit modes.
-- [ ] Confirm temporary Ctrl+mouse-wheel zoom persists across adjacent archives and resets after a full restart.
-- [ ] Confirm reading position restoration across restart with several books.
-- [ ] Confirm a deliberately damaged image does not prevent navigation.
-- [ ] Expand file-format coverage beyond JPEG/PNG where appropriate.
+- [x] WebP display, thumbnails, portrait/landscape pages, and page turns.
+- [x] Damaged page placeholder and continued forward/back navigation.
+- [x] Reading-position persistence across full restart.
+- [x] Replaced archive does not inherit stale reading state.
+- [x] DPI refresh and Manual 100% regression coverage.
+- [x] RAR/CBR direct reading.
+- [x] Solid RAR/CBR handling.
+- [x] 7z/CB7 direct reading.
+- [x] Solid 7z/CB7 handling.
+- [x] Adjacent-archive navigation for ZIP/CBZ/RAR/CBR/7z/CB7.
+- [x] Optional Windows associations for all supported archive formats.
+- [x] MComix-style status details: page range, source dimensions/zoom, archive, image name, source size.
+- [x] JPEG/PNG/GIF/BMP fast source-dimension header probing.
+- [x] Avoid decode-time upscaling beyond source width.
+- [x] JPEG tuning field measurement completed.
+- [x] page.decode average improved from 38.10 ms to 10.72 ms on the measured workload.
+- [x] render.page P95 improved from 114.12 ms to 15.77 ms on the measured workload.
+- [x] Final implementation CI green through the JPEG tuning phase.
+
+## v0.2.0 RC gate
+
+- [ ] Build the final v0.2.0 RC package from the release-preparation commit.
+- [ ] Install the RC with Setup.exe.
+- [ ] Confirm ZIP/CBZ/RAR/CBR/7z/CB7 are offered as optional handlers.
+- [ ] Open representative ZIP/CBZ/CBR/CB7 books from the installed build.
+- [ ] Re-check page turns, thumbnails, fullscreen, double-page, manga mode, and fit modes.
+- [ ] Re-check reading-position restore after restart.
+- [ ] Confirm the MComix-style status bar values are correct.
+- [ ] Confirm fast shutdown with no lingering Comet process.
+- [ ] Uninstall successfully.
+- [ ] Confirm existing archive handling remains intact after uninstall.
+- [ ] Confirm release ZIP and installer are not corrupted.
 
 ## Tag and release
 
-After syncing the final release-preparation commit locally:
+After the RC gate is complete and the final release-preparation commit is synced locally,
+create the v0.2.0 tag:
 
 ```powershell
-git tag v0.1.0
-git push origin v0.1.0
+git tag v0.2.0
+git push origin v0.2.0
 ```
 
-The `Release` workflow builds and uploads:
-- `Comet-v0.1.0-win-x64.zip`
-- `Comet-v0.1.0-win-x64-Setup.exe`
+The Release workflow builds and uploads:
+- `Comet-v0.2.0-win-x64.zip`
+- `Comet-v0.2.0-win-x64-Setup.exe`
 - `SHA256SUMS.txt`
 
-Because Comet is still pre-1.0, the workflow creates v0.1.0 as a GitHub prerelease.
+Because Comet is still pre-1.0, the workflow creates v0.2.0 as a GitHub prerelease.
