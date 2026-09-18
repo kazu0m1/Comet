@@ -1,71 +1,48 @@
-# Comet v0.2.0 Roadmap — v1.0 Hardening
+# Comet v0.2.0 roadmap
 
-> Baseline: Comet v0.1.0 released on 2026-09-18.
+> Baseline: v0.1.0 release completed and validated on Windows 11.
 
 ## Goal
 
-v0.2.0 is a hardening milestone. The priority is to make the existing MComix-like
-reading path more reliable, measurable, and regression-resistant before expanding
-to archive/document formats that were explicitly deferred beyond the v1.0 baseline.
+Move Comet from a solid ZIP/CBZ reader toward the v1.0 requirements baseline without
+sacrificing the responsiveness established in v0.1.0.
 
-## Scope
+## Priority order
 
-### 1. Regression safety
+1. **WebP support**
+   - Keep WPF/WIC for existing formats.
+   - Add a narrowly scoped WebP fallback decoder so support does not depend on the
+     Microsoft Store WebP codec being installed.
+   - Preserve decode-to-size behavior where practical and avoid slowing JPEG/PNG.
 
-- Expand smoke/integration coverage for:
-  - temporary zoom lifecycle across adjacent archives and process restart,
-  - reading-position persistence,
-  - settings persistence, schema migration, and corrupt-file fallback,
-  - natural adjacent-archive ordering including Japanese names,
-  - supported-image filtering.
-- Add deterministic fixtures for damaged-image behavior.
+2. **Damaged-page resilience**
+   - Make a failed page visibly skippable rather than only surfacing an error.
+   - Add integration coverage with a ZIP that contains a broken image between valid pages.
 
-### 2. Error resilience
+3. **Reading-state validation**
+   - Add repeatable tests for last-page restoration and bookmarks across reopen/restart.
+   - Keep per-book JSON; no database is introduced.
 
-- Verify FR-025 end-to-end with a deliberately broken image inside a ZIP.
-- Keep navigation usable after a decode failure.
-- Improve error presentation only where it does not slow the normal reading path.
+4. **DPI / multi-monitor hardening**
+   - Re-check Best Fit, Fit Width, Fit Height, Manual 100%, sidebar toggling, and fullscreen
+     when moving between monitors with different Windows scaling.
 
-### 3. DPI / resize hardening
+5. **Archive-format expansion**
+   - Evaluate RAR/CBR and 7z/CB7 only after the above are stable.
+   - PDF remains a separate decode path and is lower priority than archive-image formats.
 
-- Validate 100%, 125%, 150%, and 200% scaling.
-- Validate moving a running window between monitors with different DPI values.
-- Ensure Best Fit / Fit Width / Fit Height use the actual image viewport after
-  sidebar, fullscreen, and window-size changes.
-- Add deferred high-resolution re-decode after resize only if visual quality requires it.
+## Non-goals for v0.2.0
 
-### 4. Cache / performance hardening
+- Library/database UI.
+- Image editing/enhancement.
+- Slideshow or magnifier.
+- Replacing WPF rendering wholesale.
 
-- Measure page-open, decode, cache-hit, and page-turn latency.
-- Move decoded-page eviction from item-count-only toward a byte-aware budget if
-  measurement shows large-page memory pressure.
-- Keep thumbnails isolated from the foreground reading path.
+## Acceptance targets
 
-### 5. Localization and UI polish
-
-- Remove remaining hard-coded English labels in menus, toolbar, and dialogs.
-- Re-check Japanese/English UI switching against FR-022.
-
-### 6. Codec decision
-
-- Evaluate guaranteed WebP support without regressing startup time or distribution simplicity.
-- Prefer a decoder adapter that can be loaded only when needed.
-- RAR/CBR, 7z/CB7, and PDF remain outside v0.2.0 unless the v1.0 hardening work is complete.
-
-## Acceptance gates
-
-v0.2.0 is ready when:
-
-- expanded CI tests are green,
-- reading-position and temporary-zoom behavior are regression-tested,
-- damaged-image navigation is manually and automatically validated where practical,
-- multi-DPI behavior is manually validated,
-- no known localization gaps remain in the primary reader UI,
-- performance instrumentation is sufficient to identify regressions,
-- installer and clean-uninstall checks still pass.
-
-## Non-goals
-
-- Library/database features.
-- Slideshow, magnifier, image enhancement, or external commands.
-- Broad archive-format expansion before the existing v1.0 reader path is hardened.
+- WebP pages work inside ZIP/CBZ and folders on a clean Windows system without requiring
+  a separately installed WebP Store codec.
+- Existing JPEG/PNG startup and navigation behavior are not regressed.
+- A broken page does not block moving to the next/previous valid page.
+- Reading position round-trips across reopen in automated tests and hands-on validation.
+- v0.2.0 remains self-contained win-x64 and installable with the existing Inno Setup path.

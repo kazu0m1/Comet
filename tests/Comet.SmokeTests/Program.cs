@@ -53,6 +53,7 @@ Near(1.0, zoom.TemporaryZoomFactor, "temporary zoom resets for new process");
 
 Check(SupportedImages.IsSupported("PAGE.JPG"), "supported image extension is case-insensitive");
 Check(SupportedImages.IsSupported("page.tiff"), "tiff supported");
+Check(SupportedImages.IsSupported("page.webp"), "webp supported extension");
 Check(!SupportedImages.IsSupported("notes.txt"), "non-image rejected");
 
 var temp = Path.Combine(Path.GetTempPath(), $"comet-smoke-{Guid.NewGuid():N}");
