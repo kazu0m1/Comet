@@ -18,10 +18,12 @@ public sealed class BookSourceFactory : IBookSourceFactory
         if (SupportedImages.IsSupported(fullPath))
             return await FolderBookSource.OpenAsync(Path.GetDirectoryName(fullPath)!, cancellationToken);
 
-        return Path.GetExtension(fullPath).ToLowerInvariant() switch
-        {
-            ".zip" or ".cbz" => await ZipBookSource.OpenAsync(fullPath, cancellationToken),
-            _ => throw new NotSupportedException($"Unsupported source: {Path.GetExtension(fullPath)}")
-        };
+        if (SupportedArchives.UsesSystemZip(fullPath))
+            return await ZipBookSource.OpenAsync(fullPath, cancellationToken);
+
+        if (SupportedArchives.UsesSharpCompress(fullPath))
+            return await ArchiveBookSource.OpenAsync(fullPath, cancellationToken);
+
+        throw new NotSupportedException($"Unsupported source: {Path.GetExtension(fullPath)}");
     }
 }

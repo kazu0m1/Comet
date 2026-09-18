@@ -4,5 +4,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Comet.Core\Comet.Core.csproj" />
+    <PackageReference Include="SharpCompress" Version="0.50.4" />
   </ItemGroup>
 </Project>

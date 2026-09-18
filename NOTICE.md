@@ -15,3 +15,7 @@ copyright holders; refer to the MComix project for those terms.
 
 Comet uses SkiaSharp for WebP decoding fallback on Windows systems where the WIC WebP
 extension is not available. SkiaSharp is distributed under the MIT License.
+
+
+Comet uses SharpCompress for RAR/CBR and 7z/CB7 reading. SharpCompress is distributed
+under the MIT License.

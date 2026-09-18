@@ -1,4 +1,5 @@
 using Comet.Core.Services;
+using Comet.Infrastructure.Sources;
 
 namespace Comet.Infrastructure.Navigation;
 
@@ -15,8 +16,7 @@ public sealed class AdjacentArchiveFinder
         if (directory is null || !Directory.Exists(directory)) return null;
 
         var archives = Directory.EnumerateFiles(directory, "*", SearchOption.TopDirectoryOnly)
-            .Where(p => Path.GetExtension(p).Equals(".zip", StringComparison.OrdinalIgnoreCase)
-                     || Path.GetExtension(p).Equals(".cbz", StringComparison.OrdinalIgnoreCase))
+            .Where(SupportedArchives.IsSupported)
             .OrderBy(p => Path.GetFileName(p), NaturalStringComparer.Instance)
             .ToArray();
 

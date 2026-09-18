@@ -1027,7 +1027,7 @@ public partial class MainWindow : Window
         var dialog = new OpenFileDialog
         {
             Title = _text["OpenComic"],
-            Filter = $"{_text["ComicFiles"]} (*.zip;*.cbz;*.jpg;*.jpeg;*.png;*.bmp;*.gif;*.tif;*.tiff;*.webp)|*.zip;*.cbz;*.jpg;*.jpeg;*.png;*.bmp;*.gif;*.tif;*.tiff;*.webp|{_text["AllFiles"]} (*.*)|*.*"
+            Filter = $"{_text["ComicFiles"]} (*.zip;*.cbz;*.rar;*.cbr;*.7z;*.cb7;*.jpg;*.jpeg;*.png;*.bmp;*.gif;*.tif;*.tiff;*.webp)|*.zip;*.cbz;*.rar;*.cbr;*.7z;*.cb7;*.jpg;*.jpeg;*.png;*.bmp;*.gif;*.tif;*.tiff;*.webp|{_text["AllFiles"]} (*.*)|*.*"
         };
         if (dialog.ShowDialog(this) == true)
             await OpenPathAsync(dialog.FileName, BookOpenReason.Explicit);

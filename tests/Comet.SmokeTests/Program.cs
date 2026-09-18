@@ -6,6 +6,9 @@ using Comet.Infrastructure.Navigation;
 using Comet.Infrastructure.Persistence;
 using Comet.Infrastructure.Sources;
 using Comet.Platform.Windows.Imaging;
+using SharpCompress.Common;
+using SharpCompress.Writers;
+using SharpCompress.Writers.SevenZip;
 
 var failures = new List<string>();
 
@@ -63,6 +66,10 @@ Near(1.0, zoom.TemporaryZoomFactor, "temporary zoom resets for new process");
 Check(SupportedImages.IsSupported("PAGE.JPG"), "supported image extension is case-insensitive");
 Check(SupportedImages.IsSupported("page.tiff"), "tiff supported");
 Check(SupportedImages.IsSupported("page.webp"), "webp supported extension");
+Check(SupportedArchives.IsSupported("comic.cbr"), "cbr supported archive extension");
+Check(SupportedArchives.IsSupported("comic.cb7"), "cb7 supported archive extension");
+Check(SupportedArchives.UsesSystemZip("comic.cbz"), "cbz keeps system zip path");
+Check(SupportedArchives.UsesSharpCompress("comic.cbr"), "cbr uses SharpCompress path");
 Check(!SupportedImages.IsSupported("notes.txt"), "non-image rejected");
 
 var webpFixture = Convert.FromBase64String("UklGRhwAAABXRUJQVlA4TA8AAAAvAYAAAAcQ/Y/+ByKi/wEA");
@@ -139,16 +146,50 @@ try
         Equal(2, pageAfterDamage.PixelWidth, "page after damaged page still decodes");
     }
 
+    var cb7Path = Path.Combine(temp, "comic.cb7");
+    await using (var stream = File.Create(cb7Path))
+    {
+        using var writer = WriterFactory.OpenWriter(
+            stream,
+            ArchiveType.SevenZip,
+            new SevenZipWriterOptions(CompressionType.LZMA2)
+            {
+                CompressHeader = true
+            });
+
+        using var page10 = new MemoryStream(webpFixture);
+        writer.Write("page10.webp", page10, DateTime.UtcNow);
+        using var page2 = new MemoryStream(webpFixture);
+        writer.Write("page2.webp", page2, DateTime.UtcNow);
+        using var page1 = new MemoryStream(webpFixture);
+        writer.Write("page1.webp", page1, DateTime.UtcNow);
+    }
+
+    await using (var cb7 = await ArchiveBookSource.OpenAsync(cb7Path))
+    {
+        Equal(3, cb7.Descriptor.Pages.Count, "cb7 image filtering");
+        Equal("page1.webp", cb7.Descriptor.Pages[0].Name, "cb7 natural first");
+        Equal("page2.webp", cb7.Descriptor.Pages[1].Name, "cb7 natural second");
+        Equal("page10.webp", cb7.Descriptor.Pages[2].Name, "cb7 natural third");
+        var bytes = await cb7.ReadPageBytesAsync(1);
+        Check(bytes.SequenceEqual(webpFixture), "cb7 page bytes");
+        var decoded = windowsDecoder.Decode(bytes);
+        Equal(2, decoded.PixelWidth, "cb7 WebP decode");
+    }
+
     var adjacentRoot = Path.Combine(temp, "adjacent");
     Directory.CreateDirectory(adjacentRoot);
     var archive1 = Path.Combine(adjacentRoot, "第1巻.zip");
     var archive2 = Path.Combine(adjacentRoot, "第2巻.cbz");
+    var archive7 = Path.Combine(adjacentRoot, "第7巻.cb7");
     var archive10 = Path.Combine(adjacentRoot, "第10巻.zip");
     File.WriteAllBytes(archive1, Array.Empty<byte>());
     File.WriteAllBytes(archive2, Array.Empty<byte>());
+    File.WriteAllBytes(archive7, Array.Empty<byte>());
     File.WriteAllBytes(archive10, Array.Empty<byte>());
     var finder = new AdjacentArchiveFinder();
-    Equal(Path.GetFullPath(archive10), Path.GetFullPath(finder.FindNext(archive2)!), "adjacent archive natural next");
+    Equal(Path.GetFullPath(archive7), Path.GetFullPath(finder.FindNext(archive2)!), "adjacent archive includes cb7");
+    Equal(Path.GetFullPath(archive10), Path.GetFullPath(finder.FindNext(archive7)!), "adjacent archive natural next");
     Equal(Path.GetFullPath(archive1), Path.GetFullPath(finder.FindPrevious(archive2)!), "adjacent archive natural previous");
 
     var stateRoot = Path.Combine(temp, "state");

@@ -28,19 +28,21 @@ sacrificing the responsiveness established in v0.1.0.
    - If a ZIP/CBZ is replaced at the same path, stale reading position/bookmarks are discarded.
    - Windows 11 restart/reopen validation passed.
 
-4. **DPI / multi-monitor hardening — in progress**
+4. **DPI / multi-monitor hardening — implemented and Windows validated**
    - Manual 100% and physical zoom calculations are centralized and CI-tested at 100/125/150/200%.
    - DPI changes explicitly refresh and re-render the viewport.
-   - Hands-on mixed-DPI multi-monitor movement still requires validation.
+   - Windows hands-on validation passed for the available DPI environment.
 
 5. **Performance diagnostics — implemented**
    - Set `COMET_PERF=1` to record source-open, first-render, page-read, decode, cache hit/miss, and DPI-change events.
    - Diagnostics are disabled by default and write to `%LOCALAPPDATA%\Comet\logs\performance.log`.
    - Logging failures are swallowed and never affect reading.
 
-6. **Archive-format expansion**
-   - Evaluate RAR/CBR and 7z/CB7 only after the above are stable.
-   - PDF remains a separate decode path and is lower priority than archive-image formats.
+6. **Archive-format expansion — in progress**
+   - RAR/CBR and 7z/CB7 use SharpCompress 0.50.4 while ZIP/CBZ stays on the existing System.IO.Compression path.
+   - Natural ordering, image filtering, direct entry streaming, adjacent-archive navigation, Open dialog discovery, and optional Windows associations are wired for the new formats.
+   - 7z/CB7 has CI-generated archive coverage; RAR/CBR still requires a real-format fixture and Windows hands-on validation.
+   - PDF remains a separate decode path and is deferred until image-archive formats are validated.
 
 ## Non-goals for v0.2.0
 
