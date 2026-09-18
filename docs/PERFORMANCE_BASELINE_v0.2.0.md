@@ -53,3 +53,18 @@ Aggregate cache hit rate: **51.9%** (1286 hits / 1190 misses).
 The JPEG tuning phase is complete. Further decoder replacement (for example, moving JPEG
 from WIC to SkiaSharp) is not justified before v0.2.0 RC unless a reproducible regression
 appears.
+
+
+## RC2 memory-pressure observation
+
+Windows hands-on comparison on the same 844x1200 double-page ZIP:
+
+- RC1/earlier behavior: roughly 250 MiB idle and up to about 800 MiB during rapid page turns.
+- RC2: roughly 200 MiB idle, about 600 MiB peak during rapid page turns, and about 250-350 MiB after stopping.
+- Subjective page-loading speed was unchanged.
+- Status-bar readability improved after spacing and separator adjustments.
+
+The RC2 stale-load cancellation is retained because it lowered peak memory pressure without
+a measurable or subjective reading-speed regression. Further attempts to match MComix's
+roughly 100-110 MiB steady-state footprint are deferred because doing so would likely require
+more aggressive cache/prefetch reductions and a new performance trade-off study.
