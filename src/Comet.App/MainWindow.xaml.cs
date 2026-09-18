@@ -218,15 +218,20 @@ public partial class MainWindow : Window
         {
             // A newer render/open/close request superseded this render.
         }
-        catch (Exception ex)
+        catch (Exception) when (!token.IsCancellationRequested)
         {
             if (generation != Volatile.Read(ref _renderGeneration)) return;
             Viewport.FirstPage = null;
             Viewport.SecondPage = null;
-            Viewport.ErrorMessage = $"{_text["Error"]}: {ex.Message}";
-            Viewport.Refresh();
-            StatusText.Text = Viewport.ErrorMessage;
             _displayedPageCount = 1;
+            Viewport.ErrorMessage =
+                $"{_text["PageLoadFailed"]} ({renderPageIndex + 1})\n{_text["PageLoadFailedHint"]}";
+            Viewport.ResetScroll();
+            Viewport.Refresh();
+            StatusText.Text = $"{_text["PageLoadFailed"]} ({renderPageIndex + 1})";
+            UpdateImageInfo();
+            UpdateThumbnailSelection();
+            ScheduleStateSave();
         }
         finally
         {
@@ -1011,7 +1016,7 @@ public partial class MainWindow : Window
         var dialog = new OpenFileDialog
         {
             Title = _text["OpenComic"],
-            Filter = "Comic archives and images (*.zip;*.cbz;*.jpg;*.jpeg;*.png)|*.zip;*.cbz;*.jpg;*.jpeg;*.png|All files (*.*)|*.*"
+            Filter = $"{_text["ComicFiles"]} (*.zip;*.cbz;*.jpg;*.jpeg;*.png;*.bmp;*.gif;*.tif;*.tiff;*.webp)|*.zip;*.cbz;*.jpg;*.jpeg;*.png;*.bmp;*.gif;*.tif;*.tiff;*.webp|{_text["AllFiles"]} (*.*)|*.*"
         };
         if (dialog.ShowDialog(this) == true)
             await OpenPathAsync(dialog.FileName, BookOpenReason.Explicit);

@@ -14,10 +14,12 @@ sacrificing the responsiveness established in v0.1.0.
    - WebP uses a narrowly scoped SkiaSharp fallback and does not depend on the
      Microsoft Store WebP codec being installed.
    - Windows CI covers WebP probe and decode-to-size.
+   - Windows 11 hands-on validation passed for ZIP display, thumbnails, portrait/landscape pages, and page turns.
 
-2. **Damaged-page resilience — in progress**
-   - Make a failed page visibly skippable rather than only surfacing an error.
-   - Add integration coverage with a ZIP that contains a broken image between valid pages.
+2. **Damaged-page resilience — implemented, hands-on validation pending**
+   - A failed page shows a localized placeholder explaining that navigation can continue.
+   - Thumbnail selection and reading-state updates remain usable on the failed page.
+   - Windows CI covers a ZIP sequence with valid image → broken image → valid image and confirms the page after the failure still decodes.
 
 3. **Reading-state validation**
    - Add repeatable tests for last-page restoration and bookmarks across reopen/restart.

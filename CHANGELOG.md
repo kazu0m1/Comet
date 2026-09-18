@@ -5,6 +5,10 @@ All notable changes to Comet are documented here.
 ## [Unreleased] — v0.2.0
 
 ### Added
+- Guaranteed WebP page support through a SkiaSharp fallback decoder, including decode-to-size CI coverage and Windows 11 hands-on validation.
+- Localized damaged-page placeholder that keeps previous/next navigation usable.
+- Explicit DPI-change refresh/re-render handling.
+- Completed localization of primary reader chrome and the Open dialog file-type labels.
 - Expanded regression coverage for zoom-session lifecycle, reading-state persistence, settings migration/corrupt-file fallback, Unicode natural ordering, and adjacent archive navigation.
 - v0.2.0 hardening roadmap.
 
