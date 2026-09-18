@@ -37,8 +37,12 @@ public sealed class WpfBitmapDecoder
         image.BeginInit();
         image.CacheOption = BitmapCacheOption.OnLoad;
         image.CreateOptions = BitmapCreateOptions.PreservePixelFormat | BitmapCreateOptions.IgnoreColorProfile;
-        if (targetPixelWidth is > 0)
+        if (targetPixelWidth is > 0
+            && (!FastImageProbe.TryGetPixelSize(bytes.Span, out var sourceSize)
+                || sourceSize.Width > targetPixelWidth.Value))
+        {
             image.DecodePixelWidth = targetPixelWidth.Value;
+        }
         image.StreamSource = stream;
         image.EndInit();
         image.Freeze();
