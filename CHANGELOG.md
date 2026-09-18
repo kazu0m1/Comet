@@ -5,6 +5,9 @@ All notable changes to Comet are documented here.
 ## [Unreleased] — v0.2.0
 
 ### Added
+- MComix-style status-bar details: page range, per-page source dimensions and actual zoom, archive name, page filenames, and source image sizes.
+- Fast JPEG/PNG/GIF/BMP header probing for source dimensions plus zero-copy WIC input streams when page bytes are array-backed.
+- Separate `page.probe` and `page.bitmap-decode` performance metrics for JPEG tuning.
 - Guaranteed WebP page support through a SkiaSharp fallback decoder, including decode-to-size CI coverage and Windows 11 hands-on validation.
 - Localized damaged-page placeholder that keeps previous/next navigation usable, validated on Windows 11.
 - Reading-state source validation so replaced archives do not inherit stale page positions or bookmarks, with Windows restart/reopen validation.
