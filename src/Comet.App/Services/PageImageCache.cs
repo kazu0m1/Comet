@@ -18,6 +18,7 @@ public sealed class PageImageCache : IDisposable
     private readonly int _minimumBucketWidth;
     private readonly int _maximumBucketWidth;
     private readonly bool _captureSourcePixelSize;
+    private readonly string _traceName;
 
     public PageImageCache(
         IBookSource source,
@@ -26,7 +27,8 @@ public sealed class PageImageCache : IDisposable
         int minimumBucketWidth = 512,
         int maximumBucketWidth = 4096,
         bool captureSourcePixelSize = true,
-        long maxEstimatedBytes = 192L * 1024 * 1024)
+        long maxEstimatedBytes = 192L * 1024 * 1024,
+        string traceName = "page")
     {
         _source = source;
         _decoder = decoder;
@@ -37,6 +39,7 @@ public sealed class PageImageCache : IDisposable
         _minimumBucketWidth = Math.Max(1, minimumBucketWidth);
         _maximumBucketWidth = Math.Max(_minimumBucketWidth, maximumBucketWidth);
         _captureSourcePixelSize = captureSourcePixelSize;
+        _traceName = string.IsNullOrWhiteSpace(traceName) ? "page" : traceName.Trim();
     }
 
     public async Task<BitmapSource> GetAsync(int pageIndex, int targetPixelWidth, CancellationToken cancellationToken = default)
@@ -45,11 +48,11 @@ public sealed class PageImageCache : IDisposable
         var key = (pageIndex, width);
         if (_cache.TryGet(key, out var cached) && cached is not null)
         {
-            PerformanceTrace.Event("cache.hit", $"page={pageIndex + 1}; width={width}");
+            PerformanceTrace.Event($"{_traceName}.cache.hit", $"page={pageIndex + 1}; width={width}");
             return cached;
         }
 
-        PerformanceTrace.Event("cache.miss", $"page={pageIndex + 1}; width={width}");
+        PerformanceTrace.Event($"{_traceName}.cache.miss", $"page={pageIndex + 1}; width={width}");
 
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _lifetime.Token);
         var lazy = _inflight.GetOrAdd(key, _ => new Lazy<Task<BitmapSource>>(
@@ -88,7 +91,7 @@ public sealed class PageImageCache : IDisposable
     {
         var readStartedAt = PerformanceTrace.Start();
         var bytes = await _source.ReadPageBytesAsync(pageIndex, cancellationToken).ConfigureAwait(false);
-        PerformanceTrace.Elapsed("page.read", readStartedAt, $"page={pageIndex + 1}; bytes={bytes.Length}");
+        PerformanceTrace.Elapsed($"{_traceName}.read", readStartedAt, $"page={pageIndex + 1}; bytes={bytes.Length}");
 
         var decodeStartedAt = PerformanceTrace.Start();
         var result = await Task.Run(() =>
@@ -97,7 +100,7 @@ public sealed class PageImageCache : IDisposable
                 _sourcePixelSizes[pageIndex] = _decoder.Probe(bytes);
             return _decoder.Decode(bytes, targetPixelWidth);
         }, cancellationToken).ConfigureAwait(false);
-        PerformanceTrace.Elapsed("page.decode", decodeStartedAt, $"page={pageIndex + 1}; target={targetPixelWidth}");
+        PerformanceTrace.Elapsed($"{_traceName}.decode", decodeStartedAt, $"page={pageIndex + 1}; target={targetPixelWidth}");
         return result;
     }
 

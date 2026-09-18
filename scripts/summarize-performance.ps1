@@ -57,11 +57,25 @@ $result = foreach ($group in $groups) {
 
 $result | Format-Table -AutoSize
 
-$hits = @($rows | Where-Object Operation -eq "cache.hit").Count
-$misses = @($rows | Where-Object Operation -eq "cache.miss").Count
-$total = $hits + $misses
-if ($total -gt 0) {
-    $rate = [Math]::Round(100.0 * $hits / $total, 1)
+$cacheRows = @($rows | Where-Object { $_.Operation -match '^(?<role>.+)\.cache\.(?<result>hit|miss)
+ })
+if ($cacheRows.Count -gt 0) {
     Write-Host ""
-    Write-Host "Cache hit rate: $rate% ($hits hits / $misses misses)"
+    foreach ($roleGroup in ($cacheRows | Group-Object { ($_.Operation -split '\.cache\.')[0] } | Sort-Object Name)) {
+        $hits = @($roleGroup.Group | Where-Object Operation -like "*.cache.hit").Count
+        $misses = @($roleGroup.Group | Where-Object Operation -like "*.cache.miss").Count
+        $total = $hits + $misses
+        $rate = if ($total -gt 0) { [Math]::Round(100.0 * $hits / $total, 1) } else { 0 }
+        Write-Host "$($roleGroup.Name) cache hit rate: $rate% ($hits hits / $misses misses)"
+    }
+}
+else {
+    $hits = @($rows | Where-Object Operation -eq "cache.hit").Count
+    $misses = @($rows | Where-Object Operation -eq "cache.miss").Count
+    $total = $hits + $misses
+    if ($total -gt 0) {
+        $rate = [Math]::Round(100.0 * $hits / $total, 1)
+        Write-Host ""
+        Write-Host "Cache hit rate: $rate% ($hits hits / $misses misses)"
+    }
 }

@@ -38,6 +38,7 @@ public partial class MainWindow : Window
     private CancellationTokenSource? _openCts;
     private CancellationTokenSource? _renderCts;
     private CancellationTokenSource? _thumbnailCts;
+    private CancellationTokenSource? _thumbnailWarmupCts;
     private CancellationTokenSource? _stateSaveCts;
     private long _renderGeneration;
     private bool _fullscreen;
@@ -103,7 +104,7 @@ public partial class MainWindow : Window
                 cancellationToken.ThrowIfCancellationRequested();
             }
             _book = source;
-            _imageCache = new PageImageCache(source, _decoder);
+            _imageCache = new PageImageCache(source, _decoder, traceName: "page");
             _navigationHistory.Clear();
             Title = $"Comet — {source.Descriptor.DisplayName}";
 
@@ -281,6 +282,9 @@ public partial class MainWindow : Window
 
     private async Task InitializeThumbnailSidebarAsync(IBookSource source, CancellationToken cancellationToken)
     {
+        _thumbnailWarmupCts?.Cancel();
+        _thumbnailWarmupCts?.Dispose();
+        _thumbnailWarmupCts = null;
         _thumbnailCts?.Cancel();
         _thumbnailCts?.Dispose();
         _thumbnailCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -312,22 +316,38 @@ public partial class MainWindow : Window
             capacity: 64,
             minimumBucketWidth: 64,
             maximumBucketWidth: 192,
-            captureSourcePixelSize: false);
+            captureSourcePixelSize: false,
+            maxEstimatedBytes: 32L * 1024 * 1024,
+            traceName: "thumbnail");
 
         // Realized items may have fired Loaded before the secondary source was ready.
         // Force the current neighborhood to populate immediately, then Loaded handles
         // any other items as the user scrolls the sidebar.
         ThumbnailList.Items.Refresh();
-        _ = WarmThumbnailNeighborhoodAsync(_pageIndex, _thumbnailCts.Token);
+        StartThumbnailWarmup(_pageIndex, delayed: false);
     }
 
-    private async Task WarmThumbnailNeighborhoodAsync(int centerPage, CancellationToken cancellationToken)
+    private void StartThumbnailWarmup(int centerPage, bool delayed)
+    {
+        if (_thumbnailItems.Count == 0 || _thumbnailCts is null || _thumbnailImageCache is null)
+            return;
+
+        _thumbnailWarmupCts?.Cancel();
+        _thumbnailWarmupCts?.Dispose();
+        _thumbnailWarmupCts = CancellationTokenSource.CreateLinkedTokenSource(_thumbnailCts.Token);
+        _ = WarmThumbnailNeighborhoodAsync(centerPage, delayed, _thumbnailWarmupCts.Token);
+    }
+
+    private async Task WarmThumbnailNeighborhoodAsync(int centerPage, bool delayed, CancellationToken cancellationToken)
     {
         if (_thumbnailItems.Count == 0)
             return;
 
         try
         {
+            if (delayed)
+                await Task.Delay(75, cancellationToken).ConfigureAwait(true);
+
             const int radius = 8;
             var order = new List<int>(radius * 2 + 1) { centerPage };
             for (var distance = 1; distance <= radius; distance++)
@@ -396,7 +416,7 @@ public partial class MainWindow : Window
         }
 
         if (_thumbnailCts is not null && _thumbnailImageCache is not null)
-            _ = WarmThumbnailNeighborhoodAsync(_pageIndex, _thumbnailCts.Token);
+            StartThumbnailWarmup(_pageIndex, delayed: true);
     }
 
     private void ApplyThumbnailSidebarVisibility()
@@ -798,6 +818,9 @@ public partial class MainWindow : Window
         Interlocked.Increment(ref _renderGeneration);
         if (_book is null) return;
         if (saveState) await SaveCurrentStateNowAsync().ConfigureAwait(true);
+        _thumbnailWarmupCts?.Cancel();
+        _thumbnailWarmupCts?.Dispose();
+        _thumbnailWarmupCts = null;
         _thumbnailCts?.Cancel();
         _thumbnailCts?.Dispose();
         _thumbnailCts = null;
@@ -841,6 +864,7 @@ public partial class MainWindow : Window
 
         _openCts?.Cancel();
         _renderCts?.Cancel();
+        _thumbnailWarmupCts?.Cancel();
         _thumbnailCts?.Cancel();
         _stateSaveCts?.Cancel();
         Interlocked.Increment(ref _renderGeneration);
@@ -873,6 +897,8 @@ public partial class MainWindow : Window
 
         _openCts?.Dispose();
         _openCts = null;
+        _thumbnailWarmupCts?.Dispose();
+        _thumbnailWarmupCts = null;
         _thumbnailCts?.Dispose();
         _thumbnailCts = null;
         _stateSaveCts?.Dispose();

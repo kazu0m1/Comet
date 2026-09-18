@@ -33,12 +33,14 @@ sacrificing the responsiveness established in v0.1.0.
    - DPI changes explicitly refresh and re-render the viewport.
    - Windows hands-on validation passed.
 
-5. **Performance diagnostics / cache hardening — implemented, measurement pending**
+5. **Performance diagnostics / cache hardening — active optimization**
    - Set `COMET_PERF=1` to record source-open, first-render, page-read, decode, cache hit/miss, and DPI-change events.
    - Diagnostics are disabled by default and write to `%LOCALAPPDATA%\Comet\logs\performance.log`.
    - `scripts/summarize-performance.ps1` reports count/average/P50/P95/max plus cache hit rate.
    - The full-page LRU uses both a six-item cap and an estimated 192 MiB decoded-bitmap budget, retaining at least the most-recent page.
    - Logging failures are swallowed and never affect reading.
+   - First Windows field measurement: first render ~36 ms average, render-page median 1.9 ms, P95 ~114 ms.
+   - Main-page and thumbnail traces are now separated, and stale thumbnail warmups are cancelled/debounced to reduce decode contention during rapid navigation.
 
 6. **Archive-format expansion — implemented and Windows validated**
    - RAR/CBR and 7z/CB7 use SharpCompress 0.50.4 while ZIP/CBZ stays on the existing System.IO.Compression path.
