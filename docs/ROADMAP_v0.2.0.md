@@ -31,7 +31,7 @@ sacrificing the responsiveness established in v0.1.0.
 4. **DPI / multi-monitor hardening — implemented and Windows validated**
    - Manual 100% and physical zoom calculations are centralized and CI-tested at 100/125/150/200%.
    - DPI changes explicitly refresh and re-render the viewport.
-   - Windows hands-on validation passed for the available DPI environment.
+   - Windows hands-on validation passed.
 
 5. **Performance diagnostics — implemented**
    - Set `COMET_PERF=1` to record source-open, first-render, page-read, decode, cache hit/miss, and DPI-change events.
@@ -44,7 +44,7 @@ sacrificing the responsiveness established in v0.1.0.
    - 7z/CB7 has CI-generated archive coverage.
    - RAR/CBR uses a real RAR fixture from the SharpCompress MIT test suite for factory routing, image filtering, entry reading, and JPEG decode in CI.
    - CI also exercises solid RAR/CBR and solid 7z/CB7 fixtures by reading the last image entry first.
-   - Windows hands-on validation remains for CBR/CB7.
+   - Windows hands-on validation remains for CBR/CB7 and is the current gate.
    - PDF remains a separate decode path and is deferred until image-archive formats are validated.
 
 ## Non-goals for v0.2.0

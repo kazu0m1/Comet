@@ -1,6 +1,6 @@
 # Comet
 
-Comet is a Windows comic viewer focused on the parts of the MComix reading experience that matter most for this project: **fast startup, direct ZIP/CBZ reading, reliable fit modes, temporary zoom, and right-to-left manga reading**.
+Comet is a Windows comic viewer focused on the parts of the MComix reading experience that matter most for this project: **fast startup, direct comic-archive reading, reliable fit modes, temporary zoom, and right-to-left manga reading**.
 
 > Status: **v0.1.0 released; v0.2.0 hardening in development**. The repository is structured for repeatable Windows CI, installer validation, and tagged prereleases.
 
@@ -11,7 +11,8 @@ v0.2.0 hardens the existing reader before broader format expansion: regression t
 ## v0.1.0 scope
 
 - Windows 11 x64, .NET 10 LTS / C# 14 / WPF.
-- Open ZIP and CBZ without extracting them to disk.
+- Open ZIP/CBZ directly through the .NET ZIP path.
+- Open RAR/CBR and 7z/CB7 directly through SharpCompress.
 - Open image folders directly; dropping an individual image opens its folder at that image.
 - Natural filename sorting.
 - Single-page and double-page display; cover page alone.
@@ -20,12 +21,12 @@ v0.2.0 hardens the existing reader before broader format expansion: regression t
 - Fit Width, Fit Height, Manual 100%, temporary zoom.
 - Ctrl+mouse-wheel zoom remains active while moving to the previous/next ZIP in the same session, then resets on process restart.
 - Basic smart scrolling and flip-at-edge behavior.
-- Adjacent ZIP/CBZ navigation.
+- Adjacent ZIP/CBZ/RAR/CBR/7z/CB7 navigation.
 - Reading-position persistence and bookmarks.
 - Fullscreen, drag-and-drop, Japanese/English UI.
-- Optional ZIP/CBZ file-association registration through the installer.
+- Optional ZIP/CBZ/RAR/CBR/7z/CB7 file-association registration through the installer.
 
-RAR/7z/PDF and library management remain intentionally deferred; see `CHANGELOG.md`, `docs/ROADMAP_v0.2.0.md`, and the v1.0 requirements in `docs/`.
+PDF and library management remain deferred. RAR/CBR and 7z/CB7 are implemented in v0.2.0 development and are awaiting Windows hands-on validation; see `CHANGELOG.md` and `docs/ROADMAP_v0.2.0.md`.
 
 ## Build on Windows
 
@@ -77,7 +78,7 @@ The project deliberately follows MComix key behavior where the corresponding fea
 - `D`: double-page mode
 - `M`: manga mode
 - `F` / `F11`: fullscreen
-- `Ctrl+Shift+N/P`: next/previous ZIP or CBZ
+- `Ctrl+Shift+N/P`: next/previous supported comic archive
 - `Ctrl+D` / `Ctrl+B`: add/open bookmarks
 
 Full table: `docs/KEYBINDINGS.md`.
@@ -94,13 +95,13 @@ Comet.Core       Comet.Platform.Windows
 Comet.Infrastructure (ZIP/CBZ, folders, settings, reading state)
 ```
 
-The UI thread does not perform ZIP extraction or image decoding. Current-page work is prioritized and nearby pages are prefetched into a bounded LRU cache. Fit calculations use the actual image viewport.
+The UI thread does not perform archive extraction or image decoding. Current-page work is prioritized and nearby pages are prefetched into a bounded LRU cache. Fit calculations use the actual image viewport.
 
 See `docs/Comet_v1.0_Technical_Architecture_v0.1.md` for the full rationale.
 
 ## File associations
 
-The installer can register Comet as an available handler for `.zip` and `.cbz`. It does **not** silently replace the user's current default application. After installation, Windows Default Apps is opened so the user can select Comet. Once selected, double-clicking a ZIP/CBZ opens it directly in Comet.
+The installer can register Comet as an available handler for `.zip`, `.cbz`, `.rar`, `.cbr`, `.7z`, and `.cb7`. It does **not** silently replace the user's current default application. After installation, Windows Default Apps is opened so the user can select Comet. Once selected, double-clicking a supported archive opens it directly in Comet.
 
 ## Project relationship to MComix
 
