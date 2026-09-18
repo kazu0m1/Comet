@@ -1,10 +1,12 @@
 # Comet v0.2.0 performance baseline
 
-First Windows hands-on measurement after introducing opt-in performance tracing.
+Windows hands-on field measurement for the JPEG tuning phase.
 
-> This is a field measurement, not a hardware-normalized benchmark. The original trace
-> combined full-page and thumbnail cache/decode events, so cache/decode totals below are
-> intentionally treated as an aggregate baseline.
+> This is a field measurement, not a hardware-normalized benchmark. The same class of
+> manga ZIP was used for before/after comparison, with typical JPEG pages around
+> 1619x2048 pixels and roughly 0.5-1 MiB each.
+
+## Before JPEG tuning
 
 | Operation | Count | Average ms | P50 ms | P95 ms | Max ms |
 | --- | ---: | ---: | ---: | ---: | ---: |
@@ -16,17 +18,38 @@ First Windows hands-on measurement after introducing opt-in performance tracing.
 
 Aggregate cache hit rate: **36.5%** (236 hits / 411 misses).
 
-## Interpretation
+## After JPEG tuning
 
-- Cold opening is already fast: first rendered page averages about 36 ms.
-- Normal page turns are usually effectively instant: render-page P50 is 1.9 ms.
-- Tail latency is dominated by cold work: render-page P95 is about 114 ms.
-- Archive read time is relatively small; image decode is the larger cold-path cost.
-- The aggregate cache rate cannot distinguish full-page behavior from thumbnail activity.
+| Operation | Count | Average ms | P50 ms | P95 ms | Max ms |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| open.first-render | 1 | 35.24 | 35.24 | 35.24 | 35.24 |
+| open.source | 1 | 5.06 | 5.06 | 5.06 | 5.06 |
+| page.bitmap-decode | 964 | 10.26 | 10.53 | 13.86 | 29.25 |
+| page.decode | 964 | 10.72 | 10.98 | 14.42 | 30.97 |
+| page.probe | 792 | 0.01 | 0.00 | 0.01 | 1.22 |
+| page.read | 964 | 2.80 | 2.33 | 5.13 | 32.64 |
+| render.page | 355 | 4.10 | 2.04 | 15.77 | 74.21 |
 
-## Follow-up instrumentation
+Aggregate cache hit rate: **51.9%** (1286 hits / 1190 misses).
 
-Subsequent builds split performance operations into `page.*` and `thumbnail.*`
-families and cancel/debounce stale thumbnail neighborhood warmups. Repeat the same
-reading session after that change before considering more aggressive decode or prefetch
-changes.
+## Result
+
+- End-to-end page decode average improved from **38.10 ms to 10.72 ms** (about **72% lower**).
+- Render-page P95 improved from **114.12 ms to 15.77 ms** (about **86% lower**).
+- Render-page median remains effectively instant at **2.04 ms**, preserving the fast cached-page behavior.
+- Source-dimension probing is now effectively free at **0.01 ms average**.
+- Archive I/O remains a small part of the cold path at roughly **2.8 ms average**.
+- The remaining bitmap decode cost is about **10 ms average**, which is acceptable for the v0.2.0 target.
+
+## Tuning changes retained
+
+- JPEG/PNG/GIF/BMP source dimensions are read from image headers when possible instead of forcing WIC `OnLoad`.
+- Array-backed page bytes are passed to WIC without an extra full byte-array copy.
+- WIC no longer receives a decode width larger than the source image; visual upscaling is left to WPF rendering.
+- The cache/prefetch experiments that worsened hands-on responsiveness were reverted to the faster CI #45 behavior.
+
+## Decision
+
+The JPEG tuning phase is complete. Further decoder replacement (for example, moving JPEG
+from WIC to SkiaSharp) is not justified before v0.2.0 RC unless a reproducible regression
+appears.
