@@ -1,4 +1,5 @@
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Comet.Core.Models;
@@ -10,6 +11,9 @@ public sealed class WpfBitmapDecoder
 {
     public PixelSize Probe(ReadOnlyMemory<byte> bytes)
     {
+        if (FastImageProbe.TryGetPixelSize(bytes.Span, out var fastSize))
+            return fastSize;
+
         if (IsWebP(bytes.Span))
         {
             using var bitmap = SKBitmap.Decode(bytes.ToArray())
@@ -17,8 +21,8 @@ public sealed class WpfBitmapDecoder
             return new PixelSize(bitmap.Width, bitmap.Height);
         }
 
-        using var stream = new MemoryStream(bytes.ToArray(), writable: false);
-        var decoder = BitmapDecoder.Create(stream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad);
+        using var stream = OpenReadOnlyStream(bytes);
+        var decoder = BitmapDecoder.Create(stream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnDemand);
         var frame = decoder.Frames[0];
         return new PixelSize(frame.PixelWidth, frame.PixelHeight);
     }
@@ -28,7 +32,7 @@ public sealed class WpfBitmapDecoder
         if (IsWebP(bytes.Span))
             return DecodeWebP(bytes, targetPixelWidth);
 
-        using var stream = new MemoryStream(bytes.ToArray(), writable: false);
+        using var stream = OpenReadOnlyStream(bytes);
         var image = new BitmapImage();
         image.BeginInit();
         image.CacheOption = BitmapCacheOption.OnLoad;
@@ -93,6 +97,14 @@ public sealed class WpfBitmapDecoder
             converted?.Dispose();
             resized?.Dispose();
         }
+    }
+
+    private static MemoryStream OpenReadOnlyStream(ReadOnlyMemory<byte> bytes)
+    {
+        if (MemoryMarshal.TryGetArray(bytes, out ArraySegment<byte> segment) && segment.Array is not null)
+            return new MemoryStream(segment.Array, segment.Offset, segment.Count, writable: false, publiclyVisible: true);
+
+        return new MemoryStream(bytes.ToArray(), writable: false);
     }
 
     private static bool IsWebP(ReadOnlySpan<byte> bytes)
