@@ -26,13 +26,26 @@ public sealed class JsonSettingsStore : ISettingsStore
             var json = await File.ReadAllTextAsync(_path, cancellationToken).ConfigureAwait(false);
             var settings = JsonSerializer.Deserialize<AppSettings>(json, Options) ?? new AppSettings();
 
-            // v0.1.0 initially persisted ShowThumbnails=false even though there was no
-            // thumbnail UI yet. Migrate that legacy file once so the newly added
-            // MComix-style sidebar is visible by default. New saves carry the schema
-            // version and thereafter respect the user's explicit visibility choice.
+            // v0.1.0 initially persisted ShowThumbnails=false before the sidebar
+            // existed. Schema 2 also adopts a compact MComix-like thumbnail width.
             using var document = JsonDocument.Parse(json);
             if (!document.RootElement.TryGetProperty(nameof(AppSettings.SettingsSchemaVersion), out _))
-                settings = settings with { SettingsSchemaVersion = 1, ShowThumbnails = true };
+            {
+                settings = settings with
+                {
+                    SettingsSchemaVersion = 2,
+                    ShowThumbnails = true,
+                    ThumbnailWidth = 72
+                };
+            }
+            else if (settings.SettingsSchemaVersion < 2)
+            {
+                settings = settings with
+                {
+                    SettingsSchemaVersion = 2,
+                    ThumbnailWidth = 72
+                };
+            }
 
             return settings;
         }

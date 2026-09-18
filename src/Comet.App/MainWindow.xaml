@@ -66,7 +66,7 @@
 
         <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition x:Name="ThumbnailColumn" Width="204" />
+                <ColumnDefinition x:Name="ThumbnailColumn" Width="96" />
                 <ColumnDefinition x:Name="ThumbnailSplitterColumn" Width="5" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
@@ -96,20 +96,20 @@
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <Border Loaded="ThumbnailItem_Loaded"
-                                        Margin="5"
-                                        Padding="5"
+                                        Margin="2"
+                                        Padding="2"
                                         Background="#242424"
                                         CornerRadius="3">
                                     <StackPanel>
-                                        <Border Background="#0D0D0D" MinHeight="80">
+                                        <Border Background="#0D0D0D" MinHeight="48">
                                             <Image Source="{Binding Image}"
-                                                   MaxHeight="220"
+                                                   MaxHeight="96"
                                                    Stretch="Uniform"
                                                    RenderOptions.BitmapScalingMode="HighQuality" />
                                         </Border>
                                         <TextBlock Text="{Binding PageLabel}"
                                                    HorizontalAlignment="Center"
-                                                   Margin="0,5,0,0"
+                                                   Margin="0,2,0,0"
                                                    Foreground="#E6E6E6" />
                                     </StackPanel>
                                 </Border>

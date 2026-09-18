@@ -17,19 +17,22 @@ public sealed class PageImageCache : IDisposable
     private readonly CancellationTokenSource _lifetime = new();
     private readonly int _minimumBucketWidth;
     private readonly int _maximumBucketWidth;
+    private readonly bool _captureSourcePixelSize;
 
     public PageImageCache(
         IBookSource source,
         WpfBitmapDecoder decoder,
         int capacity = 6,
         int minimumBucketWidth = 512,
-        int maximumBucketWidth = 4096)
+        int maximumBucketWidth = 4096,
+        bool captureSourcePixelSize = true)
     {
         _source = source;
         _decoder = decoder;
         _cache = new LruCache<(int Page, int Width), BitmapSource>(Math.Max(1, capacity));
         _minimumBucketWidth = Math.Max(1, minimumBucketWidth);
         _maximumBucketWidth = Math.Max(_minimumBucketWidth, maximumBucketWidth);
+        _captureSourcePixelSize = captureSourcePixelSize;
     }
 
     public async Task<BitmapSource> GetAsync(int pageIndex, int targetPixelWidth, CancellationToken cancellationToken = default)
@@ -77,8 +80,8 @@ public sealed class PageImageCache : IDisposable
         var bytes = await _source.ReadPageBytesAsync(pageIndex, cancellationToken).ConfigureAwait(false);
         return await Task.Run(() =>
         {
-            var sourceSize = _decoder.Probe(bytes);
-            _sourcePixelSizes[pageIndex] = sourceSize;
+            if (_captureSourcePixelSize)
+                _sourcePixelSizes[pageIndex] = _decoder.Probe(bytes);
             return _decoder.Decode(bytes, targetPixelWidth);
         }, cancellationToken).ConfigureAwait(false);
     }

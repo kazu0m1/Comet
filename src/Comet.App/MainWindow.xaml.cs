@@ -25,6 +25,7 @@ public partial class MainWindow : Window
     private readonly ZoomSessionState _zoom;
 
     private IBookSource? _book;
+    private IBookSource? _thumbnailBook;
     private PageImageCache? _imageCache;
     private PageImageCache? _thumbnailImageCache;
     private readonly ObservableCollection<ThumbnailItem> _thumbnailItems = new();
@@ -134,7 +135,7 @@ public partial class MainWindow : Window
                 _pageIndex = SpreadPlanner.NormalizeStartIndex(_pageIndex, source.Descriptor.Pages.Count, _settings.PageLayoutMode);
 
             await RenderCurrentAsync(cancellationToken).ConfigureAwait(true);
-            InitializeThumbnailSidebar(source);
+            await InitializeThumbnailSidebarAsync(source, cancellationToken).ConfigureAwait(true);
         }
         catch (OperationCanceledException)
         {
@@ -256,19 +257,19 @@ public partial class MainWindow : Window
         _imageCache.Prefetch(pages, targetWidth);
     }
 
-    private void InitializeThumbnailSidebar(IBookSource source)
+    private async Task InitializeThumbnailSidebarAsync(IBookSource source, CancellationToken cancellationToken)
     {
         _thumbnailCts?.Cancel();
         _thumbnailCts?.Dispose();
-        _thumbnailCts = new CancellationTokenSource();
+        _thumbnailCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
         _thumbnailImageCache?.Dispose();
-        _thumbnailImageCache = new PageImageCache(
-            source,
-            _decoder,
-            capacity: 48,
-            minimumBucketWidth: 128,
-            maximumBucketWidth: 512);
+        _thumbnailImageCache = null;
+        if (_thumbnailBook is not null)
+        {
+            await _thumbnailBook.DisposeAsync().ConfigureAwait(true);
+            _thumbnailBook = null;
+        }
 
         _thumbnailItems.Clear();
         foreach (var page in source.Descriptor.Pages)
@@ -276,6 +277,24 @@ public partial class MainWindow : Window
 
         ApplyThumbnailSidebarVisibility();
         UpdateThumbnailSelection();
+
+        // Open a second source so thumbnail decompression never queues behind the
+        // full-resolution reader. This is especially noticeable for ZIP/CBZ books.
+        _thumbnailBook = await _sourceFactory
+            .OpenAsync(source.Descriptor.Path, _thumbnailCts.Token)
+            .ConfigureAwait(true);
+
+        _thumbnailImageCache = new PageImageCache(
+            _thumbnailBook,
+            _decoder,
+            capacity: 64,
+            minimumBucketWidth: 64,
+            maximumBucketWidth: 192,
+            captureSourcePixelSize: false);
+
+        // Realized items may have fired Loaded before the secondary source was ready.
+        // Refreshing causes visible containers to bind again without decoding off-screen pages.
+        ThumbnailList.Items.Refresh();
     }
 
     private async Task EnsureThumbnailLoadedAsync(ThumbnailItem item)
@@ -288,7 +307,7 @@ public partial class MainWindow : Window
         item.IsLoading = true;
         try
         {
-            var requestedWidth = (int)Math.Clamp(Math.Round(_settings.ThumbnailWidth), 96, 384);
+            var requestedWidth = (int)Math.Clamp(Math.Round(_settings.ThumbnailWidth), 64, 160);
             var image = await cache
                 .GetAsync(item.PageIndex, requestedWidth, lifetime.Token)
                 .ConfigureAwait(true);
@@ -332,7 +351,7 @@ public partial class MainWindow : Window
         ThumbnailSidebar.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
         ThumbnailSplitter.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
         ThumbnailColumn.Width = show
-            ? new GridLength(Math.Clamp(_settings.ThumbnailWidth + 24, 140, 360))
+            ? new GridLength(Math.Clamp(_settings.ThumbnailWidth + 20, 88, 220))
             : new GridLength(0);
         ThumbnailSplitterColumn.Width = show ? new GridLength(5) : new GridLength(0);
     }
@@ -435,8 +454,23 @@ public partial class MainWindow : Window
     private async Task SmartScrollOrFlipAsync(int direction)
     {
         if (SmartScroll(direction)) return;
-        if (!_settings.FlipPageAtScrollEdge) return;
-        if (direction > 0) await NextAsync(); else await PreviousAsync();
+        if (!_settings.FlipPageAtScrollEdge || _book is null) return;
+
+        if (direction > 0)
+        {
+            var step = Math.Max(1, _displayedPageCount);
+            if (_pageIndex + step >= _book.Descriptor.Pages.Count)
+                await OpenAdjacentArchiveAsync(next: true);
+            else
+                await NextAsync();
+        }
+        else
+        {
+            if (_pageIndex <= 0)
+                await OpenAdjacentArchiveAsync(next: false);
+            else
+                await PreviousAsync();
+        }
     }
 
     private void SetFit(FitMode mode)
@@ -706,6 +740,11 @@ public partial class MainWindow : Window
         _thumbnailCts = null;
         _thumbnailImageCache?.Dispose();
         _thumbnailImageCache = null;
+        if (_thumbnailBook is not null)
+        {
+            await _thumbnailBook.DisposeAsync().ConfigureAwait(true);
+            _thumbnailBook = null;
+        }
         _thumbnailItems.Clear();
 
         _imageCache?.Dispose();
@@ -761,6 +800,8 @@ public partial class MainWindow : Window
 
         var book = _book;
         _book = null;
+        var thumbnailBook = _thumbnailBook;
+        _thumbnailBook = null;
 
         _thumbnailImageCache?.Dispose();
         _thumbnailImageCache = null;
@@ -776,6 +817,8 @@ public partial class MainWindow : Window
 
         if (book is not null)
             _ = DisposeBookQuietlyAsync(book);
+        if (thumbnailBook is not null)
+            _ = DisposeBookQuietlyAsync(thumbnailBook);
 
         _allowClose = true;
         Close();
