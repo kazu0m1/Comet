@@ -2,11 +2,11 @@
 
 Comet is a Windows comic viewer focused on the parts of the MComix reading experience that matter most for this project: **fast startup, direct comic-archive reading, reliable fit modes, temporary zoom, and right-to-left manga reading**.
 
-> Status: **v0.1.0 released; v0.2.0 hardening in development**. The repository is structured for repeatable Windows CI, installer validation, and tagged prereleases.
+> Status: **v0.1.0 released; v0.2.0 implementation complete and entering release-candidate validation**. The repository is structured for repeatable Windows CI, installer validation, and tagged prereleases.
 
 ## v0.2.0 development focus
 
-v0.2.0 hardens the existing reader before broader format expansion: regression tests for state/zoom/navigation, damaged-page resilience, DPI/resize validation, cache/performance diagnostics, localization cleanup, and a WebP codec decision. See `docs/ROADMAP_v0.2.0.md`.
+v0.2.0 adds WebP, RAR/CBR and 7z/CB7 support, hardens damaged-page/state/DPI behavior, expands MComix-style status information, and substantially improves JPEG cold-page decode latency while preserving fast cached-page navigation. See `docs/ROADMAP_v0.2.0.md` and `docs/PERFORMANCE_BASELINE_v0.2.0.md`.
 
 ## v0.1.0 scope
 
@@ -26,7 +26,7 @@ v0.2.0 hardens the existing reader before broader format expansion: regression t
 - Fullscreen, drag-and-drop, Japanese/English UI.
 - Optional ZIP/CBZ/RAR/CBR/7z/CB7 file-association registration through the installer.
 
-PDF and library management remain deferred. RAR/CBR and 7z/CB7 are implemented in v0.2.0 development and are awaiting Windows hands-on validation; see `CHANGELOG.md` and `docs/ROADMAP_v0.2.0.md`.
+PDF and library management remain deferred. RAR/CBR and 7z/CB7 have passed Windows hands-on validation in v0.2.0; see `CHANGELOG.md` and `docs/ROADMAP_v0.2.0.md`.
 
 ## Build on Windows
 
