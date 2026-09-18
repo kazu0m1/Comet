@@ -41,6 +41,13 @@ Equal(5.0, stretch, "stretch small images");
 var noStretch = FitCalculator.CalculateScale(new PixelSize(100, 100), new ViewportSize(1000, 500), FitMode.BestFit, false);
 Equal(1.0, noStretch, "do not stretch small images");
 
+Near(1.0, DpiScaleCalculator.ManualDipScale(1.0), "manual 100 at 100 percent DPI");
+Near(0.8, DpiScaleCalculator.ManualDipScale(1.25), "manual 100 at 125 percent DPI");
+Near(2.0 / 3.0, DpiScaleCalculator.ManualDipScale(1.5), "manual 100 at 150 percent DPI");
+Near(0.5, DpiScaleCalculator.ManualDipScale(2.0), "manual 100 at 200 percent DPI");
+Near(1.0, DpiScaleCalculator.PhysicalZoom(800, 1200, 1.5), "physical zoom reports true 100 percent");
+Near(0.75, DpiScaleCalculator.PhysicalZoom(600, 1200, 1.5), "physical zoom reports true 75 percent");
+
 Equal(0, SpreadPlanner.NormalizeStartIndex(0, 10, PageLayoutMode.DoublePage), "cover alone");
 Equal(1, SpreadPlanner.NormalizeStartIndex(2, 10, PageLayoutMode.DoublePage), "double spread normalize");
 Equal(3, SpreadPlanner.NextStartIndex(1, 2, 10), "next spread");

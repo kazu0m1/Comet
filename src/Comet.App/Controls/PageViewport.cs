@@ -186,7 +186,7 @@ public sealed class PageViewport : FrameworkElement
         var combined = FitCalculator.CombineSpread(first, second, (int)Gap);
         var dpiScale = VisualTreeHelper.GetDpi(this).DpiScaleX;
         var manualScale = FitMode == FitMode.Manual
-            ? 1.0 / Math.Max(0.01, dpiScale)
+            ? DpiScaleCalculator.ManualDipScale(dpiScale)
             : 1.0;
         var baseScale = FitCalculator.CalculateScale(
             combined,

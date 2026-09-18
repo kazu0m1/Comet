@@ -22,17 +22,23 @@ sacrificing the responsiveness established in v0.1.0.
    - Windows CI covers a ZIP sequence with valid image → broken image → valid image and confirms the page after the failure still decodes.
    - Windows 11 hands-on validation passed for error placeholder and continued forward/back navigation.
 
-3. **Reading-state validation — in progress**
-   - JSON round-trip coverage already verifies last-page and bookmark persistence.
-   - Source size/last-write metadata is now validated before restoring state.
+3. **Reading-state validation — implemented and Windows validated**
+   - JSON round-trip coverage verifies last-page and bookmark persistence.
+   - Source size/last-write metadata is validated before restoring state.
    - If a ZIP/CBZ is replaced at the same path, stale reading position/bookmarks are discarded.
-   - Hands-on restart/reopen validation remains before this item is complete.
+   - Windows 11 restart/reopen validation passed.
 
-4. **DPI / multi-monitor hardening**
-   - Re-check Best Fit, Fit Width, Fit Height, Manual 100%, sidebar toggling, and fullscreen
-     when moving between monitors with different Windows scaling.
+4. **DPI / multi-monitor hardening — in progress**
+   - Manual 100% and physical zoom calculations are centralized and CI-tested at 100/125/150/200%.
+   - DPI changes explicitly refresh and re-render the viewport.
+   - Hands-on mixed-DPI multi-monitor movement still requires validation.
 
-5. **Archive-format expansion**
+5. **Performance diagnostics — implemented**
+   - Set `COMET_PERF=1` to record source-open, first-render, page-read, decode, cache hit/miss, and DPI-change events.
+   - Diagnostics are disabled by default and write to `%LOCALAPPDATA%\Comet\logs\performance.log`.
+   - Logging failures are swallowed and never affect reading.
+
+6. **Archive-format expansion**
    - Evaluate RAR/CBR and 7z/CB7 only after the above are stable.
    - PDF remains a separate decode path and is lower priority than archive-image formats.
 

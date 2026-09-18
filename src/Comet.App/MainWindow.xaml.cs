@@ -77,6 +77,7 @@ public partial class MainWindow : Window
         _openCts = new CancellationTokenSource();
         var cancellationToken = _openCts.Token;
 
+        var openStartedAt = PerformanceTrace.Start();
         try
         {
             StatusText.Text = _text["Opening"];
@@ -93,7 +94,9 @@ public partial class MainWindow : Window
             }
 
             var requestedPath = Path.GetFullPath(path);
+            var sourceOpenStartedAt = PerformanceTrace.Start();
             var source = await _sourceFactory.OpenAsync(requestedPath, cancellationToken).ConfigureAwait(true);
+            PerformanceTrace.Elapsed("open.source", sourceOpenStartedAt, Path.GetFileName(requestedPath));
             if (cancellationToken.IsCancellationRequested)
             {
                 await source.DisposeAsync().ConfigureAwait(true);
@@ -139,6 +142,7 @@ public partial class MainWindow : Window
                 _pageIndex = SpreadPlanner.NormalizeStartIndex(_pageIndex, source.Descriptor.Pages.Count, _settings.PageLayoutMode);
 
             await RenderCurrentAsync(cancellationToken).ConfigureAwait(true);
+            PerformanceTrace.Elapsed("open.first-render", openStartedAt, $"{source.Descriptor.Pages.Count} pages");
             await InitializeThumbnailSidebarAsync(source, cancellationToken).ConfigureAwait(true);
         }
         catch (OperationCanceledException)
@@ -696,8 +700,10 @@ public partial class MainWindow : Window
         ImageSizeText.Text = $"{_text["ImageSize"]}: {sizeText} px";
 
         var dpiScale = VisualTreeHelper.GetDpi(Viewport).DpiScaleX;
-        var renderedPhysicalWidth = Viewport.CurrentFirstPageDisplayWidthDip * dpiScale;
-        var actualZoom = firstSize.Width > 0 ? renderedPhysicalWidth / firstSize.Width : 1.0;
+        var actualZoom = DpiScaleCalculator.PhysicalZoom(
+            Viewport.CurrentFirstPageDisplayWidthDip,
+            firstSize.Width,
+            dpiScale);
         ZoomText.Text = $"{_text["Zoom"]}: {actualZoom * 100:0.#}%";
     }
 
@@ -967,6 +973,7 @@ public partial class MainWindow : Window
 
     private void Window_DpiChanged(object sender, DpiChangedEventArgs e)
     {
+        PerformanceTrace.Event("dpi.changed", $"{e.OldDpi.DpiScaleX:0.###} -> {e.NewDpi.DpiScaleX:0.###}");
         Viewport.Refresh();
         UpdateImageInfo();
         if (_book is not null)

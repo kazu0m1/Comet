@@ -40,7 +40,12 @@ public sealed class PageImageCache : IDisposable
         var width = BucketWidth(targetPixelWidth);
         var key = (pageIndex, width);
         if (_cache.TryGet(key, out var cached) && cached is not null)
+        {
+            PerformanceTrace.Event("cache.hit", $"page={pageIndex + 1}; width={width}");
             return cached;
+        }
+
+        PerformanceTrace.Event("cache.miss", $"page={pageIndex + 1}; width={width}");
 
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _lifetime.Token);
         var lazy = _inflight.GetOrAdd(key, _ => new Lazy<Task<BitmapSource>>(
@@ -77,13 +82,19 @@ public sealed class PageImageCache : IDisposable
 
     private async Task<BitmapSource> LoadAsync(int pageIndex, int targetPixelWidth, CancellationToken cancellationToken)
     {
+        var readStartedAt = PerformanceTrace.Start();
         var bytes = await _source.ReadPageBytesAsync(pageIndex, cancellationToken).ConfigureAwait(false);
-        return await Task.Run(() =>
+        PerformanceTrace.Elapsed("page.read", readStartedAt, $"page={pageIndex + 1}; bytes={bytes.Length}");
+
+        var decodeStartedAt = PerformanceTrace.Start();
+        var result = await Task.Run(() =>
         {
             if (_captureSourcePixelSize)
                 _sourcePixelSizes[pageIndex] = _decoder.Probe(bytes);
             return _decoder.Decode(bytes, targetPixelWidth);
         }, cancellationToken).ConfigureAwait(false);
+        PerformanceTrace.Elapsed("page.decode", decodeStartedAt, $"page={pageIndex + 1}; target={targetPixelWidth}");
+        return result;
     }
 
     private int BucketWidth(int width)
