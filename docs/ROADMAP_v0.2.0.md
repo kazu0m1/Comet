@@ -75,3 +75,10 @@ sacrificing the responsiveness established in v0.1.0.
 The page/thumbnail separation and foreground-priority experiments after CI #45 were reverted after Windows hands-on testing showed worse subjective responsiveness and a render-page median regression from 1.9 ms to about 60 ms.
 
 The runtime behavior is restored to the CI #45 baseline. Performance tracing, CMD/PowerShell measurement helpers, and the recorded baseline remain available for diagnostics, but no further cache/prefetch tuning is applied before the v0.2.0 release candidate unless a reproducible defect appears.
+
+
+## JPEG decode tuning phase
+
+Windows field testing identified JPEG bitmap decode, not archive I/O, as the remaining cold-page cost for typical 1619x2048 pages around 0.5-1 MiB. The first low-risk tuning step avoids WIC `OnLoad` for source-dimension probing by reading JPEG/PNG/GIF/BMP dimensions directly from headers, and avoids an extra byte-array copy when the source memory is already array-backed.
+
+Performance tracing now records `page.probe` and `page.bitmap-decode` separately while retaining `page.decode` as the end-to-end decode metric. The MComix-style status bar is also expanded to show page numbers, source dimensions plus actual zoom, archive name, page filenames, and source image sizes.
