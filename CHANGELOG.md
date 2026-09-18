@@ -5,6 +5,8 @@ All notable changes to Comet are documented here.
 ## [Unreleased] — v0.2.0
 
 ### Added
+- RC2 memory-pressure hardening: stale page loads and superseded prefetch batches are cancelled once no active viewer is waiting for them, without reducing normal prefetch parallelism.
+- MComix-style status-bar spacing and visual left-to-right spread detail ordering in manga mode.
 - MComix-style status-bar details: page range, per-page source dimensions and actual zoom, archive name, page filenames, and source image sizes.
 - Fast JPEG/PNG/GIF/BMP header probing for source dimensions plus zero-copy WIC input streams when page bytes are array-backed.
 - Separate `page.probe` and `page.bitmap-decode` performance metrics for JPEG tuning.
