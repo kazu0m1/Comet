@@ -25,11 +25,15 @@ public sealed class PageImageCache : IDisposable
         int capacity = 6,
         int minimumBucketWidth = 512,
         int maximumBucketWidth = 4096,
-        bool captureSourcePixelSize = true)
+        bool captureSourcePixelSize = true,
+        long maxEstimatedBytes = 192L * 1024 * 1024)
     {
         _source = source;
         _decoder = decoder;
-        _cache = new LruCache<(int Page, int Width), BitmapSource>(Math.Max(1, capacity));
+        _cache = new LruCache<(int Page, int Width), BitmapSource>(
+            Math.Max(1, capacity),
+            Math.Max(1, maxEstimatedBytes),
+            EstimateBitmapBytes);
         _minimumBucketWidth = Math.Max(1, minimumBucketWidth);
         _maximumBucketWidth = Math.Max(_minimumBucketWidth, maximumBucketWidth);
         _captureSourcePixelSize = captureSourcePixelSize;
@@ -95,6 +99,12 @@ public sealed class PageImageCache : IDisposable
         }, cancellationToken).ConfigureAwait(false);
         PerformanceTrace.Elapsed("page.decode", decodeStartedAt, $"page={pageIndex + 1}; target={targetPixelWidth}");
         return result;
+    }
+
+    private static long EstimateBitmapBytes(BitmapSource image)
+    {
+        var bitsPerPixel = Math.Max(1, image.Format.BitsPerPixel);
+        return checked((long)image.PixelWidth * image.PixelHeight * bitsPerPixel / 8);
     }
 
     private int BucketWidth(int width)

@@ -33,19 +33,21 @@ sacrificing the responsiveness established in v0.1.0.
    - DPI changes explicitly refresh and re-render the viewport.
    - Windows hands-on validation passed.
 
-5. **Performance diagnostics — implemented**
+5. **Performance diagnostics / cache hardening — implemented, measurement pending**
    - Set `COMET_PERF=1` to record source-open, first-render, page-read, decode, cache hit/miss, and DPI-change events.
    - Diagnostics are disabled by default and write to `%LOCALAPPDATA%\Comet\logs\performance.log`.
+   - `scripts/summarize-performance.ps1` reports count/average/P50/P95/max plus cache hit rate.
+   - The full-page LRU uses both a six-item cap and an estimated 192 MiB decoded-bitmap budget, retaining at least the most-recent page.
    - Logging failures are swallowed and never affect reading.
 
-6. **Archive-format expansion — in progress**
+6. **Archive-format expansion — implemented and Windows validated**
    - RAR/CBR and 7z/CB7 use SharpCompress 0.50.4 while ZIP/CBZ stays on the existing System.IO.Compression path.
    - Natural ordering, image filtering, direct entry streaming, adjacent-archive navigation, Open dialog discovery, and optional Windows associations are wired for the new formats.
    - 7z/CB7 has CI-generated archive coverage.
    - RAR/CBR uses a real RAR fixture from the SharpCompress MIT test suite for factory routing, image filtering, entry reading, and JPEG decode in CI.
    - CI also exercises solid RAR/CBR and solid 7z/CB7 fixtures by reading the last image entry first.
-   - Windows hands-on validation remains for CBR/CB7 and is the current gate.
-   - PDF remains a separate decode path and is deferred until image-archive formats are validated.
+   - Windows hands-on validation passed for normal/solid CBR and solid CB7.
+   - PDF remains a separate decode path and is deferred beyond the current v0.2.0 image-archive milestone.
 
 ## Non-goals for v0.2.0
 

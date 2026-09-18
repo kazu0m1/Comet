@@ -95,7 +95,9 @@ Comet.Core       Comet.Platform.Windows
 Comet.Infrastructure (ZIP/CBZ, folders, settings, reading state)
 ```
 
-The UI thread does not perform archive extraction or image decoding. Current-page work is prioritized and nearby pages are prefetched into a bounded LRU cache. Fit calculations use the actual image viewport.
+The UI thread does not perform archive extraction or image decoding. Current-page work is prioritized and nearby pages are prefetched into a bounded LRU cache. The full-page cache is bounded by both item count and an estimated decoded-bitmap memory budget. Fit calculations use the actual image viewport.
+
+For opt-in performance measurement, launch with `COMET_PERF=1`; results are written to `%LOCALAPPDATA%\Comet\logs\performance.log`. Run `.\scripts\summarize-performance.ps1` to summarize latency percentiles and cache hit rate.
 
 See `docs/Comet_v1.0_Technical_Architecture_v0.1.md` for the full rationale.
 
