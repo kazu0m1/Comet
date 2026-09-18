@@ -94,8 +94,16 @@ public sealed class PageImageCache : IDisposable
         var result = await Task.Run(() =>
         {
             if (_captureSourcePixelSize)
+            {
+                var probeStartedAt = PerformanceTrace.Start();
                 _sourcePixelSizes[pageIndex] = _decoder.Probe(bytes);
-            return _decoder.Decode(bytes, targetPixelWidth);
+                PerformanceTrace.Elapsed("page.probe", probeStartedAt, $"page={pageIndex + 1}");
+            }
+
+            var bitmapDecodeStartedAt = PerformanceTrace.Start();
+            var bitmap = _decoder.Decode(bytes, targetPixelWidth);
+            PerformanceTrace.Elapsed("page.bitmap-decode", bitmapDecodeStartedAt, $"page={pageIndex + 1}; target={targetPixelWidth}");
+            return bitmap;
         }, cancellationToken).ConfigureAwait(false);
         PerformanceTrace.Elapsed("page.decode", decodeStartedAt, $"page={pageIndex + 1}; target={targetPixelWidth}");
         return result;
