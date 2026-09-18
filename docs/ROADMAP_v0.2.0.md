@@ -9,13 +9,13 @@ sacrificing the responsiveness established in v0.1.0.
 
 ## Priority order
 
-1. **WebP support**
-   - Keep WPF/WIC for existing formats.
-   - Add a narrowly scoped WebP fallback decoder so support does not depend on the
+1. **WebP support — implemented**
+   - WPF/WIC remains the primary path for existing formats.
+   - WebP uses a narrowly scoped SkiaSharp fallback and does not depend on the
      Microsoft Store WebP codec being installed.
-   - Preserve decode-to-size behavior where practical and avoid slowing JPEG/PNG.
+   - Windows CI covers WebP probe and decode-to-size.
 
-2. **Damaged-page resilience**
+2. **Damaged-page resilience — in progress**
    - Make a failed page visibly skippable rather than only surfacing an error.
    - Add integration coverage with a ZIP that contains a broken image between valid pages.
 

@@ -93,6 +93,45 @@ try
         Check(bytes.SequenceEqual(new byte[] { 1, 2, 3, 4 }), "zip page bytes");
     }
 
+    var damagedZipPath = Path.Combine(temp, "damaged-page.zip");
+    using (var fs = File.Create(damagedZipPath))
+    using (var zip = new ZipArchive(fs, ZipArchiveMode.Create))
+    {
+        var first = zip.CreateEntry("page1.webp");
+        await using (var stream = first.Open())
+            await stream.WriteAsync(webpFixture);
+
+        var broken = zip.CreateEntry("page2.jpg");
+        await using (var stream = broken.Open())
+            await stream.WriteAsync(new byte[] { 0x00, 0x11, 0x22, 0x33, 0x44 });
+
+        var third = zip.CreateEntry("page3.webp");
+        await using (var stream = third.Open())
+            await stream.WriteAsync(webpFixture);
+    }
+
+    await using (var damagedBook = await ZipBookSource.OpenAsync(damagedZipPath))
+    {
+        Equal(3, damagedBook.Descriptor.Pages.Count, "damaged-page zip keeps all image entries");
+
+        var firstImage = windowsDecoder.Decode(await damagedBook.ReadPageBytesAsync(0));
+        Equal(2, firstImage.PixelWidth, "valid page before damaged page decodes");
+
+        var damagedFailed = false;
+        try
+        {
+            windowsDecoder.Decode(await damagedBook.ReadPageBytesAsync(1));
+        }
+        catch
+        {
+            damagedFailed = true;
+        }
+        Check(damagedFailed, "damaged page reports decode failure");
+
+        var pageAfterDamage = windowsDecoder.Decode(await damagedBook.ReadPageBytesAsync(2));
+        Equal(2, pageAfterDamage.PixelWidth, "page after damaged page still decodes");
+    }
+
     var adjacentRoot = Path.Combine(temp, "adjacent");
     Directory.CreateDirectory(adjacentRoot);
     var archive1 = Path.Combine(adjacentRoot, "第1巻.zip");
