@@ -23,6 +23,9 @@ public sealed class PageViewport : FrameworkElement
     public double CurrentFirstPageDisplayWidthDip
         => FirstPage is null ? 0 : GetLayout().FirstWidth;
 
+    public double CurrentSecondPageDisplayWidthDip
+        => SecondPage is null ? 0 : GetLayout().SecondWidth;
+
     public PageViewport()
     {
         Focusable = true;
