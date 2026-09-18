@@ -304,18 +304,25 @@ public partial class MainWindow : Window
         if (_thumbnailItems.Count == 0)
             return;
 
-        const int radius = 8;
-        var order = new List<int>(radius * 2 + 1) { centerPage };
-        for (var distance = 1; distance <= radius; distance++)
+        try
         {
-            order.Add(centerPage - distance);
-            order.Add(centerPage + distance);
-        }
+            const int radius = 8;
+            var order = new List<int>(radius * 2 + 1) { centerPage };
+            for (var distance = 1; distance <= radius; distance++)
+            {
+                order.Add(centerPage - distance);
+                order.Add(centerPage + distance);
+            }
 
-        foreach (var index in order.Where(i => i >= 0 && i < _thumbnailItems.Count).Distinct())
+            foreach (var index in order.Where(i => i >= 0 && i < _thumbnailItems.Count).Distinct())
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                await EnsureThumbnailLoadedAsync(_thumbnailItems[index]).ConfigureAwait(true);
+            }
+        }
+        catch (OperationCanceledException)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-            await EnsureThumbnailLoadedAsync(_thumbnailItems[index]).ConfigureAwait(true);
+            // Book changed or the application is closing.
         }
     }
 
