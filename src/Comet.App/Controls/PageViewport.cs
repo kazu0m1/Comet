@@ -18,7 +18,7 @@ public sealed class PageViewport : FrameworkElement
     public ReadingDirection ReadingDirection { get; set; } = ReadingDirection.RightToLeft;
     public bool StretchSmallImages { get; set; } = true;
     public double TemporaryZoomFactor { get; set; } = 1.0;
-    public double Gap { get; set; } = 12;
+    public double Gap { get; set; } = 0;
 
     public double CurrentFirstPageDisplayWidthDip
         => FirstPage is null ? 0 : GetLayout().FirstWidth;
