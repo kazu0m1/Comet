@@ -56,16 +56,16 @@
             </ToolBar>
         </ToolBarTray>
 
-        <StatusBar x:Name="MainStatusBar" DockPanel.Dock="Bottom">
-            <StatusBarItem><TextBlock x:Name="StatusText" Text="Ready" /></StatusBarItem>
-            <Separator />
-            <StatusBarItem><TextBlock x:Name="PageMetricsText" /></StatusBarItem>
-            <Separator />
-            <StatusBarItem><TextBlock x:Name="BookNameText" MaxWidth="260" TextTrimming="CharacterEllipsis" /></StatusBarItem>
-            <Separator />
-            <StatusBarItem><TextBlock x:Name="PageNameText" MaxWidth="320" TextTrimming="CharacterEllipsis" /></StatusBarItem>
-            <Separator />
-            <StatusBarItem><TextBlock x:Name="FileSizeText" /></StatusBarItem>
+        <StatusBar x:Name="MainStatusBar" DockPanel.Dock="Bottom" Padding="2,0">
+            <StatusBarItem Padding="8,0"><TextBlock x:Name="StatusText" Text="Ready" /></StatusBarItem>
+            <Border Width="1" Height="16" Margin="8,0" Background="#2B78A6" VerticalAlignment="Center" />
+            <StatusBarItem Padding="8,0"><TextBlock x:Name="PageMetricsText" /></StatusBarItem>
+            <Border Width="1" Height="16" Margin="8,0" Background="#2B78A6" VerticalAlignment="Center" />
+            <StatusBarItem Padding="8,0"><TextBlock x:Name="BookNameText" MaxWidth="260" TextTrimming="CharacterEllipsis" /></StatusBarItem>
+            <Border Width="1" Height="16" Margin="8,0" Background="#2B78A6" VerticalAlignment="Center" />
+            <StatusBarItem Padding="8,0"><TextBlock x:Name="PageNameText" MaxWidth="320" TextTrimming="CharacterEllipsis" /></StatusBarItem>
+            <Border Width="1" Height="16" Margin="8,0" Background="#2B78A6" VerticalAlignment="Center" />
+            <StatusBarItem Padding="8,0"><TextBlock x:Name="FileSizeText" /></StatusBarItem>
         </StatusBar>
 
         <Grid>
