@@ -12,6 +12,7 @@ All notable changes to Comet are documented here.
 - Opt-in performance diagnostics for source open, first render, page read/decode, cache hit/miss, and DPI changes.
 - RAR/CBR and 7z/CB7 direct-reading infrastructure via SharpCompress 0.50.4 while preserving the existing ZIP/CBZ fast path.
 - Optional Windows associations and adjacent-archive navigation for RAR/CBR/7z/CB7.
+- Real RAR fixture coverage for CBR factory routing, image extraction, and JPEG decode.
 - Completed localization of primary reader chrome and the Open dialog file-type labels.
 - Expanded regression coverage for zoom-session lifecycle, reading-state persistence, settings migration/corrupt-file fallback, Unicode natural ordering, and adjacent archive navigation.
 - v0.2.0 hardening roadmap.

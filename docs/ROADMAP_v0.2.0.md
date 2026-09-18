@@ -41,7 +41,9 @@ sacrificing the responsiveness established in v0.1.0.
 6. **Archive-format expansion — in progress**
    - RAR/CBR and 7z/CB7 use SharpCompress 0.50.4 while ZIP/CBZ stays on the existing System.IO.Compression path.
    - Natural ordering, image filtering, direct entry streaming, adjacent-archive navigation, Open dialog discovery, and optional Windows associations are wired for the new formats.
-   - 7z/CB7 has CI-generated archive coverage; RAR/CBR still requires a real-format fixture and Windows hands-on validation.
+   - 7z/CB7 has CI-generated archive coverage.
+   - RAR/CBR uses a real RAR fixture from the SharpCompress MIT test suite for factory routing, image filtering, entry reading, and JPEG decode in CI.
+   - Windows hands-on validation remains for CBR/CB7.
    - PDF remains a separate decode path and is deferred until image-archive formats are validated.
 
 ## Non-goals for v0.2.0

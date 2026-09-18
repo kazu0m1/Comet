@@ -177,6 +177,18 @@ try
         Equal(2, decoded.PixelWidth, "cb7 WebP decode");
     }
 
+    var cbrFixturePath = Path.Combine(AppContext.BaseDirectory, "Fixtures", "SharpCompress_Rar.cbr");
+    Check(File.Exists(cbrFixturePath), "cbr fixture copied to test output");
+    var cbrFactory = new BookSourceFactory();
+    await using (var cbr = await cbrFactory.OpenAsync(cbrFixturePath))
+    {
+        Check(cbr.Descriptor.Pages.Count > 0, "cbr real RAR fixture exposes image pages");
+        var cbrBytes = await cbr.ReadPageBytesAsync(0);
+        Check(cbrBytes.Length > 0, "cbr real RAR fixture page bytes");
+        var cbrImage = windowsDecoder.Decode(cbrBytes);
+        Check(cbrImage.PixelWidth > 0 && cbrImage.PixelHeight > 0, "cbr real RAR fixture JPEG decodes");
+    }
+
     var adjacentRoot = Path.Combine(temp, "adjacent");
     Directory.CreateDirectory(adjacentRoot);
     var archive1 = Path.Combine(adjacentRoot, "第1巻.zip");

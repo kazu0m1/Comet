@@ -10,4 +10,7 @@
     <ProjectReference Include="..\..\src\Comet.Infrastructure\Comet.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\Comet.Platform.Windows\Comet.Platform.Windows.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Fixtures\SharpCompress_Rar.cbr" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>

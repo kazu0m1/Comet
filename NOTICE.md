@@ -19,3 +19,9 @@ extension is not available. SkiaSharp is distributed under the MIT License.
 
 Comet uses SharpCompress for RAR/CBR and 7z/CB7 reading. SharpCompress is distributed
 under the MIT License.
+
+
+The test fixture `tests/Comet.SmokeTests/Fixtures/SharpCompress_Rar.cbr` is a verbatim
+copy of SharpCompress `tests/TestArchives/Archives/Rar.rar` (Git blob
+`050509c347d6911db98f13db8aa33c8f914ba9de`) and is used only for automated
+RAR/CBR compatibility testing. It is covered by the SharpCompress MIT License.
