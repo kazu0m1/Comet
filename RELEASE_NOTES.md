@@ -18,5 +18,6 @@ Highlights:
   the release workflow.
 
 This is a pre-1.0 release. WebP, RAR/CBR, 7z/CB7, and PDF are outside this milestone.
-Before the final v0.1.0 tag, the generated installer, ZIP/CBZ registration, default-app
-selection, and uninstall behavior are validated on Windows 11.
+The v0.1.0 release candidate passed Windows 11 installer and uninstall validation,
+including ZIP/CBZ handler registration and confirmation that ZIP handling remains intact
+after uninstall.

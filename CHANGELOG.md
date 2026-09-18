@@ -33,5 +33,5 @@ All notable changes to Comet are documented here.
 
 ### Known limitations
 - WebP, RAR/CBR, 7z/CB7, and PDF are not yet supported.
-- Core reading UX has passed Windows x64 CI and iterative Windows 11 hands-on
-  validation; installer/association/uninstall validation remains the release gate.
+- Core reading UX, installer compilation, install/uninstall, and ZIP/CBZ handler
+  registration have passed Windows x64 CI and Windows 11 hands-on validation.

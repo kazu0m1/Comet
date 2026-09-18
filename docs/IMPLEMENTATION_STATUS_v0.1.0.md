@@ -38,10 +38,11 @@ Completed:
   center-gap removal, and adjacent-archive rollover.
 - Repeated CI packaging of the portable Windows x64 build.
 
-Current release-candidate gate:
-- Compile the Inno Setup installer in CI.
-- Install/uninstall on Windows 11.
-- Register ZIP/CBZ as available associations and confirm Windows Default Apps selection.
-- Confirm uninstall removes Comet registration without disturbing other ZIP handlers.
+Release-candidate gate completed:
+- Inno Setup installer compiled in CI.
+- Installer completed successfully on Windows 11.
+- Comet registered as an available ZIP/CBZ handler.
+- Uninstall completed successfully.
+- Existing ZIP handling remained intact after uninstall.
 
-These gates are encoded in `scripts/verify.ps1`, `.github/workflows/ci.yml`, and `docs/RELEASE_CHECKLIST.md`.
+Remaining non-blocking follow-up tests are tracked in `docs/RELEASE_CHECKLIST.md`.
