@@ -80,8 +80,20 @@ Check(SupportedArchives.UsesSystemZip("comic.cbz"), "cbz keeps system zip path")
 Check(SupportedArchives.UsesSharpCompress("comic.cbr"), "cbr uses SharpCompress path");
 Check(!SupportedImages.IsSupported("notes.txt"), "non-image rejected");
 
-var webpFixture = Convert.FromBase64String("UklGRhwAAABXRUJQVlA4TA8AAAAvAYAAAAcQ/Y/+ByKi/wEA");
+var jpegHeaderFixture = new byte[]
+{
+    0xFF, 0xD8,
+    0xFF, 0xC0, 0x00, 0x11,
+    0x08, 0x08, 0x00, 0x06, 0x53, 0x03,
+    0x01, 0x11, 0x00, 0x02, 0x11, 0x00, 0x03, 0x11, 0x00,
+    0xFF, 0xD9
+};
 var windowsDecoder = new WpfBitmapDecoder();
+var jpegHeaderSize = windowsDecoder.Probe(jpegHeaderFixture);
+Equal(1619, jpegHeaderSize.Width, "jpeg header probe width without bitmap decode");
+Equal(2048, jpegHeaderSize.Height, "jpeg header probe height without bitmap decode");
+
+var webpFixture = Convert.FromBase64String("UklGRhwAAABXRUJQVlA4TA8AAAAvAYAAAAcQ/Y/+ByKi/wEA");
 var webpSize = windowsDecoder.Probe(webpFixture);
 Equal(2, webpSize.Width, "webp probe width");
 Equal(3, webpSize.Height, "webp probe height");
