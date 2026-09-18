@@ -293,8 +293,30 @@ public partial class MainWindow : Window
             captureSourcePixelSize: false);
 
         // Realized items may have fired Loaded before the secondary source was ready.
-        // Refreshing causes visible containers to bind again without decoding off-screen pages.
+        // Force the current neighborhood to populate immediately, then Loaded handles
+        // any other items as the user scrolls the sidebar.
         ThumbnailList.Items.Refresh();
+        _ = WarmThumbnailNeighborhoodAsync(_pageIndex, _thumbnailCts.Token);
+    }
+
+    private async Task WarmThumbnailNeighborhoodAsync(int centerPage, CancellationToken cancellationToken)
+    {
+        if (_thumbnailItems.Count == 0)
+            return;
+
+        const int radius = 8;
+        var order = new List<int>(radius * 2 + 1) { centerPage };
+        for (var distance = 1; distance <= radius; distance++)
+        {
+            order.Add(centerPage - distance);
+            order.Add(centerPage + distance);
+        }
+
+        foreach (var index in order.Where(i => i >= 0 && i < _thumbnailItems.Count).Distinct())
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            await EnsureThumbnailLoadedAsync(_thumbnailItems[index]).ConfigureAwait(true);
+        }
     }
 
     private async Task EnsureThumbnailLoadedAsync(ThumbnailItem item)
@@ -343,6 +365,9 @@ public partial class MainWindow : Window
         {
             _updatingThumbnailSelection = false;
         }
+
+        if (_thumbnailCts is not null && _thumbnailImageCache is not null)
+            _ = WarmThumbnailNeighborhoodAsync(_pageIndex, _thumbnailCts.Token);
     }
 
     private void ApplyThumbnailSidebarVisibility()
