@@ -43,6 +43,7 @@ sacrificing the responsiveness established in v0.1.0.
    - Natural ordering, image filtering, direct entry streaming, adjacent-archive navigation, Open dialog discovery, and optional Windows associations are wired for the new formats.
    - 7z/CB7 has CI-generated archive coverage.
    - RAR/CBR uses a real RAR fixture from the SharpCompress MIT test suite for factory routing, image filtering, entry reading, and JPEG decode in CI.
+   - CI also exercises solid RAR/CBR and solid 7z/CB7 fixtures by reading the last image entry first.
    - Windows hands-on validation remains for CBR/CB7.
    - PDF remains a separate decode path and is deferred until image-archive formats are validated.
 

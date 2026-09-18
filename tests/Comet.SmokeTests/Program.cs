@@ -189,6 +189,23 @@ try
         Check(cbrImage.PixelWidth > 0 && cbrImage.PixelHeight > 0, "cbr real RAR fixture JPEG decodes");
     }
 
+    foreach (var (fixtureName, label) in new[]
+    {
+        ("SharpCompress_Rar_Solid.cbr", "solid cbr"),
+        ("SharpCompress_7Zip_Solid.cb7", "solid cb7")
+    })
+    {
+        var fixturePath = Path.Combine(AppContext.BaseDirectory, "Fixtures", fixtureName);
+        Check(File.Exists(fixturePath), $"{label} fixture copied to test output");
+        var fixtureFactory = new BookSourceFactory();
+        await using var fixtureBook = await fixtureFactory.OpenAsync(fixturePath);
+        Check(fixtureBook.Descriptor.Pages.Count > 0, $"{label} exposes image pages");
+        var fixtureBytes = await fixtureBook.ReadPageBytesAsync(fixtureBook.Descriptor.Pages.Count - 1);
+        Check(fixtureBytes.Length > 0, $"{label} last image bytes");
+        var fixtureImage = windowsDecoder.Decode(fixtureBytes);
+        Check(fixtureImage.PixelWidth > 0 && fixtureImage.PixelHeight > 0, $"{label} image decodes");
+    }
+
     var adjacentRoot = Path.Combine(temp, "adjacent");
     Directory.CreateDirectory(adjacentRoot);
     var archive1 = Path.Combine(adjacentRoot, "第1巻.zip");
