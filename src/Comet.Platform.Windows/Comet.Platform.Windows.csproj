@@ -6,5 +6,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Comet.Core\Comet.Core.csproj" />
+    <PackageReference Include="SkiaSharp" Version="4.152.0" />
   </ItemGroup>
 </Project>

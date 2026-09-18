@@ -9,3 +9,9 @@ Comet is not affiliated with or endorsed by the MComix project.
 
 This repository is licensed under the MIT License. MComix has its own license and
 copyright holders; refer to the MComix project for those terms.
+
+
+## Third-party software
+
+Comet uses SkiaSharp for WebP decoding fallback on Windows systems where the WIC WebP
+extension is not available. SkiaSharp is distributed under the MIT License.
