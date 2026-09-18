@@ -730,6 +730,15 @@ public partial class MainWindow : Window
             metrics.Add($"{secondSize.Width}x{secondSize.Height} ({secondZoom * 100:0.#}%)");
             pageNames.Add(Path.GetFileName(_book.Descriptor.Pages[_pageIndex + 1].Name));
             fileSizes.Add(FormatBinarySize(_book.Descriptor.Pages[_pageIndex + 1].UncompressedLength));
+
+            // MComix reports double-page details in visual left-to-right order.
+            // In right-to-left manga mode the second logical page is drawn on the left.
+            if (_settings.ReadingDirection == ReadingDirection.RightToLeft)
+            {
+                metrics.Reverse();
+                pageNames.Reverse();
+                fileSizes.Reverse();
+            }
         }
 
         PageMetricsText.Text = string.Join(", ", metrics);
