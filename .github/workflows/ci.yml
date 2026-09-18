@@ -25,7 +25,7 @@ jobs:
         run: dotnet run --project .\tests\Comet.SmokeTests\Comet.SmokeTests.csproj -c Release --no-build
       - name: Publish Windows x64
         shell: pwsh
-        run: .\scripts\publish-win-x64.ps1 -Version 0.1.0
+        run: .\scripts\publish-win-x64.ps1 -Version 0.2.0-dev
       - name: Upload portable build
         uses: actions/upload-artifact@v7
         with:
@@ -34,12 +34,12 @@ jobs:
           if-no-files-found: error
       - name: Install Inno Setup
         run: choco install innosetup --yes --no-progress
-      - name: Package v0.1.0 release candidate
+      - name: Package v0.2.0 development build
         shell: pwsh
-        run: .\scripts\package-release.ps1 -Version 0.1.0-rc.1 -BuildInstaller
+        run: .\scripts\package-release.ps1 -Version 0.2.0-dev -BuildInstaller
       - name: Upload release candidate
         uses: actions/upload-artifact@v7
         with:
-          name: Comet-v0.1.0-rc.1
+          name: Comet-v0.2.0-dev
           path: artifacts/release/*
           if-no-files-found: error
