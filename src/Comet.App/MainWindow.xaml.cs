@@ -64,7 +64,7 @@ public partial class MainWindow : Window
         ApplySettingsToViewport();
         ApplyThumbnailSidebarVisibility();
         UpdateMenuChecks();
-        UpdateZoomText();
+        UpdateImageInfo();
         StatusText.Text = _text["Ready"];
     }
 
@@ -447,7 +447,7 @@ public partial class MainWindow : Window
         Viewport.TemporaryZoomFactor = _zoom.TemporaryZoomFactor;
         Viewport.ResetScroll();
         UpdateMenuChecks();
-        UpdateZoomText();
+        UpdateImageInfo();
         _ = SaveSettingsSafeAsync();
         if (_book is not null)
             _ = RenderCurrentAsync();
@@ -458,7 +458,7 @@ public partial class MainWindow : Window
         _zoom.AdjustTemporaryZoom(factor);
         Viewport.TemporaryZoomFactor = _zoom.TemporaryZoomFactor;
         Viewport.Refresh();
-        UpdateZoomText();
+        UpdateImageInfo();
     }
 
     private void ResetTemporaryZoom()
@@ -466,7 +466,7 @@ public partial class MainWindow : Window
         _zoom.ResetTemporaryZoom();
         Viewport.TemporaryZoomFactor = 1.0;
         Viewport.ResetScroll();
-        UpdateZoomText();
+        UpdateImageInfo();
     }
 
     private void ToggleManga()
@@ -590,10 +590,34 @@ public partial class MainWindow : Window
         StatusText.Text = _displayedPageCount > 1
             ? $"{_pageIndex + 1}-{end} / {_book.Descriptor.Pages.Count}"
             : $"{_pageIndex + 1} / {_book.Descriptor.Pages.Count}";
-        UpdateZoomText();
+        UpdateImageInfo();
     }
 
-    private void UpdateZoomText() => ZoomText.Text = $"{_text["Zoom"]}: {_zoom.TemporaryZoomFactor:P0}";
+    private void UpdateImageInfo()
+    {
+        if (_book is null || _imageCache is null || Viewport.FirstPage is null
+            || !_imageCache.TryGetSourcePixelSize(_pageIndex, out var firstSize))
+        {
+            ImageSizeText.Text = string.Empty;
+            ZoomText.Text = string.Empty;
+            return;
+        }
+
+        var sizeText = $"{firstSize.Width} × {firstSize.Height}";
+        if (_displayedPageCount > 1
+            && _pageIndex + 1 < _book.Descriptor.Pages.Count
+            && _imageCache.TryGetSourcePixelSize(_pageIndex + 1, out var secondSize))
+        {
+            sizeText += $" + {secondSize.Width} × {secondSize.Height}";
+        }
+
+        ImageSizeText.Text = $"{_text["ImageSize"]}: {sizeText} px";
+
+        var dpiScale = VisualTreeHelper.GetDpi(Viewport).DpiScaleX;
+        var renderedPhysicalWidth = Viewport.CurrentFirstPageDisplayWidthDip * dpiScale;
+        var actualZoom = firstSize.Width > 0 ? renderedPhysicalWidth / firstSize.Width : 1.0;
+        ZoomText.Text = $"{_text["Zoom"]}: {actualZoom * 100:0.#}%";
+    }
 
     private void AddBookmark()
     {
@@ -693,6 +717,8 @@ public partial class MainWindow : Window
         Viewport.SecondPage = null;
         Viewport.ErrorMessage = null;
         Viewport.Refresh();
+        ImageSizeText.Text = string.Empty;
+        ZoomText.Text = string.Empty;
         Title = "Comet";
     }
 
@@ -821,6 +847,11 @@ public partial class MainWindow : Window
 
         await SmartScrollOrFlipAsync(e.Delta < 0 ? 1 : -1);
         e.Handled = true;
+    }
+
+    private void Viewport_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        UpdateImageInfo();
     }
 
     private async void ThumbnailItem_Loaded(object sender, RoutedEventArgs e)

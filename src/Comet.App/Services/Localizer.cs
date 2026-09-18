@@ -17,7 +17,7 @@ public sealed class Localizer
         ["Navigate"] = "_Navigate", ["PreviousPage"] = "Previous Page", ["NextPage"] = "Next Page", ["PreviousArchive"] = "Previous Archive",
         ["NextArchive"] = "Next Archive", ["Ready"] = "Ready", ["Opening"] = "Opening...", ["Closing"] = "Closing...", ["NoImages"] = "No supported images found.",
         ["OpenComic"] = "Open comic archive", ["Error"] = "Error", ["BookmarksTitle"] = "Bookmarks", ["NoBookmarks"] = "No bookmarks yet.",
-        ["Page"] = "Page", ["BookmarkAdded"] = "Bookmark added", ["Zoom"] = "Zoom"
+        ["Page"] = "Page", ["BookmarkAdded"] = "Bookmark added", ["ImageSize"] = "Image", ["Zoom"] = "Zoom"
     };
 
     private static readonly IReadOnlyDictionary<string, string> Ja = new Dictionary<string, string>
@@ -29,6 +29,6 @@ public sealed class Localizer
         ["Navigate"] = "移動(_N)", ["PreviousPage"] = "前のページ", ["NextPage"] = "次のページ", ["PreviousArchive"] = "前の書庫",
         ["NextArchive"] = "次の書庫", ["Ready"] = "準備完了", ["Opening"] = "読み込み中...", ["Closing"] = "終了処理中...", ["NoImages"] = "対応画像がありません。",
         ["OpenComic"] = "漫画書庫を開く", ["Error"] = "エラー", ["BookmarksTitle"] = "ブックマーク", ["NoBookmarks"] = "ブックマークはありません。",
-        ["Page"] = "ページ", ["BookmarkAdded"] = "ブックマークを追加しました", ["Zoom"] = "ズーム"
+        ["Page"] = "ページ", ["BookmarkAdded"] = "ブックマークを追加しました", ["ImageSize"] = "画像", ["Zoom"] = "倍率"
     };
 }

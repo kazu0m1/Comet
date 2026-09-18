@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Windows.Media.Imaging;
 using Comet.Core.Abstractions;
+using Comet.Core.Models;
 using Comet.Core.Services;
 using Comet.Platform.Windows.Imaging;
 
@@ -12,6 +13,7 @@ public sealed class PageImageCache : IDisposable
     private readonly WpfBitmapDecoder _decoder;
     private readonly LruCache<(int Page, int Width), BitmapSource> _cache;
     private readonly ConcurrentDictionary<(int Page, int Width), Lazy<Task<BitmapSource>>> _inflight = new();
+    private readonly ConcurrentDictionary<int, PixelSize> _sourcePixelSizes = new();
     private readonly CancellationTokenSource _lifetime = new();
     private readonly int _minimumBucketWidth;
     private readonly int _maximumBucketWidth;
@@ -54,6 +56,9 @@ public sealed class PageImageCache : IDisposable
         }
     }
 
+    public bool TryGetSourcePixelSize(int pageIndex, out PixelSize size)
+        => _sourcePixelSizes.TryGetValue(pageIndex, out size);
+
     public void Prefetch(IEnumerable<int> pageIndices, int targetPixelWidth)
     {
         foreach (var index in pageIndices.Distinct().Where(i => i >= 0 && i < _source.Descriptor.Pages.Count))
@@ -70,7 +75,12 @@ public sealed class PageImageCache : IDisposable
     private async Task<BitmapSource> LoadAsync(int pageIndex, int targetPixelWidth, CancellationToken cancellationToken)
     {
         var bytes = await _source.ReadPageBytesAsync(pageIndex, cancellationToken).ConfigureAwait(false);
-        return await Task.Run(() => _decoder.Decode(bytes, targetPixelWidth), cancellationToken).ConfigureAwait(false);
+        return await Task.Run(() =>
+        {
+            var sourceSize = _decoder.Probe(bytes);
+            _sourcePixelSizes[pageIndex] = sourceSize;
+            return _decoder.Decode(bytes, targetPixelWidth);
+        }, cancellationToken).ConfigureAwait(false);
     }
 
     private int BucketWidth(int width)
@@ -86,5 +96,6 @@ public sealed class PageImageCache : IDisposable
         _lifetime.Cancel();
         _lifetime.Dispose();
         _cache.Clear();
+        _sourcePixelSizes.Clear();
     }
 }

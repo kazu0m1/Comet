@@ -20,6 +20,9 @@ public sealed class PageViewport : FrameworkElement
     public double TemporaryZoomFactor { get; set; } = 1.0;
     public double Gap { get; set; } = 12;
 
+    public double CurrentFirstPageDisplayWidthDip
+        => FirstPage is null ? 0 : GetLayout().FirstWidth;
+
     public PageViewport()
     {
         Focusable = true;

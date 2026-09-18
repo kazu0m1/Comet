@@ -59,6 +59,8 @@
         <StatusBar x:Name="MainStatusBar" DockPanel.Dock="Bottom">
             <StatusBarItem><TextBlock x:Name="StatusText" Text="Ready" /></StatusBarItem>
             <Separator />
+            <StatusBarItem><TextBlock x:Name="ImageSizeText" /></StatusBarItem>
+            <Separator />
             <StatusBarItem><TextBlock x:Name="ZoomText" /></StatusBarItem>
         </StatusBar>
 
@@ -127,7 +129,9 @@
                           ResizeBehavior="PreviousAndNext" />
 
             <Grid Grid.Column="2">
-                <controls:PageViewport x:Name="Viewport" MouseLeftButtonUp="Viewport_MouseLeftButtonUp" />
+                <controls:PageViewport x:Name="Viewport"
+                                       MouseLeftButtonUp="Viewport_MouseLeftButtonUp"
+                                       SizeChanged="Viewport_SizeChanged" />
             </Grid>
         </Grid>
     </DockPanel>
