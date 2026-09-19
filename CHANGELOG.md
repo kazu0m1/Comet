@@ -5,6 +5,7 @@ All notable changes to Comet are documented here.
 ## [0.2.0] - 2026-09-19
 
 ### Added
+- Darker cobalt-blue application icon for stronger visibility in Windows file associations and small icon sizes.
 - RC2 memory-pressure hardening: stale page loads and superseded prefetch batches are cancelled once no active viewer is waiting for them, without reducing normal prefetch parallelism.
 - MComix-style status-bar spacing and visual left-to-right spread detail ordering in manga mode.
 - MComix-style status-bar details: page range, per-page source dimensions and actual zoom, archive name, page filenames, and source image sizes.
