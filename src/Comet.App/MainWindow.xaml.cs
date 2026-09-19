@@ -418,6 +418,22 @@ public partial class MainWindow : Window
         _ = SaveSettingsSafeAsync();
     }
 
+    private void ThumbnailSplitter_DragCompleted(
+        object sender,
+        System.Windows.Controls.Primitives.DragCompletedEventArgs e)
+    {
+        if (!_settings.ShowThumbnails || ThumbnailSidebar.Visibility != Visibility.Visible)
+            return;
+
+        var width = Math.Clamp(ThumbnailColumn.ActualWidth - 20, 48, 200);
+        if (Math.Abs(width - _settings.ThumbnailWidth) < 0.5)
+            return;
+
+        _settings = _settings with { ThumbnailWidth = width };
+        ThumbnailColumn.Width = new GridLength(width + 20);
+        _ = SaveSettingsSafeAsync();
+    }
+
     private async Task HandleArrowKeyAsync(Key key)
     {
         var moved = key switch

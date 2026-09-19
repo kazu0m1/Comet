@@ -1,78 +1,69 @@
 # Release checklist
 
-## v0.1.0 validation completed
+## Historical validation
 
-- [x] GitHub Actions restore/build on Windows.
-- [x] Smoke tests.
-- [x] Self-contained Windows x64 publish.
-- [x] Inno Setup compilation.
-- [x] Cold start and ZIP first-page display on Windows 11.
-- [x] Best Fit, manga/right-to-left mode, fullscreen, and double-page reading.
-- [x] Arrow-key and left/right click-zone navigation.
-- [x] Compact thumbnail sidebar with prioritized loading.
-- [x] DPI-correct Manual 100% on a Windows display using 150% scaling.
-- [x] Image dimensions and actual zoom display in the status bar.
-- [x] Adjacent ZIP/CBZ rollover at the reading edge.
-- [x] Fast close without a lingering Comet process.
-- [x] Install with the generated Setup.exe.
-- [x] Register Comet as an available ZIP/CBZ handler.
-- [x] Uninstall successfully.
-- [x] Confirm ZIP handling remains intact after uninstall.
+### v0.1.0
 
-## v0.2.0 implementation and hands-on validation
+- [x] GitHub Actions restore/build/smoke-test/self-contained publish.
+- [x] Core ZIP/CBZ reading, fit modes, manga mode, fullscreen, thumbnails, navigation, Manual 100%, fast shutdown, adjacent archive rollover.
+- [x] Inno Setup install, optional association registration, uninstall, and intact ZIP handling.
 
-- [x] WebP display, thumbnails, portrait/landscape pages, and page turns.
-- [x] Damaged page placeholder and continued forward/back navigation.
-- [x] Reading-position persistence across full restart.
-- [x] Replaced archive does not inherit stale reading state.
+### v0.2.0
+
+- [x] WebP, RAR/CBR, 7z/CB7.
+- [x] Damaged-page continuation and reading-position restart restore.
 - [x] DPI refresh and Manual 100% regression coverage.
-- [x] RAR/CBR direct reading.
-- [x] Solid RAR/CBR handling.
-- [x] 7z/CB7 direct reading.
-- [x] Solid 7z/CB7 handling.
-- [x] Adjacent-archive navigation for ZIP/CBZ/RAR/CBR/7z/CB7.
-- [x] Optional Windows associations for all supported archive formats.
-- [x] MComix-style status details: page range, source dimensions/zoom, archive, image name, source size.
-- [x] JPEG/PNG/GIF/BMP fast source-dimension header probing.
-- [x] Avoid decode-time upscaling beyond source width.
-- [x] JPEG tuning field measurement completed.
-- [x] page.decode average improved from 38.10 ms to 10.72 ms on the measured workload.
-- [x] render.page P95 improved from 114.12 ms to 15.77 ms on the measured workload.
-- [x] Final implementation CI green through the JPEG tuning phase.
+- [x] MComix-style status details.
+- [x] JPEG decode tuning: measured page.decode average 38.10 ms -> 10.72 ms.
+- [x] Measured render.page P95 114.12 ms -> 15.77 ms.
+- [x] RC2 memory-pressure observation: about 200 MiB idle and 600 MiB peak during rapid paging on the measured workload, without perceived speed regression.
+- [x] Installer/associations/uninstall and release assets validated.
+- [x] v0.2.0 released successfully.
 
-## v0.2.0 RC gate
+## v0.3.0 development gate
 
-- [x] RC2 memory-pressure check on the same 844x1200 double-page ZIP: about 200 MiB idle, 600 MiB peak during rapid paging, 250-350 MiB after stopping, with no perceived speed regression.
+- [x] Formal FR-001..FR-025 / NFR-001..NFR-010 implementation audit created.
+- [x] Regression matrix created.
+- [x] Persisted settings normalize corrupt-but-valid enum/numeric values.
+- [x] Settings and reading-state temp writes clean up on interrupted writes.
+- [x] Folder and individual-image factory paths covered by smoke tests.
+- [x] All declared image/archive extensions covered by routing smoke tests.
+- [x] CI development artifacts use 0.3.0-dev naming.
+- [x] Bookmark action/open-failure localization cleanup.
+- [x] Thumbnail sidebar width is persisted after splitter resize.
+- [ ] Final v0.3.0 Windows hands-on gate.
+- [ ] Final installer/uninstaller regression.
+- [ ] Final candidate package integrity check.
 
-- [x] Build the final v0.2.0 RC package from the release-preparation commit.
-- [x] Install the RC with Setup.exe.
-- [x] Confirm ZIP/CBZ/RAR/CBR/7z/CB7 are offered as optional handlers.
-- [x] Open representative ZIP/CBZ/CBR/CB7 books from the installed build.
-- [x] Re-check page turns, thumbnails, fullscreen, double-page, manga mode, and fit modes.
-- [x] Re-check reading-position restore after restart.
-- [x] Confirm the MComix-style status bar values are correct and visually spaced close to MComix.
-- [x] Confirm fast shutdown with no lingering Comet process.
-- [x] Uninstall successfully.
-- [x] Confirm existing archive handling remains intact after uninstall.
-- [x] Confirm release ZIP and installer are not corrupted.
+## Final hands-on gate
 
-RC gate completed on Windows 11 with RC2.
+The intended final manual pass is deliberately short:
 
-All v0.2.0 RC gate checks completed successfully; the next action is to tag `v0.2.0` and let the Release workflow produce the final assets.
+1. Open one representative ZIP and check page turns, double page, manga mode, Best/Fit Width/Fit Height/Manual 100%, thumbnails, fullscreen, status bar, and temporary zoom.
+2. Resize the thumbnail sidebar, restart Comet, and confirm the width is restored.
+3. Open one CBR and one CB7 fixture.
+4. Restart on a middle page and confirm reading position restoration.
+5. Install/uninstall the candidate and confirm optional archive associations do not damage existing defaults.
+6. Confirm there is no obvious untranslated user-facing text in the active Windows language.
 
-## Tag and release
+A fresh performance benchmark is not required unless normal reading feels slower than v0.2.0.
 
-After the RC gate is complete and the final release-preparation commit is synced locally,
-create the v0.2.0 tag:
+## Tag and release with GitHub Desktop
 
-```powershell
-git tag v0.2.0
-git push origin v0.2.0
-```
+Repository operations for Comet are performed with **GitHub Desktop**, not Git CLI.
 
-The Release workflow builds and uploads:
-- `Comet-v0.2.0-win-x64.zip`
-- `Comet-v0.2.0-win-x64-Setup.exe`
+After the final gate is complete:
+
+1. In GitHub Desktop, **Fetch origin** and **Pull origin** if shown.
+2. Open **History** and select the final release-preparation commit.
+3. Right-click it and choose **Create Tag...**.
+4. Enter the requested tag exactly, for example `v0.3.0`.
+5. Choose **Create Tag**, then **Push origin** if GitHub Desktop shows it.
+6. Confirm the GitHub **Release** Actions workflow finishes green.
+
+The Release workflow creates:
+- `Comet-v<version>-win-x64.zip`
+- `Comet-v<version>-win-x64-Setup.exe`
 - `SHA256SUMS.txt`
 
-Because Comet is still pre-1.0, the workflow creates v0.2.0 as a GitHub prerelease.
+Pre-1.0 versions are published as GitHub prereleases.

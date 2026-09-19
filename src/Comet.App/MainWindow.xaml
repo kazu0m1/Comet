@@ -130,7 +130,8 @@
                           VerticalAlignment="Stretch"
                           Background="#333333"
                           ResizeDirection="Columns"
-                          ResizeBehavior="PreviousAndNext" />
+                          ResizeBehavior="PreviousAndNext"
+                          DragCompleted="ThumbnailSplitter_DragCompleted" />
 
             <Grid Grid.Column="2">
                 <controls:PageViewport x:Name="Viewport"
