@@ -28,7 +28,7 @@
 | FR-019 | Reading position | Implemented + automated + validated | JSON round-trip/source validation plus restart hands-on check. |
 | FR-020 | Bookmark | Implemented + automated persistence coverage | Bookmark JSON round-trip and dialog flow implemented. |
 | FR-021 | Settings persistence | Implemented + automated | Round-trip, migration, corrupt fallback, and invalid-value normalization covered. |
-| FR-022 | Japanese/English UI | Implemented; audit in progress | Locale follows Windows UI culture; bookmark action and open-failure text localized in v0.3.0. |
+| FR-022 | Japanese/English UI | Implemented + automated audit | Locale follows Windows UI culture; user-facing reader actions are localized and EN/JA key parity is smoke-tested. |
 | FR-023 | MComix-compatible controls | Implemented for in-scope features | See KEYBINDINGS.md; core behavior Windows-validated. |
 | FR-024 | Drag and drop | Implemented | Archive, folder, supported image. |
 | FR-025 | Damaged page continuation | Implemented + automated + validated | Valid → broken → valid sequence covered; localized continuation UI validated. |
@@ -60,6 +60,4 @@
 
 ## Audit conclusion so far
 
-No missing core v1.0 feature has been found. The remaining v0.3.0 work is primarily
-regression locking, final localization/UI review, state/packaging consistency, and a short
-Windows hands-on gate before deciding whether to move directly to a v1.0 release-candidate cycle.
+No missing core v1.0 feature has been found. Code-level localization, state hardening, regression coverage, and packaging consistency work are complete; the remaining v0.3.0 work is a short Windows hands-on gate before deciding whether to move directly to a v1.0 release-candidate cycle.

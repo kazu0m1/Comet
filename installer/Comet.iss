@@ -1,6 +1,6 @@
 #define MyAppName "Comet"
 #ifndef MyAppVersion
-  #define MyAppVersion "0.1.0"
+  #define MyAppVersion "0.3.0-dev"
 #endif
 #define MyAppExeName "Comet.exe"
 

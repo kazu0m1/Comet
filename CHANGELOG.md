@@ -2,6 +2,22 @@
 
 All notable changes to Comet are documented here.
 
+## [Unreleased] — v0.3.0
+
+### Added
+- Formal FR-001..FR-025 and NFR-001..NFR-010 implementation audit with a v0.3.0 regression matrix.
+- Expanded smoke coverage for Unicode image folders, individual-image routing, all declared archive/image extensions, and adjacent archive ordering across ZIP/CBZ/RAR/CBR/7z/CB7.
+- English/Japanese localization parity checks in CI.
+- Persistent thumbnail-sidebar width after splitter resize.
+
+### Changed
+- Invalid persisted enum/numeric settings are normalized to safe values before use.
+- Settings and reading-state temp files are cleaned up on interrupted writes on a best-effort basis.
+- Bookmark action text, open-failure messaging, and reader tooltips are fully routed through localization.
+- CI development artifacts and fallback package defaults now use `0.3.0-dev`.
+- Release documentation uses GitHub Desktop for repository/tag operations.
+
+
 ## [0.2.0] - 2026-09-19
 
 ### Added

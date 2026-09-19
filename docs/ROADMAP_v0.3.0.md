@@ -20,12 +20,13 @@ v0.3.0 is intentionally a **completion and hardening milestone**, not a format-e
    - Folder/individual-image routing and all declared archive/image extensions now have deterministic smoke coverage.
    - Remaining manual checks are limited to rendering/input/integration behavior.
 
-3. **UI and localization audit — in progress**
+3. **UI and localization audit — complete in code
    - Bookmark action text and open-failure messaging are localized.
    - Toolbar tooltips are normalized through the localization table.
-   - Continue checking only genuinely user-visible literals; symbols/file names/technical diagnostics are not localization defects.
+   - English/Japanese localization tables are now parity-checked in smoke tests.
+   - Remaining symbols, file names, units, and technical diagnostics are intentionally language-neutral or diagnostic content.
 
-4. **Settings and state hardening — in progress**
+4. **Settings and state hardening — complete in code
    - Corrupt/missing settings fallback is covered.
    - Loaded settings are normalized for invalid enum values and unsafe numeric ranges.
    - Interrupted settings/reading-state writes clean up temporary files on a best-effort basis.
@@ -36,11 +37,12 @@ v0.3.0 is intentionally a **completion and hardening milestone**, not a format-e
    - Do not retune prefetch/cache unless a reproducible regression appears.
    - Weighted LRU behavior remains smoke-tested; RC2 memory figures remain observation data, not a hard promise.
 
-6. **Windows packaging polish — in progress**
+6. **Windows packaging polish — complete in code
    - CI development artifacts now use `0.3.0-dev` naming.
    - Release workflow remains tag-driven.
    - GitHub Desktop is the documented repository/tagging workflow.
-   - Final candidate will re-check installer/uninstaller and optional archive associations.
+   - Publish/package/installer fallback versions now agree on `0.3.0-dev`.
+   - Final candidate still requires the short Windows install/uninstall and association gate.
 
 ## Explicit non-goals
 
