@@ -31,13 +31,13 @@
 - [x] CI development artifacts use 0.3.0-dev naming.
 - [x] Bookmark action/open-failure localization cleanup.
 - [x] Thumbnail sidebar width is persisted after splitter resize.
-- [ ] Final v0.3.0 Windows hands-on gate.
-- [ ] Final installer/uninstaller regression.
+- [x] Final v0.3.0 Windows hands-on gate.
+- [x] Final installer/uninstaller regression.
 - [x] Final candidate package integrity check.
 
 ## Final hands-on gate
 
-RC1 was installed and launched successfully on the Windows 11 validation machine. The remaining release-blocking manual confirmation is uninstall/file-association behavior.
+RC1 passed the Windows 11 hands-on gate. Installation, launch, uninstall, and file-association cleanup were confirmed without issues.
 
 The intended final manual pass is deliberately short:
 
@@ -48,7 +48,9 @@ The intended final manual pass is deliberately short:
 5. Install/uninstall the candidate and confirm optional archive associations do not damage existing defaults.
 6. Confirm there is no obvious untranslated user-facing text in the active Windows language.
 
-A fresh performance benchmark is not required unless normal reading feels slower than v0.2.0.
+A fresh performance benchmark was not required because normal reading showed no reported regression from the v0.2.0 baseline.
+
+**v0.3.0 release gate: PASSED on 2026-09-19.**
 
 ## Tag and release with GitHub Desktop
 

@@ -2,7 +2,7 @@
 
 All notable changes to Comet are documented here.
 
-## [Unreleased] — v0.3.0
+## [0.3.0] - 2026-09-19
 
 ### Added
 - Formal FR-001..FR-025 and NFR-001..NFR-010 implementation audit with a v0.3.0 regression matrix.

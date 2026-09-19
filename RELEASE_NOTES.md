@@ -23,6 +23,7 @@ kept as the performance/UX baseline rather than retuned.
 PDF support, library/database UI, slideshow, magnifier, and image editing/enhancement remain
 outside this milestone.
 
-If the v0.3.0 Windows release-candidate gate completes without exposing a missing core
-requirement, the project is intended to move toward a v1.0 release-candidate cycle rather than
-another broad feature-expansion milestone.
+The v0.3.0 Windows release-candidate gate passed on 2026-09-19, including install, launch,
+uninstall, and file-association cleanup. No missing core requirement was exposed. The project can
+therefore move toward a v1.0 release-candidate cycle rather than another broad feature-expansion
+milestone.

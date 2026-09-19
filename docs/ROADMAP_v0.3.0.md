@@ -42,7 +42,7 @@ v0.3.0 is intentionally a **completion and hardening milestone**, not a format-e
    - Release workflow remains tag-driven.
    - GitHub Desktop is the documented repository/tagging workflow.
    - Publish/package/installer fallback versions now agree on `0.3.0-dev`.
-   - Final candidate still requires the short Windows install/uninstall and association gate.
+   - Final Windows install/uninstall and association gate passed on 2026-09-19.
 
 ## Explicit non-goals
 
@@ -73,6 +73,6 @@ milestone should be a v1.0 release-candidate cycle rather than another broad fea
 
 ## Current phase
 
-RC1 packaging is complete and the Windows install/launch check passed. No further code-level
-feature work is planned before release; only the final uninstall/file-association confirmation
-remains before the `v0.3.0` tag.
+RC1 packaging and the compact Windows hands-on gate are complete. Installation, launch,
+uninstall, and file-association cleanup passed on 2026-09-19. v0.3.0 is ready for the final
+`v0.3.0` tag and Release workflow.
