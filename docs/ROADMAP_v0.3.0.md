@@ -15,18 +15,18 @@ v0.3.0 is intentionally a **completion and hardening milestone**, not a format-e
    - FR-001 through FR-025 and NFR-001 through NFR-010 are mapped in `IMPLEMENTATION_STATUS_v1.0.md`.
    - No missing core v1.0 feature has been identified.
 
-2. **Reader regression matrix — in progress**
+2. **Reader regression matrix — complete in code**
    - Added `REGRESSION_MATRIX_v0.3.0.md`.
    - Folder/individual-image routing and all declared archive/image extensions now have deterministic smoke coverage.
-   - Remaining manual checks are limited to rendering/input/integration behavior.
+   - Deterministic paths are covered; remaining checks are limited to the compact RC1 Windows rendering/input/integration gate.
 
-3. **UI and localization audit — complete in code
+3. **UI and localization audit — complete in code**
    - Bookmark action text and open-failure messaging are localized.
    - Toolbar tooltips are normalized through the localization table.
    - English/Japanese localization tables are now parity-checked in smoke tests.
    - Remaining symbols, file names, units, and technical diagnostics are intentionally language-neutral or diagnostic content.
 
-4. **Settings and state hardening — complete in code
+4. **Settings and state hardening — complete in code**
    - Corrupt/missing settings fallback is covered.
    - Loaded settings are normalized for invalid enum values and unsafe numeric ranges.
    - Interrupted settings/reading-state writes clean up temporary files on a best-effort basis.
@@ -37,7 +37,7 @@ v0.3.0 is intentionally a **completion and hardening milestone**, not a format-e
    - Do not retune prefetch/cache unless a reproducible regression appears.
    - Weighted LRU behavior remains smoke-tested; RC2 memory figures remain observation data, not a hard promise.
 
-6. **Windows packaging polish — complete in code
+6. **Windows packaging polish — complete in code**
    - CI development artifacts now use `0.3.0-dev` naming.
    - Release workflow remains tag-driven.
    - GitHub Desktop is the documented repository/tagging workflow.
@@ -69,3 +69,9 @@ v0.3.0 is complete when:
 
 If the final compact Windows gate passes without discovering a missing core requirement, the next
 milestone should be a v1.0 release-candidate cycle rather than another broad feature-expansion release.
+
+
+## Current phase
+
+RC1 packaging is active. No further code-level feature work is planned before the compact
+Windows hands-on gate unless CI exposes a regression.
