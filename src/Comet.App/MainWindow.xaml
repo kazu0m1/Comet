@@ -57,7 +57,7 @@
         </ToolBarTray>
 
         <StatusBar x:Name="MainStatusBar" DockPanel.Dock="Bottom" Padding="2,0">
-            <StatusBarItem Padding="8,0"><TextBlock x:Name="StatusText" Text="Ready" /></StatusBarItem>
+            <StatusBarItem Padding="8,0"><TextBlock x:Name="StatusText" /></StatusBarItem>
             <Border Width="1" Height="16" Margin="8,0" Background="#2B78A6" VerticalAlignment="Center" />
             <StatusBarItem Padding="8,0"><TextBlock x:Name="PageMetricsText" /></StatusBarItem>
             <Border Width="1" Height="16" Margin="8,0" Background="#2B78A6" VerticalAlignment="Center" />

@@ -4,7 +4,7 @@
         Width="420" Height="420" WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
     <DockPanel Margin="12">
         <TextBlock x:Name="EmptyText" DockPanel.Dock="Top" Margin="0,0,0,8" />
-        <Button x:Name="OpenButton" DockPanel.Dock="Bottom" Margin="0,8,0,0" Padding="12,6" HorizontalAlignment="Right" Click="Open_Click">Open</Button>
+        <Button x:Name="OpenButton" DockPanel.Dock="Bottom" Margin="0,8,0,0" Padding="12,6" HorizontalAlignment="Right" Click="Open_Click" />
         <ListBox x:Name="BookmarkList" MouseDoubleClick="BookmarkList_MouseDoubleClick" />
     </DockPanel>
 </Window>

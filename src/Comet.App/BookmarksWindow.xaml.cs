@@ -15,6 +15,7 @@ public partial class BookmarksWindow : Window
         InitializeComponent();
         Title = localizer["BookmarksTitle"];
         EmptyText.Text = bookmarks.Count == 0 ? localizer["NoBookmarks"] : string.Empty;
+        OpenButton.Content = localizer["OpenSelected"];
         BookmarkList.ItemsSource = bookmarks.Select(b => $"{localizer["Page"]} {b.PageIndex + 1} — {b.CreatedAt.LocalDateTime:g}").ToArray();
         OpenButton.IsEnabled = bookmarks.Count > 0;
         if (bookmarks.Count > 0) BookmarkList.SelectedIndex = 0;

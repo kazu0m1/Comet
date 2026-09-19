@@ -2,13 +2,13 @@
 
 Comet is a Windows comic viewer focused on the parts of the MComix reading experience that matter most for this project: **fast startup, direct comic-archive reading, reliable fit modes, temporary zoom, and right-to-left manga reading**.
 
-> Status: **v0.2.0 released; v0.3.0 completion/hardening planning started**. The repository is structured for repeatable Windows CI, installer validation, and tagged prereleases.
+> Status: **v0.2.0 released; v0.3.0 completion/hardening in progress**. The repository is structured for repeatable Windows CI, installer validation, and tagged prereleases.
 
 ## v0.3.0 focus
 
 v0.3.0 is a completion/hardening milestone: formally audit the original v1.0 requirements, expand regression coverage, finish UI/localization cleanup, harden settings/state upgrades, and preserve the v0.2.0 performance baseline. Major new subsystems such as PDF and Library remain deferred. See `docs/ROADMAP_v0.3.0.md`.
 
-## v0.1.0 scope
+## Current reader scope
 
 - Windows 11 x64, .NET 10 LTS / C# 14 / WPF.
 - Open ZIP/CBZ directly through the .NET ZIP path.
@@ -19,7 +19,7 @@ v0.3.0 is a completion/hardening milestone: formally audit the original v1.0 req
 - Right-to-left manga mode enabled by default.
 - Best Fit enabled by default; small images are enlarged by default.
 - Fit Width, Fit Height, Manual 100%, temporary zoom.
-- Ctrl+mouse-wheel zoom remains active while moving to the previous/next ZIP in the same session, then resets on process restart.
+- Ctrl+mouse-wheel zoom remains active while moving to the previous/next archive in the same session, then resets on process restart.
 - Basic smart scrolling and flip-at-edge behavior.
 - Adjacent ZIP/CBZ/RAR/CBR/7z/CB7 navigation.
 - Reading-position persistence and bookmarks.
@@ -34,26 +34,20 @@ Prerequisites:
 - Windows 11 x64
 - .NET 10 SDK
 
-```powershell
-git clone <your-repository-url>
-cd Comet
-.\scripts\verify.ps1
-```
-
 For a self-contained build:
 
 ```powershell
-.\scripts\publish-win-x64.ps1 -Version 0.1.0
+.\scripts\publish-win-x64.ps1 -Version 0.2.0
 ```
 
 The publish output is written to `artifacts/win-x64`.
 
 ## Create release assets locally
 
-Install [Inno Setup 6](https://jrsoftware.org/isinfo.php), then run:
+Install Inno Setup 6, then run:
 
 ```powershell
-.\scripts\package-release.ps1 -Version 0.1.0 -BuildInstaller
+.\scripts\package-release.ps1 -Version 0.2.0 -BuildInstaller
 ```
 
 Assets are written to `artifacts/release` with SHA-256 hashes.
@@ -64,7 +58,7 @@ The repository contains two workflows:
 - `CI`: build + smoke tests + Windows x64 publish on pushes and pull requests.
 - `Release`: triggered by `v*` tags; builds, tests, packages a portable ZIP and Setup.exe, calculates hashes, and creates a GitHub prerelease.
 
-See `docs/RELEASE_CHECKLIST.md` before tagging.
+Repository operations and tagging are performed through GitHub Desktop. See `docs/RELEASE_CHECKLIST.md` before tagging.
 
 ## Core controls
 
@@ -92,7 +86,7 @@ Comet.App (WPF UI, input, page cache)
 Comet.Core       Comet.Platform.Windows
        |
        v
-Comet.Infrastructure (ZIP/CBZ, folders, settings, reading state)
+Comet.Infrastructure (comic archives, folders, settings, reading state)
 ```
 
 The UI thread does not perform archive extraction or image decoding. Current-page work is prioritized and nearby pages are prefetched into a bounded LRU cache. The full-page cache is bounded by both item count and an estimated decoded-bitmap memory budget. Fit calculations use the actual image viewport.

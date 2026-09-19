@@ -153,9 +153,9 @@ public partial class MainWindow : Window
         {
             Viewport.FirstPage = null;
             Viewport.SecondPage = null;
-            Viewport.ErrorMessage = ex.Message;
+            Viewport.ErrorMessage = $"{_text["OpenFailed"]}\n{ex.Message}";
             Viewport.Refresh();
-            StatusText.Text = $"{_text["Error"]}: {ex.Message}";
+            StatusText.Text = $"{_text["OpenFailed"]} {ex.Message}";
         }
     }
 
@@ -676,6 +676,11 @@ public partial class MainWindow : Window
         FitWidthToolbarButton.Content = _text["ToolbarWidth"];
         FitHeightToolbarButton.Content = _text["ToolbarHeight"];
         MangaToolbarButton.Content = _text["ToolbarManga"];
+        BestFitToolbarButton.ToolTip = _text["BestFit"];
+        FitWidthToolbarButton.ToolTip = _text["FitWidth"];
+        FitHeightToolbarButton.ToolTip = _text["FitHeight"];
+        DoublePageToolbarButton.ToolTip = _text["DoublePage"];
+        MangaToolbarButton.ToolTip = _text["MangaMode"];
     }
 
     private void UpdateStatus()
