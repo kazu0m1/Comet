@@ -1,5 +1,5 @@
 param(
-    [string]$Version = "0.3.0-dev",
+    [string]$Version = "1.0.0-rc1",
     [switch]$BuildInstaller
 )
 

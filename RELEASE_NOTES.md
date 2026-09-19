@@ -1,29 +1,14 @@
-# Comet v0.3.0
+# Comet v1.0.0 RC1
 
-Comet v0.3.0 is a completion and hardening release. It does not add another major reader
-subsystem; instead it audits the original v1.0 requirements, expands deterministic regression
-coverage, hardens persisted state, and cleans up the remaining reader UI/localization edges.
+Comet v1.0.0 RC1 is the release candidate for the first general-availability Comet release.
+It adds no broad reader subsystem beyond the Windows-validated v0.3.0 baseline; its purpose is final validation of the frozen v1.0 requirements and packaging.
 
-Highlights:
-- Formal FR-001 through FR-025 and NFR-001 through NFR-010 implementation audit.
-- Regression matrix covering ZIP/CBZ/RAR/CBR/7z/CB7, image folders, Unicode natural
-  ordering, archive routing, reading state, settings migration, and damaged pages.
-- Persisted settings now normalize invalid enum/numeric values to safe ranges.
-- Interrupted settings and reading-state writes clean up temporary files on a best-effort basis.
-- Thumbnail-sidebar width is saved after splitter resize and restored on restart.
-- Remaining bookmark/open-failure/tool-tip reader text is routed through Japanese/English localization.
-- English/Japanese localization key parity is smoke-tested.
-- CI and fallback package defaults are aligned on the v0.3.0 development/release-candidate line.
-- GitHub Desktop is the documented repository/tag workflow.
+Candidate baseline:
+- FR-001 through FR-025 and NFR-001 through NFR-010 are implemented with no missing core requirement identified.
+- ZIP/CBZ and image-folder reading, reader modes, fit/zoom, Smart Scroll, adjacent archives, thumbnails, fullscreen, persistence, bookmarks, settings, drag-and-drop, damaged-page continuation, and Japanese/English UI are retained.
+- WebP, RAR/CBR, and 7z/CB7 remain supported beyond the original baseline.
+- The v0.2.0 performance/cache path and v0.3.0 state/localization/packaging hardening remain locked.
+- Windows x64 portable ZIP and Inno Setup installer remain the release outputs.
 
-The successful v0.2.0 JPEG performance path, cache/prefetch behavior, memory hardening,
-archive support, WebP support, DPI behavior, and MComix-style status bar are deliberately
-kept as the performance/UX baseline rather than retuned.
-
-PDF support, library/database UI, slideshow, magnifier, and image editing/enhancement remain
-outside this milestone.
-
-The v0.3.0 Windows release-candidate gate passed on 2026-09-19, including install, launch,
-uninstall, and file-association cleanup. No missing core requirement was exposed. The project can
-therefore move toward a v1.0 release-candidate cycle rather than another broad feature-expansion
-milestone.
+PDF, library/database UI, slideshow, magnifier, and image editing/enhancement remain outside v1.0.
+If RC1 passes without a release-blocking defect requiring code or packaging changes, the next step is final v1.0.0 rather than RC2.
