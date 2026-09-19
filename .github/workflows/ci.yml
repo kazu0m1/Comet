@@ -29,17 +29,15 @@ jobs:
           $sample = Join-Path $env:RUNNER_TEMP "comet-performance-sample.log"
           $tab = [char]9
           @(
-            "2026-09-18T00:00:00+00:00${tab}open.first-render${tab}120.5 ms${tab}10 pages",
-            "2026-09-18T00:00:01+00:00${tab}page.decode${tab}12.0 ms${tab}page=1",
-            "2026-09-18T00:00:02+00:00${tab}page.cache.hit${tab}- ms${tab}page=2",
-            "2026-09-18T00:00:03+00:00${tab}page.cache.miss${tab}- ms${tab}page=3",
-            "2026-09-18T00:00:04+00:00${tab}thumbnail.decode${tab}3.0 ms${tab}page=2",
-            "2026-09-18T00:00:05+00:00${tab}thumbnail.cache.miss${tab}- ms${tab}page=2"
+            "2026-09-19T00:00:00+00:00${tab}open.first-render${tab}35.2 ms${tab}172 pages",
+            "2026-09-19T00:00:01+00:00${tab}page.decode${tab}10.7 ms${tab}page=1",
+            "2026-09-19T00:00:02+00:00${tab}cache.hit${tab}- ms${tab}page=2",
+            "2026-09-19T00:00:03+00:00${tab}cache.miss${tab}- ms${tab}page=3"
           ) | Set-Content -Path $sample
           .\scripts\summarize-performance.ps1 -Path $sample
       - name: Publish Windows x64
         shell: pwsh
-        run: .\scripts\publish-win-x64.ps1 -Version 0.2.0-rc2
+        run: .\scripts\publish-win-x64.ps1 -Version 0.3.0-dev
       - name: Upload portable build
         uses: actions/upload-artifact@v7
         with:
@@ -48,12 +46,12 @@ jobs:
           if-no-files-found: error
       - name: Install Inno Setup
         run: choco install innosetup --yes --no-progress
-      - name: Package v0.2.0 RC2 build
+      - name: Package v0.3.0 development build
         shell: pwsh
-        run: .\scripts\package-release.ps1 -Version 0.2.0-rc2 -BuildInstaller
-      - name: Upload release candidate
+        run: .\scripts\package-release.ps1 -Version 0.3.0-dev -BuildInstaller
+      - name: Upload development package
         uses: actions/upload-artifact@v7
         with:
-          name: Comet-v0.2.0-rc2
+          name: Comet-v0.3.0-dev
           path: artifacts/release/*
           if-no-files-found: error

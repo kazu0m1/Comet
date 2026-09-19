@@ -71,14 +71,19 @@ Near(0.8, zoom.TemporaryZoomFactor, "temporary zoom survives adjacent archive");
 zoom.ResetForNewProcess();
 Near(1.0, zoom.TemporaryZoomFactor, "temporary zoom resets for new process");
 
-Check(SupportedImages.IsSupported("PAGE.JPG"), "supported image extension is case-insensitive");
-Check(SupportedImages.IsSupported("page.tiff"), "tiff supported");
-Check(SupportedImages.IsSupported("page.webp"), "webp supported extension");
-Check(SupportedArchives.IsSupported("comic.cbr"), "cbr supported archive extension");
-Check(SupportedArchives.IsSupported("comic.cb7"), "cb7 supported archive extension");
+foreach (var extension in new[] { ".jpg", ".jpeg", ".png", ".bmp", ".gif", ".tif", ".tiff", ".webp" })
+    Check(SupportedImages.IsSupported("PAGE" + extension.ToUpperInvariant()), $"supported image extension {extension}");
+
+foreach (var extension in new[] { ".zip", ".cbz", ".rar", ".cbr", ".7z", ".cb7" })
+    Check(SupportedArchives.IsSupported("comic" + extension.ToUpperInvariant()), $"supported archive extension {extension}");
+
+Check(SupportedArchives.UsesSystemZip("comic.zip"), "zip keeps system zip path");
 Check(SupportedArchives.UsesSystemZip("comic.cbz"), "cbz keeps system zip path");
-Check(SupportedArchives.UsesSharpCompress("comic.cbr"), "cbr uses SharpCompress path");
+foreach (var extension in new[] { ".rar", ".cbr", ".7z", ".cb7" })
+    Check(SupportedArchives.UsesSharpCompress("comic" + extension), $"SharpCompress archive path {extension}");
+
 Check(!SupportedImages.IsSupported("notes.txt"), "non-image rejected");
+Check(!SupportedArchives.IsSupported("comic.tar"), "unsupported archive rejected");
 
 var jpegHeaderFixture = new byte[]
 {
@@ -105,6 +110,33 @@ var temp = Path.Combine(Path.GetTempPath(), $"comet-smoke-{Guid.NewGuid():N}");
 Directory.CreateDirectory(temp);
 try
 {
+    var imageFolder = Path.Combine(temp, "画像フォルダー");
+    Directory.CreateDirectory(imageFolder);
+    await File.WriteAllBytesAsync(Path.Combine(imageFolder, "ページ10.webp"), webpFixture);
+    await File.WriteAllBytesAsync(Path.Combine(imageFolder, "ページ2.webp"), webpFixture);
+    await File.WriteAllBytesAsync(Path.Combine(imageFolder, "ページ1.webp"), webpFixture);
+    await File.WriteAllTextAsync(Path.Combine(imageFolder, "notes.txt"), "ignored");
+
+    await using (var folderBook = await FolderBookSource.OpenAsync(imageFolder))
+    {
+        Equal(3, folderBook.Descriptor.Pages.Count, "folder image filtering");
+        Equal("ページ1.webp", folderBook.Descriptor.Pages[0].Name, "folder unicode natural first");
+        Equal("ページ2.webp", folderBook.Descriptor.Pages[1].Name, "folder unicode natural second");
+        Equal("ページ10.webp", folderBook.Descriptor.Pages[2].Name, "folder unicode natural third");
+        var folderBytes = await folderBook.ReadPageBytesAsync(1);
+        Check(folderBytes.SequenceEqual(webpFixture), "folder page bytes");
+    }
+
+    var sourceFactory = new BookSourceFactory();
+    await using (var fromFolder = await sourceFactory.OpenAsync(imageFolder))
+        Check(fromFolder is FolderBookSource, "factory routes folder to folder source");
+
+    await using (var fromImage = await sourceFactory.OpenAsync(Path.Combine(imageFolder, "ページ2.webp")))
+    {
+        Check(fromImage is FolderBookSource, "factory routes individual image through containing folder");
+        Equal(3, fromImage.Descriptor.Pages.Count, "individual image factory exposes folder pages");
+    }
+
     var zipPath = Path.Combine(temp, "book.zip");
     using (var fs = File.Create(zipPath))
     using (var zip = new ZipArchive(fs, ZipArchiveMode.Create))
@@ -116,6 +148,9 @@ try
             stream.Write(new byte[] { 1, 2, 3, 4 });
         }
     }
+
+    await using (var factoryZip = await sourceFactory.OpenAsync(zipPath))
+        Check(factoryZip is ZipBookSource, "factory routes zip to system zip source");
 
     await using (var book = await ZipBookSource.OpenAsync(zipPath))
     {
@@ -230,15 +265,20 @@ try
     Directory.CreateDirectory(adjacentRoot);
     var archive1 = Path.Combine(adjacentRoot, "第1巻.zip");
     var archive2 = Path.Combine(adjacentRoot, "第2巻.cbz");
-    var archive7 = Path.Combine(adjacentRoot, "第7巻.cb7");
+    var archive3 = Path.Combine(adjacentRoot, "第3巻.rar");
+    var archive4 = Path.Combine(adjacentRoot, "第4巻.cbr");
+    var archive5 = Path.Combine(adjacentRoot, "第5巻.7z");
+    var archive6 = Path.Combine(adjacentRoot, "第6巻.cb7");
     var archive10 = Path.Combine(adjacentRoot, "第10巻.zip");
-    File.WriteAllBytes(archive1, Array.Empty<byte>());
-    File.WriteAllBytes(archive2, Array.Empty<byte>());
-    File.WriteAllBytes(archive7, Array.Empty<byte>());
-    File.WriteAllBytes(archive10, Array.Empty<byte>());
+    foreach (var archive in new[] { archive1, archive2, archive3, archive4, archive5, archive6, archive10 })
+        File.WriteAllBytes(archive, Array.Empty<byte>());
+
     var finder = new AdjacentArchiveFinder();
-    Equal(Path.GetFullPath(archive7), Path.GetFullPath(finder.FindNext(archive2)!), "adjacent archive includes cb7");
-    Equal(Path.GetFullPath(archive10), Path.GetFullPath(finder.FindNext(archive7)!), "adjacent archive natural next");
+    Equal(Path.GetFullPath(archive3), Path.GetFullPath(finder.FindNext(archive2)!), "adjacent archive includes rar");
+    Equal(Path.GetFullPath(archive4), Path.GetFullPath(finder.FindNext(archive3)!), "adjacent archive includes cbr");
+    Equal(Path.GetFullPath(archive5), Path.GetFullPath(finder.FindNext(archive4)!), "adjacent archive includes 7z");
+    Equal(Path.GetFullPath(archive6), Path.GetFullPath(finder.FindNext(archive5)!), "adjacent archive includes cb7");
+    Equal(Path.GetFullPath(archive10), Path.GetFullPath(finder.FindNext(archive6)!), "adjacent archive natural next");
     Equal(Path.GetFullPath(archive1), Path.GetFullPath(finder.FindPrevious(archive2)!), "adjacent archive natural previous");
 
     var stateRoot = Path.Combine(temp, "state");

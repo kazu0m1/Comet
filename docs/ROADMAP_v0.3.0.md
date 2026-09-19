@@ -9,59 +9,40 @@ Windows reader without adding another major subsystem.
 
 v0.3.0 is intentionally a **completion and hardening milestone**, not a format-expansion milestone.
 
-## Why this phase
-
-By v0.2.0, Comet already implements essentially all Must/Should requirements in the original
-v1.0 baseline, and also goes beyond it with WebP, RAR/CBR, and 7z/CB7 support.
-
-The remaining risk is not missing headline features. It is accumulated edge cases, UI roughness,
-settings/state behavior, packaging drift, and regressions across the many interacting reader paths.
-
 ## Priority order
 
-1. **Formal v1.0 requirement audit**
-   - Re-check FR-001 through FR-025 against the current source tree.
-   - Re-check NFR-001 through NFR-010.
-   - Mark each item as implemented, validated, or requiring follow-up.
-   - Replace the stale v0.1.0 implementation-status document with a current matrix.
+1. **Formal v1.0 requirement audit — complete**
+   - FR-001 through FR-025 and NFR-001 through NFR-010 are mapped in `IMPLEMENTATION_STATUS_v1.0.md`.
+   - No missing core v1.0 feature has been identified.
 
-2. **Reader regression matrix**
-   - Cover ZIP/CBZ/RAR/CBR/7z/CB7 and folder reading.
-   - Cover single/double page, cover-alone behavior, landscape-alone behavior, manga/LTR,
-     Best Fit/Fit Width/Fit Height/Manual 100%, temporary zoom, fullscreen, thumbnails,
-     adjacent archive navigation, reading-state restore, bookmarks, and damaged pages.
-   - Prefer automated smoke coverage where behavior is deterministic.
-   - Keep a short Windows hands-on checklist only for behavior that actually needs a person.
+2. **Reader regression matrix — in progress**
+   - Added `REGRESSION_MATRIX_v0.3.0.md`.
+   - Folder/individual-image routing and all declared archive/image extensions now have deterministic smoke coverage.
+   - Remaining manual checks are limited to rendering/input/integration behavior.
 
-3. **UI and localization audit**
-   - Search the WPF UI and dialogs for remaining hard-coded user-visible English/Japanese strings.
-   - Normalize labels, tooltips, status text, dialogs, and menu terminology.
-   - Preserve the MComix-inspired reading workflow and the v0.2.0 status-bar layout.
-   - Avoid visual redesign for its own sake.
+3. **UI and localization audit — in progress**
+   - Bookmark action text and open-failure messaging are localized.
+   - Toolbar tooltips are normalized through the localization table.
+   - Continue checking only genuinely user-visible literals; symbols/file names/technical diagnostics are not localization defects.
 
 4. **Settings and state hardening — in progress**
    - Corrupt/missing settings fallback is covered.
    - Loaded settings are normalized for invalid enum values and unsafe numeric ranges.
    - Interrupted settings/reading-state writes clean up temporary files on a best-effort basis.
-   - Verify window/UI-state persistence remains sane across upgrades.
-   - Verify reading positions/bookmarks survive normal upgrades and reject replaced books as intended.
-   - Keep temporary zoom session-only.
+   - Reading-position/source replacement behavior remains covered and Windows-validated.
 
-5. **Performance and memory guardrails**
-   - Keep the v0.2.0 JPEG performance baseline as a regression target.
+5. **Performance and memory guardrails — baseline locked**
+   - Keep the v0.2.0 JPEG performance baseline as the regression target.
    - Do not retune prefetch/cache unless a reproducible regression appears.
-   - Add targeted checks around stale-load cancellation and bounded bitmap caching where practical.
-   - Treat the RC2 memory figures as an observation baseline, not a promise.
+   - Weighted LRU behavior remains smoke-tested; RC2 memory figures remain observation data, not a hard promise.
 
-6. **Windows packaging polish**
-   - Re-check application/file-association icon behavior.
-   - Re-check installer/uninstaller and optional archive associations.
-   - Ensure release notes, README, version labels, and package names agree.
-   - Keep GitHub Desktop as the documented release workflow for repository operations.
+6. **Windows packaging polish — in progress**
+   - CI development artifacts now use `0.3.0-dev` naming.
+   - Release workflow remains tag-driven.
+   - GitHub Desktop is the documented repository/tagging workflow.
+   - Final candidate will re-check installer/uninstaller and optional archive associations.
 
 ## Explicit non-goals
-
-The following remain outside v0.3.0 unless a blocking requirement emerges:
 
 - PDF support.
 - Library/database UI.
@@ -84,5 +65,5 @@ v0.3.0 is complete when:
 
 ## Exit toward v1.0
 
-If this milestone closes without discovering a missing core requirement, the next milestone should
-be a v1.0 release-candidate cycle rather than another broad feature-expansion release.
+If the final compact Windows gate passes without discovering a missing core requirement, the next
+milestone should be a v1.0 release-candidate cycle rather than another broad feature-expansion release.
