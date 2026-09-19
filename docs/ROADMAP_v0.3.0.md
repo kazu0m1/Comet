@@ -39,8 +39,10 @@ settings/state behavior, packaging drift, and regressions across the many intera
    - Preserve the MComix-inspired reading workflow and the v0.2.0 status-bar layout.
    - Avoid visual redesign for its own sake.
 
-4. **Settings and state hardening**
-   - Verify corrupt/missing settings fallback.
+4. **Settings and state hardening — in progress**
+   - Corrupt/missing settings fallback is covered.
+   - Loaded settings are normalized for invalid enum values and unsafe numeric ranges.
+   - Interrupted settings/reading-state writes clean up temporary files on a best-effort basis.
    - Verify window/UI-state persistence remains sane across upgrades.
    - Verify reading positions/bookmarks survive normal upgrades and reject replaced books as intended.
    - Keep temporary zoom session-only.

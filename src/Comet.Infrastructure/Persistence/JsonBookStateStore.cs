@@ -36,22 +36,40 @@ public sealed class JsonBookStateStore : IBookStateStore
         {
             return null;
         }
+        catch (UnauthorizedAccessException)
+        {
+            return null;
+        }
     }
 
     public async ValueTask SaveAsync(string sourcePath, BookState state, CancellationToken cancellationToken = default)
     {
         await _writeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        var path = StatePath(sourcePath);
+        var temp = path + ".tmp";
         try
         {
-            var path = StatePath(sourcePath);
-            var temp = path + ".tmp";
             await using (var stream = File.Create(temp))
                 await JsonSerializer.SerializeAsync(stream, state, Options, cancellationToken).ConfigureAwait(false);
             File.Move(temp, path, overwrite: true);
         }
         finally
         {
+            TryDeleteTemp(temp);
             _writeGate.Release();
+        }
+    }
+
+    private static void TryDeleteTemp(string path)
+    {
+        try
+        {
+            if (File.Exists(path))
+                File.Delete(path);
+        }
+        catch
+        {
+            // A stale temp file is harmless and must not make reading-state persistence fatal.
         }
     }
 

@@ -33,21 +33,21 @@ public sealed class JsonSettingsStore : ISettingsStore
             {
                 settings = settings with
                 {
-                    SettingsSchemaVersion = 2,
+                    SettingsSchemaVersion = AppSettingsNormalizer.CurrentSchemaVersion,
                     ShowThumbnails = true,
                     ThumbnailWidth = 72
                 };
             }
-            else if (settings.SettingsSchemaVersion < 2)
+            else if (settings.SettingsSchemaVersion < AppSettingsNormalizer.CurrentSchemaVersion)
             {
                 settings = settings with
                 {
-                    SettingsSchemaVersion = 2,
+                    SettingsSchemaVersion = AppSettingsNormalizer.CurrentSchemaVersion,
                     ThumbnailWidth = 72
                 };
             }
 
-            return settings;
+            return AppSettingsNormalizer.Normalize(settings);
         }
         catch (JsonException)
         {
@@ -57,21 +57,40 @@ public sealed class JsonSettingsStore : ISettingsStore
         {
             return new AppSettings();
         }
+        catch (UnauthorizedAccessException)
+        {
+            return new AppSettings();
+        }
     }
 
     public async ValueTask SaveAsync(AppSettings settings, CancellationToken cancellationToken = default)
     {
         await _writeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        var temp = _path + ".tmp";
         try
         {
-            var temp = _path + ".tmp";
+            var normalized = AppSettingsNormalizer.Normalize(settings);
             await using (var stream = File.Create(temp))
-                await JsonSerializer.SerializeAsync(stream, settings, Options, cancellationToken).ConfigureAwait(false);
+                await JsonSerializer.SerializeAsync(stream, normalized, Options, cancellationToken).ConfigureAwait(false);
             File.Move(temp, _path, overwrite: true);
         }
         finally
         {
+            TryDeleteTemp(temp);
             _writeGate.Release();
+        }
+    }
+
+    private static void TryDeleteTemp(string path)
+    {
+        try
+        {
+            if (File.Exists(path))
+                File.Delete(path);
+        }
+        catch
+        {
+            // A stale temp file is harmless and must not make settings persistence fatal.
         }
     }
 }

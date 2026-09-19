@@ -310,6 +310,43 @@ try
     Equal(2, corruptSettings.SettingsSchemaVersion, "corrupt settings fallback schema");
     Equal(FitMode.BestFit, corruptSettings.FitMode, "corrupt settings fallback fit");
     Equal(true, corruptSettings.ShowThumbnails, "corrupt settings fallback thumbnails");
+
+    var normalizedSettings = AppSettingsNormalizer.Normalize(new AppSettings
+    {
+        FitMode = (FitMode)999,
+        ReadingDirection = (ReadingDirection)999,
+        PageLayoutMode = (PageLayoutMode)999,
+        ThumbnailWidth = 9999,
+        SmartScrollFraction = -3,
+        ArrowScrollPixels = double.PositiveInfinity
+    });
+    Equal(FitMode.BestFit, normalizedSettings.FitMode, "invalid fit mode normalized");
+    Equal(ReadingDirection.RightToLeft, normalizedSettings.ReadingDirection, "invalid reading direction normalized");
+    Equal(PageLayoutMode.DoublePage, normalizedSettings.PageLayoutMode, "invalid layout mode normalized");
+    Equal(200d, normalizedSettings.ThumbnailWidth, "thumbnail width clamped");
+    Equal(0.10d, normalizedSettings.SmartScrollFraction, "smart scroll fraction clamped");
+    Equal(70d, normalizedSettings.ArrowScrollPixels, "non-finite arrow scroll falls back");
+
+    await File.WriteAllTextAsync(
+        Path.Combine(settingsRoot, "settings.json"),
+        """
+        {
+          "SettingsSchemaVersion": 2,
+          "FitMode": 999,
+          "ReadingDirection": 999,
+          "PageLayoutMode": 999,
+          "ThumbnailWidth": -500,
+          "SmartScrollFraction": 99,
+          "ArrowScrollPixels": -10
+        }
+        """);
+    var sanitizedFromDisk = await settingsStore.LoadAsync();
+    Equal(FitMode.BestFit, sanitizedFromDisk.FitMode, "disk invalid fit mode normalized");
+    Equal(ReadingDirection.RightToLeft, sanitizedFromDisk.ReadingDirection, "disk invalid direction normalized");
+    Equal(PageLayoutMode.DoublePage, sanitizedFromDisk.PageLayoutMode, "disk invalid layout normalized");
+    Equal(48d, sanitizedFromDisk.ThumbnailWidth, "disk thumbnail width clamped");
+    Equal(1.0d, sanitizedFromDisk.SmartScrollFraction, "disk smart scroll clamped");
+    Equal(10d, sanitizedFromDisk.ArrowScrollPixels, "disk arrow scroll clamped");
 }
 finally
 {
