@@ -2,11 +2,11 @@
 
 Comet is a Windows comic viewer focused on the parts of the MComix reading experience that matter most for this project: **fast startup, direct comic-archive reading, reliable fit modes, temporary zoom, and right-to-left manga reading**.
 
-> Status: **v0.3.0 released on 2026-09-19 after the Windows release gate passed**. The next planned milestone is a v1.0 release-candidate cycle rather than another broad feature-expansion milestone.
+> Status: **v1.0.0 RC1 passed; v1.0.0 final release preparation is active**. No release-blocking defect was found in the final Windows candidate gate.
 
-## v0.3.0 focus
+## v1.0 focus
 
-v0.3.0 is a completion/hardening milestone: formally audit the original v1.0 requirements, expand regression coverage, finish UI/localization cleanup, harden settings/state upgrades, and preserve the v0.2.0 performance baseline. Major new subsystems such as PDF and Library remain deferred. See `docs/ROADMAP_v0.3.0.md`.
+v1.0 promotes the Windows-validated v0.3.0 baseline to the first general-availability release. The original FR-001..FR-025 and NFR-001..NFR-010 scope is frozen, RC1 passed, and no broad feature expansion is being added before GA. See `docs/ROADMAP_v1.0.md` and `docs/RC_VALIDATION_v1.0.md`.
 
 ## Current reader scope
 
@@ -37,7 +37,7 @@ Prerequisites:
 For a self-contained build:
 
 ```powershell
-.\scripts\publish-win-x64.ps1 -Version 0.3.0
+.\scripts\publish-win-x64.ps1 -Version 1.0.0
 ```
 
 The publish output is written to `artifacts/win-x64`.
@@ -47,7 +47,7 @@ The publish output is written to `artifacts/win-x64`.
 Install Inno Setup 6, then run:
 
 ```powershell
-.\scripts\package-release.ps1 -Version 0.3.0 -BuildInstaller
+.\scripts\package-release.ps1 -Version 1.0.0 -BuildInstaller
 ```
 
 Assets are written to `artifacts/release` with SHA-256 hashes.

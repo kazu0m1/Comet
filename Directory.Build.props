@@ -7,7 +7,6 @@
     <Deterministic>true</Deterministic>
     <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
     <VersionPrefix>1.0.0</VersionPrefix>
-    <VersionSuffix>rc1</VersionSuffix>
     <Authors>Comet contributors</Authors>
     <Product>Comet</Product>
     <RepositoryType>git</RepositoryType>

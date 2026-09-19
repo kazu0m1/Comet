@@ -2,6 +2,15 @@
 
 All notable changes to Comet are documented here.
 
+## [1.0.0] - 2026-09-19
+
+### General availability
+- Promoted the fully audited v0.3.0 baseline to the first general-availability release.
+- Frozen v1.0 baseline covers FR-001..FR-025 and NFR-001..NFR-010 with no missing core requirement identified.
+- v1.0.0-rc1 passed the final Windows hands-on gate, including install/launch, core reading workflow, zoom/session/restart behavior, reading-position restore, CBR/CB7 regression checks, localization, uninstall, and file-association health.
+- RC2 was not required because RC1 exposed no release-blocking defect requiring code or packaging changes.
+- Final Windows x64 portable ZIP and Inno Setup packaging are versioned 1.0.0.
+
 ## [0.3.0] - 2026-09-19
 
 ### Added
