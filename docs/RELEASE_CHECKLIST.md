@@ -33,9 +33,11 @@
 - [x] Thumbnail sidebar width is persisted after splitter resize.
 - [ ] Final v0.3.0 Windows hands-on gate.
 - [ ] Final installer/uninstaller regression.
-- [ ] Final candidate package integrity check.
+- [x] Final candidate package integrity check.
 
 ## Final hands-on gate
+
+RC1 was installed and launched successfully on the Windows 11 validation machine. The remaining release-blocking manual confirmation is uninstall/file-association behavior.
 
 The intended final manual pass is deliberately short:
 

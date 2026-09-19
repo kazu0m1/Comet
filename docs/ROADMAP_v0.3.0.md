@@ -73,5 +73,6 @@ milestone should be a v1.0 release-candidate cycle rather than another broad fea
 
 ## Current phase
 
-RC1 packaging is active. No further code-level feature work is planned before the compact
-Windows hands-on gate unless CI exposes a regression.
+RC1 packaging is complete and the Windows install/launch check passed. No further code-level
+feature work is planned before release; only the final uninstall/file-association confirmation
+remains before the `v0.3.0` tag.

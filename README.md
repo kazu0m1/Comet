@@ -2,7 +2,7 @@
 
 Comet is a Windows comic viewer focused on the parts of the MComix reading experience that matter most for this project: **fast startup, direct comic-archive reading, reliable fit modes, temporary zoom, and right-to-left manga reading**.
 
-> Status: **v0.2.0 released; v0.3.0 RC1 validation is being prepared after completion/hardening audit**. The repository is structured for repeatable Windows CI, installer validation, and tagged prereleases.
+> Status: **v0.2.0 released; v0.3.0 RC1 has passed the Windows install/launch check, with final uninstall/association confirmation remaining before tagging**. The repository is structured for repeatable Windows CI, installer validation, and tagged prereleases.
 
 ## v0.3.0 focus
 
@@ -37,7 +37,7 @@ Prerequisites:
 For a self-contained build:
 
 ```powershell
-.\scripts\publish-win-x64.ps1 -Version 0.2.0
+.\scripts\publish-win-x64.ps1 -Version 0.3.0
 ```
 
 The publish output is written to `artifacts/win-x64`.
@@ -47,7 +47,7 @@ The publish output is written to `artifacts/win-x64`.
 Install Inno Setup 6, then run:
 
 ```powershell
-.\scripts\package-release.ps1 -Version 0.2.0 -BuildInstaller
+.\scripts\package-release.ps1 -Version 0.3.0 -BuildInstaller
 ```
 
 Assets are written to `artifacts/release` with SHA-256 hashes.
