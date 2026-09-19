@@ -33,4 +33,4 @@
 
 ## Result
 
-**RC1 PASSED on 2026-09-19.** No release-blocking defect was found and no code or packaging change is required as a result of hands-on validation. RC2 is not required; proceed directly to final v1.0.0 preparation.
+**RC1 PASSED on 2026-09-19.** No release-blocking defect was found and no code or packaging change was required as a result of hands-on validation. RC2 was not required. The final `v1.0.0` Release workflow subsequently completed successfully and the GA release was published on 2026-09-19.

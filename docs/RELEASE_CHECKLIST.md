@@ -73,3 +73,17 @@ The Release workflow creates:
 - `SHA256SUMS.txt`
 
 Pre-1.0 versions are published as GitHub prereleases.
+
+## v1.0.0 general-availability gate
+
+- [x] v1.0 scope frozen at FR-001..FR-025 / NFR-001..NFR-010.
+- [x] v1.0.0-rc1 CI and package generation completed successfully.
+- [x] v1.0.0-rc1 Windows hands-on gate passed.
+- [x] RC2 skipped because no release-blocking defect was found.
+- [x] Final v1.0.0 CI completed successfully.
+- [x] `v1.0.0` tag pushed to the final release-gate commit.
+- [x] GitHub Release workflow completed successfully.
+- [x] `Comet-v1.0.0-win-x64.zip`, `Comet-v1.0.0-win-x64-Setup.exe`, and `SHA256SUMS.txt` published.
+- [x] GitHub Release published as a normal release (`prerelease: false`).
+
+**v1.0.0 milestone: CLOSED on 2026-09-19.**
