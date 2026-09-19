@@ -6,6 +6,7 @@
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\src\Comet.App\Comet.App.csproj" />
     <ProjectReference Include="..\..\src\Comet.Core\Comet.Core.csproj" />
     <ProjectReference Include="..\..\src\Comet.Infrastructure\Comet.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\Comet.Platform.Windows\Comet.Platform.Windows.csproj" />

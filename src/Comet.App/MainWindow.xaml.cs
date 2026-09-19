@@ -841,6 +841,7 @@ public partial class MainWindow : Window
             }
         }
         catch (IOException) { }
+        catch (UnauthorizedAccessException) { }
         return new BookState(_pageIndex, _bookmarks.ToArray(), length, modified);
     }
 

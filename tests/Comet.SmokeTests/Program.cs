@@ -1,5 +1,7 @@
 using System.IO;
 using System.IO.Compression;
+using System.Globalization;
+using Comet.App.Services;
 using Comet.Core.Models;
 using Comet.Core.Services;
 using Comet.Infrastructure.Navigation;
@@ -11,6 +13,14 @@ using SharpCompress.Writers;
 using SharpCompress.Writers.SevenZip;
 
 var failures = new List<string>();
+
+var enText = new Localizer(CultureInfo.GetCultureInfo("en-US"));
+var jaText = new Localizer(CultureInfo.GetCultureInfo("ja-JP"));
+Check(Localizer.TranslationKeysMatch, "English/Japanese localization keys match");
+Equal("Open", enText["OpenSelected"], "English bookmark open text");
+Equal("開く", jaText["OpenSelected"], "Japanese bookmark open text");
+Equal("Could not open this item.", enText["OpenFailed"], "English open failure text");
+Equal("この項目を開けませんでした。", jaText["OpenFailed"], "Japanese open failure text");
 
 void Check(bool condition, string name)
 {

@@ -4,9 +4,20 @@ namespace Comet.App.Services;
 
 public sealed class Localizer
 {
-    private readonly bool _ja = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.Equals("ja", StringComparison.OrdinalIgnoreCase);
+    private readonly bool _ja;
 
-    public string this[string key] => _ja ? Ja.GetValueOrDefault(key, En.GetValueOrDefault(key, key)) : En.GetValueOrDefault(key, key);
+    public Localizer(CultureInfo? culture = null)
+    {
+        var uiCulture = culture ?? CultureInfo.CurrentUICulture;
+        _ja = uiCulture.TwoLetterISOLanguageName.Equals("ja", StringComparison.OrdinalIgnoreCase);
+    }
+
+    public string this[string key] => _ja
+        ? Ja.GetValueOrDefault(key, En.GetValueOrDefault(key, key))
+        : En.GetValueOrDefault(key, key);
+
+    public static bool TranslationKeysMatch
+        => En.Count == Ja.Count && En.Keys.All(Ja.ContainsKey);
 
     private static readonly IReadOnlyDictionary<string, string> En = new Dictionary<string, string>
     {
