@@ -34,6 +34,8 @@
 - [x] Final v0.3.0 Windows hands-on gate.
 - [x] Final installer/uninstaller regression.
 - [x] Final candidate package integrity check.
+- [x] `v0.3.0` tag pushed and GitHub Release workflow completed successfully.
+- [x] v0.3.0 release assets published: portable ZIP, Setup.exe, and SHA256SUMS.txt.
 
 ## Final hands-on gate
 

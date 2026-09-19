@@ -73,6 +73,7 @@ milestone should be a v1.0 release-candidate cycle rather than another broad fea
 
 ## Current phase
 
-RC1 packaging and the compact Windows hands-on gate are complete. Installation, launch,
-uninstall, and file-association cleanup passed on 2026-09-19. v0.3.0 is ready for the final
-`v0.3.0` tag and Release workflow.
+v0.3.0 was tagged and released successfully on 2026-09-19. The Windows release gate,
+Release workflow, installer/portable asset generation, and GitHub prerelease publication all
+completed successfully. This milestone is closed; the next planned milestone is the v1.0
+release-candidate cycle.
