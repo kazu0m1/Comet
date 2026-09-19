@@ -58,6 +58,8 @@
 
 RC gate completed on Windows 11 with RC2.
 
+All v0.2.0 RC gate checks completed successfully; the next action is to tag `v0.2.0` and let the Release workflow produce the final assets.
+
 ## Tag and release
 
 After the RC gate is complete and the final release-preparation commit is synced locally,

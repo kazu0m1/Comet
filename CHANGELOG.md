@@ -2,7 +2,7 @@
 
 All notable changes to Comet are documented here.
 
-## [Unreleased] — v0.2.0
+## [0.2.0] - 2026-09-19
 
 ### Added
 - RC2 memory-pressure hardening: stale page loads and superseded prefetch batches are cancelled once no active viewer is waiting for them, without reducing normal prefetch parallelism.
