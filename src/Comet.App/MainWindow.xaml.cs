@@ -582,6 +582,7 @@ public partial class MainWindow : Window
         Viewport.ReadingDirection = direction;
         Viewport.ResetScroll();
         UpdateMenuChecks();
+        UpdateImageInfo();
         _ = SaveSettingsSafeAsync();
     }
 

@@ -1,27 +1,28 @@
-# Comet v0.2.0
+# Comet v0.3.0
 
-Comet v0.2.0 expands the reader beyond ZIP/CBZ while keeping the fast MComix-inspired
-reading workflow established in v0.1.0.
+Comet v0.3.0 is a completion and hardening release. It does not add another major reader
+subsystem; instead it audits the original v1.0 requirements, expands deterministic regression
+coverage, hardens persisted state, and cleans up the remaining reader UI/localization edges.
 
 Highlights:
-- Direct ZIP/CBZ, RAR/CBR, and 7z/CB7 reading.
-- Guaranteed WebP support without requiring the Microsoft Store WebP codec.
-- Damaged-page resilience so a broken image does not block navigation.
-- Reading-state validation so replaced archives do not inherit stale page positions.
-- DPI-change hardening and DPI-correct Manual 100% behavior.
-- MComix-style status bar with page range, source dimensions and actual zoom, archive
-  name, page filenames, and source image sizes.
-- JPEG/PNG/GIF/BMP source dimensions are read from image headers where possible,
-  avoiding an expensive WIC probe path.
-- Array-backed image data is passed to WIC without an unnecessary full copy.
-- Decode-time upscaling beyond source width is avoided.
-- Optional Windows file-association registration for ZIP/CBZ/RAR/CBR/7z/CB7.
-- Self-contained Windows x64 portable ZIP and Inno Setup installer.
+- Formal FR-001 through FR-025 and NFR-001 through NFR-010 implementation audit.
+- Regression matrix covering ZIP/CBZ/RAR/CBR/7z/CB7, image folders, Unicode natural
+  ordering, archive routing, reading state, settings migration, and damaged pages.
+- Persisted settings now normalize invalid enum/numeric values to safe ranges.
+- Interrupted settings and reading-state writes clean up temporary files on a best-effort basis.
+- Thumbnail-sidebar width is saved after splitter resize and restored on restart.
+- Remaining bookmark/open-failure/tool-tip reader text is routed through Japanese/English localization.
+- English/Japanese localization key parity is smoke-tested.
+- CI and fallback package defaults are aligned on the v0.3.0 development/release-candidate line.
+- GitHub Desktop is the documented repository/tag workflow.
 
-Performance field measurement on a Windows manga workload with typical 1619x2048 JPEG
-pages showed average page decode improving from 38.10 ms to 10.72 ms, while render-page
-P95 improved from 114.12 ms to 15.77 ms. These are field measurements rather than a
-hardware-normalized benchmark.
+The successful v0.2.0 JPEG performance path, cache/prefetch behavior, memory hardening,
+archive support, WebP support, DPI behavior, and MComix-style status bar are deliberately
+kept as the performance/UX baseline rather than retuned.
 
-v0.2.0 remains a pre-1.0 release. PDF support, library/database UI, slideshow, magnifier,
-and image editing/enhancement remain outside this milestone.
+PDF support, library/database UI, slideshow, magnifier, and image editing/enhancement remain
+outside this milestone.
+
+If the v0.3.0 Windows release-candidate gate completes without exposing a missing core
+requirement, the project is intended to move toward a v1.0 release-candidate cycle rather than
+another broad feature-expansion milestone.

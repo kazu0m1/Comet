@@ -37,7 +37,7 @@ jobs:
           .\scripts\summarize-performance.ps1 -Path $sample
       - name: Publish Windows x64
         shell: pwsh
-        run: .\scripts\publish-win-x64.ps1 -Version 0.3.0-dev
+        run: .\scripts\publish-win-x64.ps1 -Version 0.3.0-rc1
       - name: Upload portable build
         uses: actions/upload-artifact@v7
         with:
@@ -46,12 +46,12 @@ jobs:
           if-no-files-found: error
       - name: Install Inno Setup
         run: choco install innosetup --yes --no-progress
-      - name: Package v0.3.0 development build
+      - name: Package v0.3.0 RC1 build
         shell: pwsh
-        run: .\scripts\package-release.ps1 -Version 0.3.0-dev -BuildInstaller
-      - name: Upload development package
+        run: .\scripts\package-release.ps1 -Version 0.3.0-rc1 -BuildInstaller
+      - name: Upload release candidate
         uses: actions/upload-artifact@v7
         with:
-          name: Comet-v0.3.0-dev
+          name: Comet-v0.3.0-rc1
           path: artifacts/release/*
           if-no-files-found: error
