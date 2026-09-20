@@ -24,6 +24,7 @@ public partial class MainWindow : Window
     private readonly WpfBitmapDecoder _decoder = new();
     private readonly Localizer _text = new();
     private readonly ZoomSessionState _zoom;
+    private readonly DragPanGesture _dragPan = new();
 
     private IBookSource? _book;
     private IBookSource? _thumbnailBook;
@@ -1079,12 +1080,64 @@ public partial class MainWindow : Window
         Viewport.Focus();
     }
 
-    private async void Viewport_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    private void Viewport_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         if (e.ChangedButton != MouseButton.Left)
             return;
 
         Viewport.Focus();
+        var position = e.GetPosition(Viewport);
+        _dragPan.Begin(position.X, position.Y);
+        e.Handled = true;
+    }
+
+    private void Viewport_MouseMove(object sender, MouseEventArgs e)
+    {
+        if (!_dragPan.IsTracking)
+            return;
+
+        if (e.LeftButton != MouseButtonState.Pressed)
+        {
+            CancelDragPan();
+            return;
+        }
+
+        var position = e.GetPosition(Viewport);
+        var move = _dragPan.Move(
+            position.X,
+            position.Y,
+            SystemParameters.MinimumHorizontalDragDistance,
+            SystemParameters.MinimumVerticalDragDistance,
+            Viewport.CanPan);
+
+        if (!move.IsDragging)
+            return;
+
+        if (!Viewport.IsMouseCaptured)
+            Viewport.CaptureMouse();
+
+        Viewport.Cursor = Cursors.ScrollAll;
+        Viewport.ScrollBy(-move.DeltaX, -move.DeltaY);
+        e.Handled = true;
+    }
+
+    private async void Viewport_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ChangedButton != MouseButton.Left)
+            return;
+
+        var wasDragging = _dragPan.End();
+        if (Viewport.IsMouseCaptured)
+            Viewport.ReleaseMouseCapture();
+        Viewport.Cursor = null;
+
+        Viewport.Focus();
+        if (wasDragging)
+        {
+            e.Handled = true;
+            return;
+        }
+
         var position = e.GetPosition(Viewport);
         if (position.X < Viewport.ActualWidth / 2)
             await NextAsync();
@@ -1092,6 +1145,20 @@ public partial class MainWindow : Window
             await PreviousAsync();
 
         e.Handled = true;
+    }
+
+    private void Viewport_LostMouseCapture(object sender, MouseEventArgs e)
+    {
+        _dragPan.Cancel();
+        Viewport.Cursor = null;
+    }
+
+    private void CancelDragPan()
+    {
+        _dragPan.Cancel();
+        if (Viewport.IsMouseCaptured)
+            Viewport.ReleaseMouseCapture();
+        Viewport.Cursor = null;
     }
 
     private async void Window_Drop(object sender, DragEventArgs e)

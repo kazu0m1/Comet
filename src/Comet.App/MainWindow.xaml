@@ -135,7 +135,10 @@
 
             <Grid Grid.Column="2">
                 <controls:PageViewport x:Name="Viewport"
+                                       MouseLeftButtonDown="Viewport_MouseLeftButtonDown"
+                                       MouseMove="Viewport_MouseMove"
                                        MouseLeftButtonUp="Viewport_MouseLeftButtonUp"
+                                       LostMouseCapture="Viewport_LostMouseCapture"
                                        SizeChanged="Viewport_SizeChanged" />
             </Grid>
         </Grid>

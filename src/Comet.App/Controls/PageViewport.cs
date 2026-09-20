@@ -26,6 +26,18 @@ public sealed class PageViewport : FrameworkElement
     public double CurrentSecondPageDisplayWidthDip
         => SecondPage is null ? 0 : GetLayout().SecondWidth;
 
+    public bool CanPan
+    {
+        get
+        {
+            if (FirstPage is null || ActualWidth <= 0 || ActualHeight <= 0)
+                return false;
+
+            var layout = GetLayout();
+            return layout.ContentWidth > ActualWidth + 0.5 || layout.ContentHeight > ActualHeight + 0.5;
+        }
+    }
+
     public PageViewport()
     {
         Focusable = true;

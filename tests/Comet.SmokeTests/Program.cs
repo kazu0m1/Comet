@@ -81,6 +81,24 @@ Near(0.8, zoom.TemporaryZoomFactor, "temporary zoom survives adjacent archive");
 zoom.ResetForNewProcess();
 Near(1.0, zoom.TemporaryZoomFactor, "temporary zoom resets for new process");
 
+var dragPan = new DragPanGesture();
+dragPan.Begin(100, 100);
+Check(dragPan.IsTracking && !dragPan.IsDragging, "drag pan starts as click candidate");
+var belowThreshold = dragPan.Move(102, 103, 4, 4, canPan: true);
+Check(!belowThreshold.IsDragging, "drag pan preserves click below threshold");
+var dragStarted = dragPan.Move(106, 104, 4, 4, canPan: true);
+Check(dragStarted.IsDragging, "drag pan starts after threshold when content overflows");
+Near(6, dragStarted.DeltaX, "drag pan first delta x includes pre-threshold motion");
+Near(4, dragStarted.DeltaY, "drag pan first delta y includes pre-threshold motion");
+var dragContinued = dragPan.Move(111, 1, 4, 4, canPan: true);
+Near(5, dragContinued.DeltaX, "drag pan continuation delta x");
+Near(-103, dragContinued.DeltaY, "drag pan continuation delta y");
+Check(dragPan.End(), "drag pan end suppresses click after dragging");
+
+dragPan.Begin(10, 10);
+Check(!dragPan.Move(30, 30, 4, 4, canPan: false).IsDragging, "drag pan disabled when content fits viewport");
+Check(!dragPan.End(), "non-pannable drag attempt remains a click");
+
 foreach (var extension in new[] { ".jpg", ".jpeg", ".png", ".bmp", ".gif", ".tif", ".tiff", ".webp" })
     Check(SupportedImages.IsSupported("PAGE" + extension.ToUpperInvariant()), $"supported image extension {extension}");
 
