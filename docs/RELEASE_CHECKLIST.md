@@ -87,3 +87,17 @@ Pre-1.0 versions are published as GitHub prereleases.
 - [x] GitHub Release published as a normal release (`prerelease: false`).
 
 **v1.0.0 milestone: CLOSED on 2026-09-19.**
+
+## v1.0.1 maintenance release
+
+- [x] Added left-button drag panning for oversized pages/spreads.
+- [x] Preserved existing left-click page navigation through Windows drag-distance thresholding.
+- [x] Added smoke coverage for click-versus-drag behavior and non-pannable content.
+- [x] Implementation CI completed successfully without a separate hands-on gate.
+- [x] Final v1.0.1 CI completed successfully.
+- [x] `v1.0.1` tag pushed to `Prepare v1.0.1 release`.
+- [x] GitHub Release workflow completed successfully.
+- [x] `Comet-v1.0.1-win-x64.zip`, `Comet-v1.0.1-win-x64-Setup.exe`, and `SHA256SUMS.txt` published.
+- [x] GitHub Release published as a normal release (`prerelease: false`).
+
+**v1.0.1 maintenance release: CLOSED on 2026-09-20.**
