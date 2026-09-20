@@ -2,6 +2,17 @@
 
 All notable changes to Comet are documented here.
 
+## [1.0.1] - 2026-09-20
+
+### Added
+- Left-button drag panning for a page or spread when the rendered content is larger than the viewport.
+- Drag gestures use the Windows drag-distance threshold so ordinary left clicks continue to perform the existing click-zone page navigation.
+- Panning remains bounded to the rendered content and is disabled when the content already fits inside the viewport.
+
+### Validation
+- Added smoke coverage for click-versus-drag thresholding, non-pannable content, drag deltas, and click suppression after a drag.
+- Full CI build, smoke tests, Windows x64 publish, and installer packaging passed without requiring a separate hands-on gate.
+
 ## [1.0.0] - 2026-09-19
 
 ### General availability

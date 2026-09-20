@@ -1,6 +1,6 @@
 # Keybindings
 
-Comet v0.1.0 follows MComix behavior for the reader functions implemented in this release.
+Comet follows MComix behavior where the corresponding reader function is implemented, with a small number of native Comet interactions documented below.
 
 | Action | Binding |
 |---|---|
@@ -8,6 +8,7 @@ Comet v0.1.0 follows MComix behavior for the reader functions implemented in thi
 | Close book | Ctrl+W |
 | Quit | Ctrl+Q |
 | Next page/spread | PageDown, left click |
+| Pan oversized page/spread | Hold left mouse button and drag |
 | Previous page/spread | PageUp, Backspace |
 | Smart scroll forward | Space, mouse wheel down |
 | Smart scroll backward | Shift+Space, mouse wheel up |

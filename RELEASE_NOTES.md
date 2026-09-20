@@ -1,20 +1,16 @@
-# Comet v1.0.0
+# Comet v1.0.1
 
-Comet v1.0.0 is the first general-availability release of Comet, a Windows comic viewer focused on fast direct archive reading and an MComix-inspired reading workflow.
+Comet v1.0.1 is a small reader-interaction update built on the v1.0.0 general-availability baseline.
 
-Highlights:
-- Fast direct ZIP/CBZ reading without pre-extraction, plus direct image-folder reading.
-- Single-page and double-page reading with cover-alone behavior and right-to-left manga mode.
-- Best Fit, Fit Width, Fit Height, DPI-correct Manual 100%, temporary zoom, and Smart Scroll.
-- Adjacent archive navigation with session zoom retention.
-- Asynchronous prefetch, bounded image cache, responsive thumbnails, reading-position persistence, bookmarks, fullscreen, and drag-and-drop.
-- Japanese/English UI and optional Windows file-association registration.
-- Damaged-page continuation instead of failing the entire reading session.
-- WebP, RAR/CBR, and 7z/CB7 support retained as validated capabilities beyond the original v1.0 baseline.
-- Self-contained Windows x64 portable ZIP and Inno Setup installer.
+## Added
 
-The v1.0 requirements baseline covers FR-001 through FR-025 and NFR-001 through NFR-010. The v1.0.0-rc1 Windows hands-on gate passed on 2026-09-19 without a release-blocking defect, so RC2 was not required.
+- When the displayed page or spread is larger than the image viewport, hold the left mouse button and drag to pan it horizontally or vertically.
+- Panning is clamped to the rendered content, so the image cannot be dragged beyond its available scroll range.
+- The existing left-click page navigation remains intact: movement must exceed the Windows drag-distance threshold before the gesture becomes a pan.
+- When the content already fits inside the viewport, dragging does not enter pan mode.
 
-The established v0.2.0 JPEG performance/cache path and v0.3.0 state, localization, regression, and packaging hardening are retained unchanged.
+## Validation
 
-PDF, library/database UI, slideshow, magnifier, and image editing/enhancement remain outside v1.0.
+- Automated smoke coverage verifies click-versus-drag thresholding, non-pannable content, drag deltas, and suppression of click navigation after an actual drag.
+- Build, smoke tests, Windows x64 self-contained publish, and installer packaging passed in CI.
+- No separate Windows hands-on gate was required because the change is isolated to pointer gesture classification and the existing bounded viewport scrolling path.
