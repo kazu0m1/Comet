@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using Microsoft.Win32;
@@ -660,6 +661,7 @@ public partial class MainWindow : Window
         MangaModeMenuItem.IsChecked = _settings.ReadingDirection == ReadingDirection.RightToLeft;
         StretchMenuItem.IsChecked = _settings.StretchSmallImages;
         ThumbnailSidebarMenuItem.IsChecked = _settings.ShowThumbnails;
+        UpdateViewportContextMenu();
     }
 
     private void LocalizeUi()
@@ -699,6 +701,39 @@ public partial class MainWindow : Window
         FitHeightToolbarButton.ToolTip = _text["FitHeight"];
         DoublePageToolbarButton.ToolTip = _text["DoublePage"];
         MangaToolbarButton.ToolTip = _text["MangaMode"];
+        UpdateViewportContextMenu();
+    }
+
+    private void ViewportContextMenu_Opened(object sender, RoutedEventArgs e)
+    {
+        UpdateViewportContextMenu();
+    }
+
+    private void UpdateViewportContextMenu()
+    {
+        var contextMenu = Viewport.ContextMenu;
+        if (contextMenu is null)
+            return;
+
+        foreach (var item in contextMenu.Items.OfType<MenuItem>())
+        {
+            if (item.Tag is not string key)
+                continue;
+
+            item.Header = _text[key];
+            item.IsChecked = key switch
+            {
+                "BestFit" => _settings.FitMode == FitMode.BestFit,
+                "FitWidth" => _settings.FitMode == FitMode.FitWidth,
+                "FitHeight" => _settings.FitMode == FitMode.FitHeight,
+                "Manual" => _settings.FitMode == FitMode.Manual,
+                "DoublePage" => _settings.PageLayoutMode == PageLayoutMode.DoublePage,
+                "MangaMode" => _settings.ReadingDirection == ReadingDirection.RightToLeft,
+                "Stretch" => _settings.StretchSmallImages,
+                "Thumbnails" => _settings.ShowThumbnails,
+                _ => false
+            };
+        }
     }
 
     private void UpdateStatus()
@@ -1040,6 +1075,13 @@ public partial class MainWindow : Window
 
     private async void Window_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
     {
+        if (ThumbnailSidebar.Visibility == Visibility.Visible && ThumbnailList.IsMouseOver)
+        {
+            ScrollThumbnailList(e.Delta);
+            e.Handled = true;
+            return;
+        }
+
         if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
         {
             AdjustZoom(e.Delta > 0 ? 1.10 : 1 / 1.10);
@@ -1049,6 +1091,42 @@ public partial class MainWindow : Window
 
         await SmartScrollOrFlipAsync(e.Delta < 0 ? 1 : -1);
         e.Handled = true;
+    }
+
+    private void ScrollThumbnailList(int wheelDelta)
+    {
+        var scrollViewer = FindVisualChild<ScrollViewer>(ThumbnailList);
+        if (scrollViewer is null)
+            return;
+
+        var lines = SystemParameters.WheelScrollLines;
+        if (lines < 0)
+        {
+            if (wheelDelta > 0) scrollViewer.PageUp(); else scrollViewer.PageDown();
+            return;
+        }
+
+        var lineCount = Math.Clamp(lines, 1, 10);
+        for (var i = 0; i < lineCount; i++)
+        {
+            if (wheelDelta > 0) scrollViewer.LineUp(); else scrollViewer.LineDown();
+        }
+    }
+
+    private static T? FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
+    {
+        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+        {
+            var child = VisualTreeHelper.GetChild(parent, i);
+            if (child is T match)
+                return match;
+
+            var nested = FindVisualChild<T>(child);
+            if (nested is not null)
+                return nested;
+        }
+
+        return null;
     }
 
     private void Window_DpiChanged(object sender, DpiChangedEventArgs e)

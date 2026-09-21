@@ -139,7 +139,30 @@
                                        MouseMove="Viewport_MouseMove"
                                        MouseLeftButtonUp="Viewport_MouseLeftButtonUp"
                                        LostMouseCapture="Viewport_LostMouseCapture"
-                                       SizeChanged="Viewport_SizeChanged" />
+                                       SizeChanged="Viewport_SizeChanged">
+                    <controls:PageViewport.ContextMenu>
+                        <ContextMenu Opened="ViewportContextMenu_Opened">
+                            <MenuItem Tag="PreviousPage" InputGestureText="PageUp" Click="Previous_Click" />
+                            <MenuItem Tag="NextPage" InputGestureText="PageDown" Click="Next_Click" />
+                            <Separator />
+                            <MenuItem Tag="PreviousArchive" InputGestureText="Ctrl+Shift+P" Click="PreviousArchive_Click" />
+                            <MenuItem Tag="NextArchive" InputGestureText="Ctrl+Shift+N" Click="NextArchive_Click" />
+                            <Separator />
+                            <MenuItem Tag="BestFit" IsCheckable="True" InputGestureText="B" Click="BestFit_Click" />
+                            <MenuItem Tag="FitWidth" IsCheckable="True" InputGestureText="W" Click="FitWidth_Click" />
+                            <MenuItem Tag="FitHeight" IsCheckable="True" InputGestureText="H" Click="FitHeight_Click" />
+                            <MenuItem Tag="Manual" IsCheckable="True" InputGestureText="A" Click="Manual_Click" />
+                            <Separator />
+                            <MenuItem Tag="DoublePage" IsCheckable="True" InputGestureText="D" Click="DoublePage_Click" />
+                            <MenuItem Tag="MangaMode" IsCheckable="True" InputGestureText="M" Click="MangaMode_Click" />
+                            <MenuItem Tag="Stretch" IsCheckable="True" InputGestureText="Y" Click="Stretch_Click" />
+                            <MenuItem Tag="Thumbnails" IsCheckable="True" Click="ThumbnailSidebar_Click" />
+                            <Separator />
+                            <MenuItem Tag="AddBookmark" InputGestureText="Ctrl+D" Click="AddBookmark_Click" />
+                            <MenuItem Tag="Fullscreen" InputGestureText="F / F11" Click="Fullscreen_Click" />
+                        </ContextMenu>
+                    </controls:PageViewport.ContextMenu>
+                </controls:PageViewport>
             </Grid>
         </Grid>
     </DockPanel>
