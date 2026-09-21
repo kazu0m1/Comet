@@ -1,11 +1,11 @@
-# Comet v1.0.2 candidate
+# Comet v1.0.2
 
 Comet v1.0.2 is a small interaction and navigation maintenance update.
 
 ## Changed
 
 - Mouse-wheel input over the thumbnail sidebar scrolls only the thumbnail list and no longer triggers Smart Scroll or page/archive navigation in the main reader.
-- Clicking a thumbnail continues to jump directly to that page.
+- Clicking a thumbnail jumps directly to that page.
 - Mouse-wheel behavior over the main reader remains unchanged.
 
 ## Added
@@ -16,5 +16,5 @@ Comet v1.0.2 is a small interaction and navigation maintenance update.
 
 ## Validation
 
-- Build and smoke tests pass with the new XAML and input routing.
-- Before tagging v1.0.2, verify thumbnail wheel isolation, thumbnail click navigation, and viewer right-click context-menu behavior on Windows.
+- Build, smoke tests, Windows x64 self-contained publish, and installer packaging passed in CI.
+- Windows hands-on validation passed for thumbnail-wheel isolation, thumbnail click navigation, main-reader wheel navigation, and context-menu opening/action execution.

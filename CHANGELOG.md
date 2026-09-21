@@ -2,6 +2,21 @@
 
 All notable changes to Comet are documented here.
 
+## [1.0.2] - 2026-09-21
+
+### Changed
+- Mouse-wheel input over the thumbnail sidebar now scrolls only the thumbnails and no longer triggers Smart Scroll or page/archive navigation in the main reader.
+- Thumbnail selection remains direct navigation: clicking a thumbnail opens that page.
+- Mouse-wheel behavior over the main reader remains unchanged.
+
+### Added
+- Right-click context menu on the main reader with previous/next page and archive navigation, fit modes, double-page mode, manga mode, stretch, thumbnail visibility, bookmark creation, and fullscreen.
+- Context-menu labels reuse the existing Japanese/English localization and current display settings are reflected as checked items.
+
+### Validation
+- WPF XAML build, smoke tests, Windows x64 publish, and installer packaging passed in CI.
+- Windows hands-on validation passed for thumbnail-wheel isolation, thumbnail click navigation, main-reader wheel navigation, and context-menu opening/action execution.
+
 ## [1.0.1] - 2026-09-20
 
 ### Added

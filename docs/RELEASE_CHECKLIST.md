@@ -101,3 +101,19 @@ Pre-1.0 versions are published as GitHub prereleases.
 - [x] GitHub Release published as a normal release (`prerelease: false`).
 
 **v1.0.1 maintenance release: CLOSED on 2026-09-20.**
+
+## v1.0.2 interaction maintenance gate
+
+- [x] Route wheel input over the thumbnail sidebar to the thumbnail ScrollViewer only.
+- [x] Preserve thumbnail click-to-page navigation.
+- [x] Preserve main-reader wheel Smart Scroll/page navigation.
+- [x] Add localized right-click context menu to the main reader.
+- [x] Implementation build and smoke tests passed.
+- [x] Windows check: thumbnail wheel scrolls thumbnails without changing the main page.
+- [x] Windows check: clicking a thumbnail jumps to that page.
+- [x] Windows check: main-reader wheel navigation remains unchanged.
+- [x] Windows check: right-click opens the context menu and a representative action works.
+- [ ] Final v1.0.2 CI succeeds.
+- [ ] `v1.0.2` tag and Release workflow succeed.
+
+**v1.0.2 hands-on gate: PASSED on 2026-09-21.**
