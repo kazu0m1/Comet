@@ -113,7 +113,12 @@ Pre-1.0 versions are published as GitHub prereleases.
 - [x] Windows check: clicking a thumbnail jumps to that page.
 - [x] Windows check: main-reader wheel navigation remains unchanged.
 - [x] Windows check: right-click opens the context menu and a representative action works.
-- [ ] Final v1.0.2 CI succeeds.
-- [ ] `v1.0.2` tag and Release workflow succeed.
+- [x] Final v1.0.2 CI succeeds.
+- [x] `v1.0.2` tag and Release workflow succeed.
 
 **v1.0.2 hands-on gate: PASSED on 2026-09-21.**
+
+- [x] `Comet-v1.0.2-win-x64.zip`, `Comet-v1.0.2-win-x64-Setup.exe`, and `SHA256SUMS.txt` published.
+- [x] GitHub Release published as a normal release (`prerelease: false`).
+
+**v1.0.2 maintenance release: CLOSED on 2026-09-21.**
