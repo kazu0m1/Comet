@@ -451,24 +451,24 @@ public partial class MainWindow : Window
 
         if (key == Key.Down)
         {
-            await NextAsync();
+            await MovePageOrArchiveAsync(next: true);
             return;
         }
 
         if (key == Key.Up)
         {
-            await PreviousAsync();
+            await MovePageOrArchiveAsync(next: false);
             return;
         }
 
         var manga = _settings.ReadingDirection == ReadingDirection.RightToLeft;
         if (key == Key.Left)
         {
-            if (manga) await NextAsync(); else await PreviousAsync();
+            await MovePageOrArchiveAsync(next: manga);
         }
         else if (key == Key.Right)
         {
-            if (manga) await PreviousAsync(); else await NextAsync();
+            await MovePageOrArchiveAsync(next: !manga);
         }
     }
 
@@ -528,7 +528,15 @@ public partial class MainWindow : Window
         if (SmartScroll(direction)) return;
         if (!_settings.FlipPageAtScrollEdge || _book is null) return;
 
-        if (direction > 0)
+        await MovePageOrArchiveAsync(next: direction > 0);
+    }
+
+    private async Task MovePageOrArchiveAsync(bool next)
+    {
+        if (_book is null)
+            return;
+
+        if (next)
         {
             var step = Math.Max(1, _displayedPageCount);
             if (_pageIndex + step >= _book.Descriptor.Pages.Count)
