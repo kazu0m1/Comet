@@ -129,8 +129,11 @@ Pre-1.0 versions are published as GitHub prereleases.
 - [x] Preserve Down/Up forward/back semantics.
 - [x] Preserve Left/Right manga-mode reading-direction semantics.
 - [x] Implementation build and smoke tests passed.
-- [ ] Windows check: at the final page, forward arrow-key navigation opens the next archive.
-- [ ] Windows check: normal arrow-key navigation inside a book remains unchanged.
+- [x] Windows check: at the final page, forward arrow-key navigation opens the next archive.
+- [x] Windows check: normal arrow-key navigation inside a book remains unchanged.
+- [x] Windows check: Up/Down archive transitions keep focus out of the menu bar.
 - [ ] Final v1.0.3 CI succeeds.
 - [ ] `v1.0.3` tag and Release workflow succeed.
 
+
+**v1.0.3 hands-on gate: PASSED on 2026-09-26.**
