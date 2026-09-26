@@ -132,8 +132,13 @@ Pre-1.0 versions are published as GitHub prereleases.
 - [x] Windows check: at the final page, forward arrow-key navigation opens the next archive.
 - [x] Windows check: normal arrow-key navigation inside a book remains unchanged.
 - [x] Windows check: Up/Down archive transitions keep focus out of the menu bar.
-- [ ] Final v1.0.3 CI succeeds.
-- [ ] `v1.0.3` tag and Release workflow succeed.
+- [x] Final v1.0.3 CI succeeds.
+- [x] `v1.0.3` tag and Release workflow succeed.
 
 
 **v1.0.3 hands-on gate: PASSED on 2026-09-26.**
+
+- [x] `Comet-v1.0.3-win-x64.zip`, `Comet-v1.0.3-win-x64-Setup.exe`, and `SHA256SUMS.txt` published.
+- [x] GitHub Release published as a normal release (`prerelease: false`).
+
+**v1.0.3 maintenance release: CLOSED on 2026-09-26.**
