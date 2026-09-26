@@ -2,6 +2,17 @@
 
 All notable changes to Comet are documented here.
 
+## [Unreleased] — v1.0.3
+
+### Changed
+- Arrow-key navigation now continues into the adjacent supported comic archive when the current book boundary is reached.
+- Down moves forward and Up moves backward across archive boundaries; Left/Right preserve the current manga/reading-direction semantics.
+- Mouse-wheel boundary rollover and arrow-key boundary rollover now share the same page-or-adjacent-archive navigation path.
+
+### Validation
+- Existing build and smoke tests pass after the navigation-path refactor.
+- A short Windows hands-on check is retained for real keyboard event behavior at archive boundaries.
+
 ## [1.0.2] - 2026-09-21
 
 ### Changed

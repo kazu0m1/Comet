@@ -1,20 +1,15 @@
-# Comet v1.0.2
+# Comet v1.0.3 candidate
 
-Comet v1.0.2 is a small interaction and navigation maintenance update.
+Comet v1.0.3 is a small navigation-consistency maintenance update.
 
 ## Changed
 
-- Mouse-wheel input over the thumbnail sidebar scrolls only the thumbnail list and no longer triggers Smart Scroll or page/archive navigation in the main reader.
-- Clicking a thumbnail jumps directly to that page.
-- Mouse-wheel behavior over the main reader remains unchanged.
-
-## Added
-
-- Right-click the main reader to open a localized context menu.
-- The context menu exposes page/archive navigation, fit modes, double-page mode, manga mode, stretch, thumbnail visibility, bookmark creation, and fullscreen.
-- Checkable context-menu items reflect the current reader settings.
+- Arrow-key navigation now crosses comic-archive boundaries when the current book has no further page in that direction.
+- Down continues to the next archive and Up can return to the previous archive.
+- Left/Right preserve the active reading direction: in manga mode Left advances and Right goes back; in left-to-right mode the directions are reversed.
+- Mouse-wheel and arrow-key archive-boundary navigation now share the same page-or-archive decision path.
 
 ## Validation
 
-- Build, smoke tests, Windows x64 self-contained publish, and installer packaging passed in CI.
-- Windows hands-on validation passed for thumbnail-wheel isolation, thumbnail click navigation, main-reader wheel navigation, and context-menu opening/action execution.
+- Build and smoke tests pass after the navigation refactor.
+- Before tagging v1.0.3, verify on Windows that an arrow key can move from the last page into the next archive and that ordinary in-book arrow navigation remains unchanged.

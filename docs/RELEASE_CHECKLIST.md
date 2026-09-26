@@ -122,3 +122,15 @@ Pre-1.0 versions are published as GitHub prereleases.
 - [x] GitHub Release published as a normal release (`prerelease: false`).
 
 **v1.0.2 maintenance release: CLOSED on 2026-09-21.**
+
+## v1.0.3 arrow-key boundary navigation gate
+
+- [x] Reuse the same page-or-adjacent-archive boundary logic for mouse-wheel and arrow-key navigation.
+- [x] Preserve Down/Up forward/back semantics.
+- [x] Preserve Left/Right manga-mode reading-direction semantics.
+- [x] Implementation build and smoke tests passed.
+- [ ] Windows check: at the final page, forward arrow-key navigation opens the next archive.
+- [ ] Windows check: normal arrow-key navigation inside a book remains unchanged.
+- [ ] Final v1.0.3 CI succeeds.
+- [ ] `v1.0.3` tag and Release workflow succeed.
+

@@ -2,7 +2,7 @@
 
 Comet is a Windows comic viewer focused on the parts of the MComix reading experience that matter most for this project: **fast startup, direct comic-archive reading, reliable fit modes, temporary zoom, and right-to-left manga reading**.
 
-> Status: **v1.0.2 released on 2026-09-21**. This maintenance update separates thumbnail scrolling from reader navigation and adds a localized viewer context menu.
+> Status: **v1.0.3 validation is active**. This maintenance update lets arrow-key navigation cross into adjacent comic archives at book boundaries.
 
 ## v1.0 focus
 
@@ -21,7 +21,7 @@ v1.0 promotes the Windows-validated v0.3.0 baseline to the first general-availab
 - Fit Width, Fit Height, Manual 100%, temporary zoom, and left-button drag panning when the displayed content exceeds the viewport.
 - Ctrl+mouse-wheel zoom remains active while moving to the previous/next archive in the same session, then resets on process restart.
 - Basic smart scrolling and flip-at-edge behavior.
-- Adjacent ZIP/CBZ/RAR/CBR/7z/CB7 navigation.
+- Adjacent ZIP/CBZ/RAR/CBR/7z/CB7 navigation, including rollover at book boundaries from mouse-wheel and arrow-key navigation.
 - Thumbnail-wheel scrolling stays inside the thumbnail sidebar; clicking a thumbnail jumps directly to that page.
 - Right-clicking the main reader opens a context menu for navigation and common display actions.
 - Reading-position persistence and bookmarks.
@@ -39,7 +39,7 @@ Prerequisites:
 For a self-contained build:
 
 ```powershell
-.\scripts\publish-win-x64.ps1 -Version 1.0.2
+.\scripts\publish-win-x64.ps1 -Version 1.0.3
 ```
 
 The publish output is written to `artifacts/win-x64`.
@@ -49,7 +49,7 @@ The publish output is written to `artifacts/win-x64`.
 Install Inno Setup 6, then run:
 
 ```powershell
-.\scripts\package-release.ps1 -Version 1.0.2 -BuildInstaller
+.\scripts\package-release.ps1 -Version 1.0.3 -BuildInstaller
 ```
 
 Assets are written to `artifacts/release` with SHA-256 hashes.
@@ -58,7 +58,7 @@ Assets are written to `artifacts/release` with SHA-256 hashes.
 
 The repository contains two workflows:
 - `CI`: build + smoke tests + Windows x64 publish on pushes and pull requests.
-- `Release`: triggered by `v*` tags; builds, tests, packages a portable ZIP and Setup.exe, calculates hashes, and creates a GitHub Release. Pre-release versions such as `0.x` or versions containing a hyphen are marked as prereleases; stable `1.x` versions such as `v1.0.2` are normal releases.
+- `Release`: triggered by `v*` tags; builds, tests, packages a portable ZIP and Setup.exe, calculates hashes, and creates a GitHub Release. Pre-release versions such as `0.x` or versions containing a hyphen are marked as prereleases; stable `1.x` versions such as `v1.0.3` are normal releases.
 
 Repository operations and tagging are performed through GitHub Desktop. See `docs/RELEASE_CHECKLIST.md` before tagging.
 
@@ -69,7 +69,8 @@ The project deliberately follows MComix key behavior where the corresponding fea
 - `PageDown` / left click: next page or spread
 - Left-button drag on oversized content: pan the displayed page/spread
 - `PageUp` / Backspace: previous page or spread
-- `Space` / wheel: smart scroll, then flip page at the edge
+- `Space` / wheel: smart scroll, then flip page/archive at the edge
+- Arrow keys: scroll/page navigation; at book boundaries continue into the adjacent archive according to reading direction
 - `B`, `W`, `H`, `A`: Best Fit / Fit Width / Fit Height / Manual 100%
 - `Ctrl+wheel`, `+`, `-`, `Ctrl+0`: temporary zoom
 - `D`: double-page mode
