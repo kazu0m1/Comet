@@ -1063,8 +1063,8 @@ public partial class MainWindow : Window
 
         if (key is Key.Down or Key.Up or Key.Left or Key.Right)
         {
-            await HandleArrowKeyAsync(key);
             e.Handled = true;
+            await HandleArrowKeyAsync(key);
             return;
         }
 
