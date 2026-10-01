@@ -135,10 +135,23 @@ Pre-1.0 versions are published as GitHub prereleases.
 - [x] Final v1.0.3 CI succeeds.
 - [x] `v1.0.3` tag and Release workflow succeed.
 
-
 **v1.0.3 hands-on gate: PASSED on 2026-09-26.**
 
 - [x] `Comet-v1.0.3-win-x64.zip`, `Comet-v1.0.3-win-x64-Setup.exe`, and `SHA256SUMS.txt` published.
 - [x] GitHub Release published as a normal release (`prerelease: false`).
 
 **v1.0.3 maintenance release: CLOSED on 2026-09-26.**
+
+## v1.0.4 recursive ZIP/CBZ gate
+
+- [x] ZIP/CBZ entries inside ZIP/CBZ archives are detected recursively.
+- [x] Direct image pages and nested ZIP/CBZ page sequences are flattened in natural filename order.
+- [x] Nested page names retain their archive path while the outer archive remains the book identity/path.
+- [x] Nested archives use temporary disk storage instead of whole-archive RAM retention and are cleaned up on source disposal.
+- [x] Recursion and temporary-storage safety limits are enforced.
+- [x] Automated fixture covers `A.zip` with a direct image, `B.zip`, `C.cbz`, and deeper `D.zip`.
+- [x] Smoke test verifies page count, natural order, page bytes, factory routing, and outer source-path preservation.
+- [x] Implementation build and recursive-archive smoke tests passed.
+- [x] Separate Windows UI hands-on gate not required because reader UI/navigation code is unchanged.
+- [ ] Final v1.0.4 CI and package generation succeed.
+- [ ] `v1.0.4` tag and Release workflow succeed.

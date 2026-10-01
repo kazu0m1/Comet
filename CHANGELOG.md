@@ -2,6 +2,18 @@
 
 All notable changes to Comet are documented here.
 
+## [1.0.4] - 2026-10-01
+
+### Added
+- Recursive ZIP/CBZ reading: contained ZIP/CBZ archives are traversed in natural filename order and flattened into one continuous page sequence.
+- Nested page names retain their archive path while the outer archive remains the book identity for reading state and bookmarks.
+- Temporary-storage handling for nested archives with cleanup on book close, a 16-level recursion limit, an 8 GiB per-nested-archive limit, and a 32 GiB total temporary-storage safety limit per opened outer archive.
+
+### Validation
+- Added automated smoke coverage that builds an outer ZIP containing a direct image, `B.zip`, `C.cbz`, and a deeper `D.zip`.
+- Verified recursive flattening, natural order, page bytes, ZIP/CBZ handling at multiple levels, factory routing, and preservation of the outer source path.
+- UI navigation/rendering code is unchanged, so no additional hands-on gate was required.
+
 ## [1.0.3] - 2026-09-26
 
 ### Changed
@@ -63,7 +75,6 @@ All notable changes to Comet are documented here.
 - Bookmark action text, open-failure messaging, and reader tooltips are fully routed through localization.
 - CI development artifacts and fallback package defaults now use `0.3.0-dev`.
 - Release documentation uses GitHub Desktop for repository/tag operations.
-
 
 ## [0.2.0] - 2026-09-19
 

@@ -2,7 +2,7 @@
 
 Comet is a Windows comic viewer focused on the parts of the MComix reading experience that matter most for this project: **fast startup, direct comic-archive reading, reliable fit modes, temporary zoom, and right-to-left manga reading**.
 
-> Status: **v1.0.3 released on 2026-09-26**. This maintenance update lets arrow-key navigation cross adjacent comic archives while keeping keyboard focus in the reader.
+> Status: **v1.0.4 release preparation is complete**. This maintenance update adds recursive ZIP/CBZ reading so an outer archive can contain inner ZIP/CBZ books and expose them as one continuous page sequence.
 
 ## v1.0 focus
 
@@ -12,6 +12,7 @@ v1.0 promotes the Windows-validated v0.3.0 baseline to the first general-availab
 
 - Windows 11 x64, .NET 10 LTS / C# 14 / WPF.
 - Open ZIP/CBZ directly through the .NET ZIP path.
+- Recursively read ZIP/CBZ files contained inside ZIP/CBZ archives and flatten their image pages into one natural-order reading sequence.
 - Open RAR/CBR and 7z/CB7 directly through SharpCompress.
 - Open image folders directly; dropping an individual image opens its folder at that image.
 - Natural filename sorting.
@@ -28,7 +29,7 @@ v1.0 promotes the Windows-validated v0.3.0 baseline to the first general-availab
 - Fullscreen, drag-and-drop, Japanese/English UI.
 - Optional ZIP/CBZ/RAR/CBR/7z/CB7 file-association registration through the installer.
 
-PDF and library management remain deferred. RAR/CBR and 7z/CB7 have passed Windows hands-on validation in v0.2.0; see `CHANGELOG.md` and `docs/ROADMAP_v0.2.0.md`.
+Recursive archive reading is currently limited to ZIP/CBZ-inside-ZIP/CBZ. Nested archives are expanded to a temporary Comet workspace rather than being held wholly in RAM, are limited to 16 nested levels, and are cleaned up when the outer book is closed. PDF and library management remain deferred. RAR/CBR and 7z/CB7 have passed Windows hands-on validation in v0.2.0; see `CHANGELOG.md` and `docs/ROADMAP_v0.2.0.md`.
 
 ## Build on Windows
 
@@ -39,7 +40,7 @@ Prerequisites:
 For a self-contained build:
 
 ```powershell
-.\scripts\publish-win-x64.ps1 -Version 1.0.3
+.\scripts\publish-win-x64.ps1 -Version 1.0.4
 ```
 
 The publish output is written to `artifacts/win-x64`.
@@ -49,7 +50,7 @@ The publish output is written to `artifacts/win-x64`.
 Install Inno Setup 6, then run:
 
 ```powershell
-.\scripts\package-release.ps1 -Version 1.0.3 -BuildInstaller
+.\scripts\package-release.ps1 -Version 1.0.4 -BuildInstaller
 ```
 
 Assets are written to `artifacts/release` with SHA-256 hashes.
@@ -58,7 +59,7 @@ Assets are written to `artifacts/release` with SHA-256 hashes.
 
 The repository contains two workflows:
 - `CI`: build + smoke tests + Windows x64 publish on pushes and pull requests.
-- `Release`: triggered by `v*` tags; builds, tests, packages a portable ZIP and Setup.exe, calculates hashes, and creates a GitHub Release. Pre-release versions such as `0.x` or versions containing a hyphen are marked as prereleases; stable `1.x` versions such as `v1.0.3` are normal releases.
+- `Release`: triggered by `v*` tags; builds, tests, packages a portable ZIP and Setup.exe, calculates hashes, and creates a GitHub Release. Pre-release versions such as `0.x` or versions containing a hyphen are marked as prereleases; stable `1.x` versions such as `v1.0.4` are normal releases.
 
 Repository operations and tagging are performed through GitHub Desktop. See `docs/RELEASE_CHECKLIST.md` before tagging.
 
