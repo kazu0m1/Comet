@@ -1,3 +1,4 @@
+using System.IO;
 using System.IO.Compression;
 using System.Runtime.CompilerServices;
 using Comet.Infrastructure.Sources;
