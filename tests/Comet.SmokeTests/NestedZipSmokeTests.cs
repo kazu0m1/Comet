@@ -12,7 +12,7 @@ internal static class NestedZipSmokeTests
         Directory.CreateDirectory(temp);
         try
         {
-            var failures = RunAsync(temp).GetAwaiter().GetResult();
+            var failures = Run(temp);
             if (failures.Count != 0)
                 throw new InvalidOperationException("Nested ZIP smoke tests failed: " + string.Join("; ", failures));
         }
@@ -23,7 +23,7 @@ internal static class NestedZipSmokeTests
         }
     }
 
-    private static async Task<IReadOnlyList<string>> RunAsync(string tempRoot)
+    private static IReadOnlyList<string> Run(string tempRoot)
     {
         var failures = new List<string>();
         var outerPath = Path.Combine(tempRoot, "nested-outer.zip");
@@ -50,7 +50,8 @@ internal static class NestedZipSmokeTests
             WriteEntry(outer, "ignored.txt", new byte[] { 88 });
         }
 
-        await using (var book = await ZipBookSource.OpenAsync(outerPath))
+        var book = ZipBookSource.OpenAsync(outerPath).AsTask().GetAwaiter().GetResult();
+        try
         {
             Equal(6, book.Descriptor.Pages.Count, "nested zip flattened page count", failures);
             Equal(Path.GetFullPath(outerPath), Path.GetFullPath(book.Descriptor.Path), "nested zip keeps outer source path", failures);
@@ -71,18 +72,27 @@ internal static class NestedZipSmokeTests
             var expectedBytes = new byte[] { 0, 1, 2, 10, 21, 31 };
             for (var i = 0; i < expectedBytes.Length && i < book.Descriptor.Pages.Count; i++)
             {
-                var bytes = await book.ReadPageBytesAsync(i);
+                var bytes = book.ReadPageBytesAsync(i).AsTask().GetAwaiter().GetResult();
                 if (bytes.Length != 1 || bytes[0] != expectedBytes[i])
                     failures.Add($"nested zip page bytes {i}: expected={expectedBytes[i]}, actual={string.Join(',', bytes)}");
             }
         }
+        finally
+        {
+            book.DisposeAsync().AsTask().GetAwaiter().GetResult();
+        }
 
         var factory = new BookSourceFactory();
-        await using (var factoryBook = await factory.OpenAsync(outerPath))
+        var factoryBook = factory.OpenAsync(outerPath).AsTask().GetAwaiter().GetResult();
+        try
         {
             if (factoryBook is not ZipBookSource)
                 failures.Add("factory keeps nested zip on system zip source");
             Equal(6, factoryBook.Descriptor.Pages.Count, "factory nested zip page count", failures);
+        }
+        finally
+        {
+            factoryBook.DisposeAsync().AsTask().GetAwaiter().GetResult();
         }
 
         return failures;
