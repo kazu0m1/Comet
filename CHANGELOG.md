@@ -13,6 +13,7 @@ All notable changes to Comet are documented here.
 - Added automated smoke coverage that builds an outer ZIP containing a direct image, `B.zip`, `C.cbz`, and a deeper `D.zip`.
 - Verified recursive flattening, natural order, page bytes, ZIP/CBZ handling at multiple levels, factory routing, and preservation of the outer source path.
 - UI navigation/rendering code is unchanged, so no additional hands-on gate was required.
+- Final v1.0.4 CI and tag-triggered Release workflow completed successfully; the normal GitHub Release includes the portable ZIP, Setup.exe, and SHA256SUMS.txt.
 
 ## [1.0.3] - 2026-09-26
 

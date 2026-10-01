@@ -153,5 +153,9 @@ Pre-1.0 versions are published as GitHub prereleases.
 - [x] Smoke test verifies page count, natural order, page bytes, factory routing, and outer source-path preservation.
 - [x] Implementation build and recursive-archive smoke tests passed.
 - [x] Separate Windows UI hands-on gate not required because reader UI/navigation code is unchanged.
-- [ ] Final v1.0.4 CI and package generation succeed.
-- [ ] `v1.0.4` tag and Release workflow succeed.
+- [x] Final v1.0.4 CI and package generation succeed.
+- [x] `v1.0.4` tag points to `48fd1598c813d65bd35f78a630577e3c5fbe1d71` and Release workflow succeeds.
+- [x] `Comet-v1.0.4-win-x64.zip`, `Comet-v1.0.4-win-x64-Setup.exe`, and `SHA256SUMS.txt` published.
+- [x] GitHub Release published as a normal release (`prerelease: false`).
+
+**v1.0.4 maintenance release: CLOSED on 2026-10-01.**

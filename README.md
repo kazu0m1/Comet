@@ -2,7 +2,7 @@
 
 Comet is a Windows comic viewer focused on the parts of the MComix reading experience that matter most for this project: **fast startup, direct comic-archive reading, reliable fit modes, temporary zoom, and right-to-left manga reading**.
 
-> Status: **v1.0.4 release preparation is complete**. This maintenance update adds recursive ZIP/CBZ reading so an outer archive can contain inner ZIP/CBZ books and expose them as one continuous page sequence.
+> Status: **v1.0.4 released on 2026-10-01**. This maintenance update adds recursive ZIP/CBZ reading so an outer archive can contain inner ZIP/CBZ books and expose them as one continuous page sequence.
 
 ## v1.0 focus
 
