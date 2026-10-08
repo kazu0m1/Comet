@@ -2,7 +2,7 @@
 
 Comet is a Windows comic viewer focused on the parts of the MComix reading experience that matter most for this project: **fast startup, direct comic-archive reading, reliable fit modes, temporary zoom, and right-to-left manga reading**.
 
-> Status: **v1.0.4 released on 2026-10-01**. This maintenance update adds recursive ZIP/CBZ reading so an outer archive can contain inner ZIP/CBZ books and expose them as one continuous page sequence.
+> Status: **v1.0.5 fullscreen maintenance validation is active**. Fullscreen now starts correctly from a maximized window, and Esc exits fullscreen to the previous window state.
 
 ## v1.0 focus
 
@@ -40,7 +40,7 @@ Prerequisites:
 For a self-contained build:
 
 ```powershell
-.\scripts\publish-win-x64.ps1 -Version 1.0.4
+.\scripts\publish-win-x64.ps1 -Version 1.0.5
 ```
 
 The publish output is written to `artifacts/win-x64`.
@@ -50,7 +50,7 @@ The publish output is written to `artifacts/win-x64`.
 Install Inno Setup 6, then run:
 
 ```powershell
-.\scripts\package-release.ps1 -Version 1.0.4 -BuildInstaller
+.\scripts\package-release.ps1 -Version 1.0.5 -BuildInstaller
 ```
 
 Assets are written to `artifacts/release` with SHA-256 hashes.
@@ -59,7 +59,7 @@ Assets are written to `artifacts/release` with SHA-256 hashes.
 
 The repository contains two workflows:
 - `CI`: build + smoke tests + Windows x64 publish on pushes and pull requests.
-- `Release`: triggered by `v*` tags; builds, tests, packages a portable ZIP and Setup.exe, calculates hashes, and creates a GitHub Release. Pre-release versions such as `0.x` or versions containing a hyphen are marked as prereleases; stable `1.x` versions such as `v1.0.4` are normal releases.
+- `Release`: triggered by `v*` tags; builds, tests, packages a portable ZIP and Setup.exe, calculates hashes, and creates a GitHub Release. Pre-release versions such as `0.x` or versions containing a hyphen are marked as prereleases; stable `1.x` versions such as `v1.0.5` are normal releases.
 
 Repository operations and tagging are performed through GitHub Desktop. See `docs/RELEASE_CHECKLIST.md` before tagging.
 
@@ -76,7 +76,7 @@ The project deliberately follows MComix key behavior where the corresponding fea
 - `Ctrl+wheel`, `+`, `-`, `Ctrl+0`: temporary zoom
 - `D`: double-page mode
 - `M`: manga mode
-- `F` / `F11`: fullscreen
+- `F` / `F11`: enter/leave fullscreen (including when maximized); `Esc`: leave fullscreen
 - `Ctrl+Shift+N/P`: next/previous supported comic archive
 - `Ctrl+D` / `Ctrl+B`: add/open bookmarks
 

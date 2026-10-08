@@ -159,3 +159,16 @@ Pre-1.0 versions are published as GitHub prereleases.
 - [x] GitHub Release published as a normal release (`prerelease: false`).
 
 **v1.0.4 maintenance release: CLOSED on 2026-10-01.**
+
+## v1.0.5 fullscreen regression gate
+
+- [x] Fullscreen transition resets maximized state before applying borderless maximized mode.
+- [x] Fullscreen window temporarily uses topmost mode and exit restores the prior state/chrome/topmost settings.
+- [x] Esc exits fullscreen while F/F11 continue to toggle.
+- [ ] v1.0.5 build, smoke tests, publish, and installer packaging succeed.
+- [ ] Windows check: from maximized, F/F11 covers the taskbar; Esc exits and restores maximized.
+- [ ] Windows check: from normal, F/F11 covers the taskbar; Esc exits and restores normal.
+- [ ] Final v1.0.5 CI succeeds.
+- [ ] `v1.0.5` tag and GitHub Release workflow succeed.
+- [ ] Setup.exe, portable ZIP, and SHA256SUMS.txt are published as a normal release.
+

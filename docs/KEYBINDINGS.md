@@ -26,7 +26,8 @@ Comet follows MComix behavior where the corresponding reader function is impleme
 | Double-page mode | D |
 | Manga mode | M |
 | Stretch small images | Y |
-| Fullscreen | F / F11 |
+| Toggle fullscreen | F / F11 |
+| Exit fullscreen | Esc (while fullscreen) |
 | Hide/show UI chrome | I |
 | Add bookmark | Ctrl+D |
 | Open bookmark list | Ctrl+B |
