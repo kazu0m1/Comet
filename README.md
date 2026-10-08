@@ -2,7 +2,7 @@
 
 Comet is a Windows comic viewer focused on the parts of the MComix reading experience that matter most for this project: **fast startup, direct comic-archive reading, reliable fit modes, temporary zoom, and right-to-left manga reading**.
 
-> Status: **v1.0.5 fullscreen validation is active**. Fullscreen now uses a native borderless transition without visibly restoring maximized windows; Esc exits fullscreen and restores the previous window state.
+> Status: **v1.0.5 fullscreen hands-on validation passed on 2026-10-08; final release preparation is complete**. The native borderless transition eliminates the visible restore animation, covers the taskbar, and supports Esc to restore the prior window state.
 
 ## v1.0 focus
 

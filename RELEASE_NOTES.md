@@ -1,4 +1,4 @@
-# Comet v1.0.5 release candidate
+# Comet v1.0.5
 
 Comet v1.0.5 is a focused fullscreen behavior maintenance release.
 
@@ -10,5 +10,5 @@ Comet v1.0.5 is a focused fullscreen behavior maintenance release.
 
 ## Validation
 
-- Full CI build, smoke tests, Windows x64 publish, and Setup package generation are required.
-- A short Windows hands-on check is required for a consistent fullscreen transition from normal/maximized, taskbar coverage and Esc state restoration; CI cannot verify on-screen transitions.
+- CI #115 passed: build, smoke tests, Windows x64 self-contained publish, and Setup/portable ZIP packaging.
+- Windows hands-on gate passed on 2026-10-08: both normal and maximized transitions are smooth, the taskbar is covered, and Esc restores the previous normal/maximized state.

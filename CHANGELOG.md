@@ -2,7 +2,7 @@
 
 All notable changes to Comet are documented here.
 
-## [Unreleased] — v1.0.5
+## [1.0.5] - 2026-10-08
 
 ### Fixed
 - Entering fullscreen with F/F11 now switches the native window border and resizes directly to the full monitor bounds without a visible Normal-to-Maximized window transition.
@@ -10,7 +10,8 @@ All notable changes to Comet are documented here.
 - Esc now exits fullscreen; F/F11 still toggle fullscreen.
 
 ### Validation
-- The Windows GUI regression gate checks seamless direct fullscreen transitions from maximized and normal windows, taskbar coverage, Esc exit, and restoration of the prior window state.
+- Full CI #115 passed: Build, smoke tests, Windows x64 publish, and installer/portable packaging.
+- Windows hands-on validation passed on 2026-10-08: fullscreen entered smoothly from both maximized and normal windows, the taskbar remained covered, and Esc restored the original window state.
 
 ## [1.0.4] - 2026-10-01
 
