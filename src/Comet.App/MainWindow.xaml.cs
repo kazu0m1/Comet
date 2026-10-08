@@ -43,10 +43,7 @@ public partial class MainWindow : Window
     private CancellationTokenSource? _stateSaveCts;
     private long _renderGeneration;
     private bool _fullscreen;
-    private WindowState _windowStateBeforeFullscreen;
-    private WindowStyle _windowStyleBeforeFullscreen;
-    private ResizeMode _resizeModeBeforeFullscreen;
-    private bool _topmostBeforeFullscreen;
+    private BorderlessFullscreenSession? _fullscreenSession;
     private bool _uiHidden;
     private bool _isClosing;
     private bool _allowClose;
@@ -626,29 +623,18 @@ public partial class MainWindow : Window
     {
         if (!_fullscreen)
         {
-            _windowStateBeforeFullscreen = WindowState;
-            _windowStyleBeforeFullscreen = WindowStyle;
-            _resizeModeBeforeFullscreen = ResizeMode;
-            _topmostBeforeFullscreen = Topmost;
-
-            // A window already maximized must first leave that state so WPF
-            // recalculates the borderless bounds instead of reusing the work area.
-            WindowState = WindowState.Normal;
-            ResizeMode = ResizeMode.NoResize;
-            WindowStyle = WindowStyle.None;
-            Topmost = true;
-            WindowState = WindowState.Maximized;
+            // Switch the native window frame in place. A visible Normal -> Maximized
+            // transition is jarring when fullscreen starts from a maximized window.
+            _fullscreenSession = BorderlessFullscreenSession.Enter(this);
             _fullscreen = true;
         }
         else
         {
-            WindowState = WindowState.Normal;
-            WindowStyle = _windowStyleBeforeFullscreen;
-            ResizeMode = _resizeModeBeforeFullscreen;
-            Topmost = _topmostBeforeFullscreen;
-            WindowState = _windowStateBeforeFullscreen;
+            _fullscreenSession?.Dispose();
+            _fullscreenSession = null;
             _fullscreen = false;
         }
+
         ApplyChromeVisibility();
     }
 
