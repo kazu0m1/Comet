@@ -162,11 +162,11 @@ Pre-1.0 versions are published as GitHub prereleases.
 
 ## v1.0.5 fullscreen regression gate
 
-- [x] Fullscreen transition resets maximized state before applying borderless maximized mode.
-- [x] Fullscreen window temporarily uses topmost mode and exit restores the prior state/chrome/topmost settings.
+- [x] Enter fullscreen by changing the native window border and screen bounds directly, without the Normal-to-Maximized intermediate transition.
+- [x] Fullscreen temporarily uses topmost mode and exit restores native window placement, style, and prior topmost state.
 - [x] Esc exits fullscreen while F/F11 continue to toggle.
 - [ ] v1.0.5 build, smoke tests, publish, and installer packaging succeed.
-- [ ] Windows check: from maximized, F/F11 covers the taskbar; Esc exits and restores maximized.
+- [ ] Windows check: from maximized, F/F11 enters fullscreen without the distracting intermediate resize, covers the taskbar, and Esc restores maximized.
 - [ ] Windows check: from normal, F/F11 covers the taskbar; Esc exits and restores normal.
 - [ ] Final v1.0.5 CI succeeds.
 - [ ] `v1.0.5` tag and GitHub Release workflow succeed.

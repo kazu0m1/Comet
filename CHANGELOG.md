@@ -5,12 +5,12 @@ All notable changes to Comet are documented here.
 ## [Unreleased] — v1.0.5
 
 ### Fixed
-- Entering fullscreen with F/F11 from a maximized window now resets the window state before switching to borderless maximized mode, preventing the Windows taskbar from remaining visible.
-- Fullscreen mode is always-on-top only while active, and exiting it restores the original maximized/normal state, resize mode, window style, and topmost setting.
+- Entering fullscreen with F/F11 now switches the native window border and resizes directly to the full monitor bounds without a visible Normal-to-Maximized window transition.
+- The fullscreen window covers the taskbar and is temporarily topmost. Exiting restores the original window placement and native window style, including its maximized/normal and topmost state.
 - Esc now exits fullscreen; F/F11 still toggle fullscreen.
 
 ### Validation
-- The Windows GUI regression gate checks taskbar coverage when entering from maximized and normal windows, Esc exit, and restoration of the prior window state.
+- The Windows GUI regression gate checks seamless direct fullscreen transitions from maximized and normal windows, taskbar coverage, Esc exit, and restoration of the prior window state.
 
 ## [1.0.4] - 2026-10-01
 
