@@ -43,6 +43,10 @@ public partial class MainWindow : Window
     private CancellationTokenSource? _stateSaveCts;
     private long _renderGeneration;
     private bool _fullscreen;
+    private WindowState _windowStateBeforeFullscreen;
+    private WindowStyle _windowStyleBeforeFullscreen;
+    private ResizeMode _resizeModeBeforeFullscreen;
+    private bool _topmostBeforeFullscreen;
     private bool _uiHidden;
     private bool _isClosing;
     private bool _allowClose;
@@ -620,18 +624,30 @@ public partial class MainWindow : Window
 
     private void ToggleFullscreen()
     {
-        _fullscreen = !_fullscreen;
-        if (_fullscreen)
+        if (!_fullscreen)
         {
-            WindowStyle = WindowStyle.None;
+            _windowStateBeforeFullscreen = WindowState;
+            _windowStyleBeforeFullscreen = WindowStyle;
+            _resizeModeBeforeFullscreen = ResizeMode;
+            _topmostBeforeFullscreen = Topmost;
+
+            // A window already maximized must first leave that state so WPF
+            // recalculates the borderless bounds instead of reusing the work area.
+            WindowState = WindowState.Normal;
             ResizeMode = ResizeMode.NoResize;
+            WindowStyle = WindowStyle.None;
+            Topmost = true;
             WindowState = WindowState.Maximized;
+            _fullscreen = true;
         }
         else
         {
-            WindowStyle = WindowStyle.SingleBorderWindow;
-            ResizeMode = ResizeMode.CanResize;
             WindowState = WindowState.Normal;
+            WindowStyle = _windowStyleBeforeFullscreen;
+            ResizeMode = _resizeModeBeforeFullscreen;
+            Topmost = _topmostBeforeFullscreen;
+            WindowState = _windowStateBeforeFullscreen;
+            _fullscreen = false;
         }
         ApplyChromeVisibility();
     }
@@ -1076,7 +1092,8 @@ public partial class MainWindow : Window
         if (key == Key.D) { await ToggleDoublePageAsync(); e.Handled = true; return; }
         if (key == Key.Y) { ToggleStretch(); e.Handled = true; return; }
         if (key == Key.I) { ToggleUiHidden(); e.Handled = true; return; }
-        if (key is Key.F or Key.F11) { ToggleFullscreen(); e.Handled = true; return; }
+        if (key == Key.Escape && _fullscreen) { e.Handled = true; ToggleFullscreen(); return; }
+        if (key is Key.F or Key.F11) { e.Handled = true; ToggleFullscreen(); return; }
         if (key is Key.OemPlus or Key.Add) { AdjustZoom(1.10); e.Handled = true; return; }
         if (key is Key.OemMinus or Key.Subtract) { AdjustZoom(1 / 1.10); e.Handled = true; }
     }
