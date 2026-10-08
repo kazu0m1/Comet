@@ -168,9 +168,11 @@ Pre-1.0 versions are published as GitHub prereleases.
 - [x] v1.0.5 build, smoke tests, publish, and installer packaging succeed (CI #115).
 - [x] Windows check: from maximized, F/F11 enters fullscreen without the distracting intermediate resize, covers the taskbar, and Esc restores maximized.
 - [x] Windows check: from normal, F/F11 covers the taskbar; Esc exits and restores normal.
-- [ ] Final v1.0.5 CI succeeds.
-- [ ] `v1.0.5` tag and GitHub Release workflow succeed.
-- [ ] Setup.exe, portable ZIP, and SHA256SUMS.txt are published as a normal release.
+- [x] Final v1.0.5 CI succeeds (CI #116).
+- [x] `v1.0.5` tag points to `855236cb5a5b76b84c13d0c8535829f2eb33c7fd` and Release workflow #9 succeeds.
+- [x] `Comet-v1.0.5-win-x64-Setup.exe`, `Comet-v1.0.5-win-x64.zip`, and `SHA256SUMS.txt` published as a normal release (`prerelease: false`).
 
 
 **v1.0.5 hands-on gate: PASSED on 2026-10-08.**
+
+**v1.0.5 maintenance release: CLOSED on 2026-10-08.**
