@@ -186,6 +186,8 @@ Pre-1.0 versions are published as GitHub prereleases.
 - [x] Preserve direct thumbnail clicking and thumbnail-only wheel scrolling.
 - [x] No additional Windows hands-on gate required for the isolated existing-method reuse.
 - [x] v1.0.6 CI #119, Windows x64 publish, and Setup/ZIP packaging succeeded.
-- [ ] `v1.0.6` tag points to the final release commit and Release workflow succeeds.
-- [ ] Installer, portable ZIP, and SHA256SUMS.txt are published as a normal release.
+- [x] `v1.0.6` tag points to `46a6146badfc1fc0d4f434b121dd922027028b4f` and Release workflow #10 succeeds.
+- [x] `Comet-v1.0.6-win-x64-Setup.exe`, `Comet-v1.0.6-win-x64.zip`, and `SHA256SUMS.txt` published as a normal release (`prerelease: false`).
 
+
+**v1.0.6 maintenance release: CLOSED on 2026-10-13.**
