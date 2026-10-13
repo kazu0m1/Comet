@@ -11,5 +11,5 @@ Comet v1.0.6 fixes thumbnail sidebar positioning after returning from fullscreen
 
 ## Validation
 
-- Build, smoke tests, Windows x64 publish, and Setup/portable ZIP packaging are checked by the release CI.
+- CI #119 succeeded: Build, smoke tests, Windows x64 publish, installer/portable ZIP packaging, and release-candidate artifact upload.
 - This isolated visibility synchronization fix does not require a separate Windows hands-on gate.

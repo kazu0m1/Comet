@@ -185,7 +185,7 @@ Pre-1.0 versions are published as GitHub prereleases.
 - [x] Apply the same fix to fullscreen exit, I-key UI restore, and thumbnail sidebar restore.
 - [x] Preserve direct thumbnail clicking and thumbnail-only wheel scrolling.
 - [x] No additional Windows hands-on gate required for the isolated existing-method reuse.
-- [ ] v1.0.6 final CI, Windows x64 publish, and Setup/ZIP packaging succeed.
+- [x] v1.0.6 CI #119, Windows x64 publish, and Setup/ZIP packaging succeeded.
 - [ ] `v1.0.6` tag points to the final release commit and Release workflow succeeds.
 - [ ] Installer, portable ZIP, and SHA256SUMS.txt are published as a normal release.
 
