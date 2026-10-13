@@ -176,3 +176,16 @@ Pre-1.0 versions are published as GitHub prereleases.
 **v1.0.5 hands-on gate: PASSED on 2026-10-08.**
 
 **v1.0.5 maintenance release: CLOSED on 2026-10-08.**
+
+## v1.0.6 thumbnail sidebar restoration gate
+
+- [x] Identify that thumbnail selection updates while the sidebar is hidden but ScrollIntoView is skipped.
+- [x] On hidden-to-visible transition, defer selection/scroll synchronization until WPF Loaded priority.
+- [x] Use the latest current-page index and guard against the sidebar being hidden again.
+- [x] Apply the same fix to fullscreen exit, I-key UI restore, and thumbnail sidebar restore.
+- [x] Preserve direct thumbnail clicking and thumbnail-only wheel scrolling.
+- [x] No additional Windows hands-on gate required for the isolated existing-method reuse.
+- [ ] v1.0.6 final CI, Windows x64 publish, and Setup/ZIP packaging succeed.
+- [ ] `v1.0.6` tag points to the final release commit and Release workflow succeeds.
+- [ ] Installer, portable ZIP, and SHA256SUMS.txt are published as a normal release.
+

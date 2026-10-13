@@ -2,7 +2,7 @@
 
 Comet is a Windows comic viewer focused on the parts of the MComix reading experience that matter most for this project: **fast startup, direct comic-archive reading, reliable fit modes, temporary zoom, and right-to-left manga reading**.
 
-> Status: **v1.0.5 released on 2026-10-08**. This maintenance release adds a smooth native borderless fullscreen transition from normal/maximized windows, covers the taskbar, and enables Esc to restore the previous window state.
+> Status: **v1.0.6 release preparation is active**. This maintenance update resynchronizes the thumbnail sidebar to the currently displayed page after fullscreen/UI/sidebar visibility is restored.
 
 ## v1.0 focus
 
@@ -23,7 +23,7 @@ v1.0 promotes the Windows-validated v0.3.0 baseline to the first general-availab
 - Ctrl+mouse-wheel zoom remains active while moving to the previous/next archive in the same session, then resets on process restart.
 - Basic smart scrolling and flip-at-edge behavior.
 - Adjacent ZIP/CBZ/RAR/CBR/7z/CB7 navigation, including rollover at book boundaries from mouse-wheel and arrow-key navigation.
-- Thumbnail-wheel scrolling stays inside the thumbnail sidebar; clicking a thumbnail jumps directly to that page.
+- Thumbnail-wheel scrolling stays inside the thumbnail sidebar; clicking a thumbnail jumps directly to that page. After restoring a hidden sidebar (fullscreen, I, or thumbnail toggle), its scroll position catches up to the current page.
 - Right-clicking the main reader opens a context menu for navigation and common display actions.
 - Reading-position persistence and bookmarks.
 - Fullscreen, drag-and-drop, Japanese/English UI.
@@ -40,7 +40,7 @@ Prerequisites:
 For a self-contained build:
 
 ```powershell
-.\scripts\publish-win-x64.ps1 -Version 1.0.5
+.\scripts\publish-win-x64.ps1 -Version 1.0.6
 ```
 
 The publish output is written to `artifacts/win-x64`.
@@ -50,7 +50,7 @@ The publish output is written to `artifacts/win-x64`.
 Install Inno Setup 6, then run:
 
 ```powershell
-.\scripts\package-release.ps1 -Version 1.0.5 -BuildInstaller
+.\scripts\package-release.ps1 -Version 1.0.6 -BuildInstaller
 ```
 
 Assets are written to `artifacts/release` with SHA-256 hashes.
@@ -59,7 +59,7 @@ Assets are written to `artifacts/release` with SHA-256 hashes.
 
 The repository contains two workflows:
 - `CI`: build + smoke tests + Windows x64 publish on pushes and pull requests.
-- `Release`: triggered by `v*` tags; builds, tests, packages a portable ZIP and Setup.exe, calculates hashes, and creates a GitHub Release. Pre-release versions such as `0.x` or versions containing a hyphen are marked as prereleases; stable `1.x` versions such as `v1.0.5` are normal releases.
+- `Release`: triggered by `v*` tags; builds, tests, packages a portable ZIP and Setup.exe, calculates hashes, and creates a GitHub Release. Pre-release versions such as `0.x` or versions containing a hyphen are marked as prereleases; stable `1.x` versions such as `v1.0.6` are normal releases.
 
 Repository operations and tagging are performed through GitHub Desktop. See `docs/RELEASE_CHECKLIST.md` before tagging.
 

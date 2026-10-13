@@ -2,6 +2,17 @@
 
 All notable changes to Comet are documented here.
 
+## [1.0.6] - 2026-10-13
+
+### Fixed
+- When a hidden thumbnail sidebar becomes visible again after fullscreen, I-key UI hiding, or a sidebar toggle, scroll to the currently displayed page instead of retaining the previous viewport position.
+- Selection continues to update while the sidebar is hidden; only the visible scroll position is synchronized once WPF has laid out the sidebar again.
+- Preserve thumbnail click-to-page navigation and independent thumbnail mouse-wheel scrolling.
+
+### Validation
+- Build and smoke tests cover the maintenance change without modifying image decoding, pagination, archive sources, or thumbnail loading.
+- Visibility synchronization is deferred until WPF's Loaded dispatcher priority; the callback uses the latest page and skips the operation if the sidebar is hidden again.
+
 ## [1.0.5] - 2026-10-08
 
 ### Fixed
