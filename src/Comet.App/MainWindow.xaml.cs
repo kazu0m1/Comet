@@ -404,6 +404,7 @@ public partial class MainWindow : Window
 
     private void ApplyThumbnailSidebarVisibility()
     {
+        var wasVisible = ThumbnailSidebar.Visibility == Visibility.Visible;
         var show = _settings.ShowThumbnails && !_fullscreen && !_uiHidden;
         ThumbnailSidebar.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
         ThumbnailSplitter.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
@@ -411,6 +412,19 @@ public partial class MainWindow : Window
             ? new GridLength(Math.Clamp(_settings.ThumbnailWidth + 20, 88, 220))
             : new GridLength(0);
         ThumbnailSplitterColumn.Width = show ? new GridLength(5) : new GridLength(0);
+
+        if (show && !wasVisible)
+        {
+            // ScrollIntoView cannot reliably lay out virtualized items while the
+            // sidebar is collapsed. Run once after it has become visible and
+            // WPF has completed its layout, using the latest displayed page.
+            Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded,
+                new Action(() =>
+                {
+                    if (ThumbnailSidebar.Visibility == Visibility.Visible)
+                        UpdateThumbnailSelection();
+                }));
+        }
     }
 
     private void ToggleThumbnailSidebar()
