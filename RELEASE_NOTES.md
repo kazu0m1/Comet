@@ -1,15 +1,14 @@
-# Comet v1.0.6
+# Comet v1.0.7
 
-Comet v1.0.6 fixes thumbnail sidebar positioning after returning from fullscreen or another hidden-sidebar mode.
+Comet v1.0.7 changes the default startup window state.
 
-## Fixed
+## Changed
 
-- After advancing pages in fullscreen, returning with Esc or F/F11 shows the thumbnail corresponding to the currently displayed page instead of leaving the sidebar at the original scroll position.
-- The same behavior applies when restoring the sidebar with I or toggling thumbnail visibility.
-- Thumbnail selection is maintained while hidden. Scroll synchronization runs only when the sidebar becomes visible, after its layout is ready.
-- Existing thumbnail click navigation, independent thumbnail-wheel scrolling, and fullscreen transitions are unchanged.
+- Start maximized as a normal Windows window, preserving the title bar, menus, toolbar, thumbnail sidebar, status bar, and taskbar.
+- F/F11 still enters the separate borderless fullscreen mode; Esc exits it to the previous window state.
+- If the user restores the window manually, the existing normal-window size remains available.
 
 ## Validation
 
-- CI #119 succeeded: Build, smoke tests, Windows x64 publish, installer/portable ZIP packaging, and release-candidate artifact upload.
-- This isolated visibility synchronization fix does not require a separate Windows hands-on gate.
+- The maximized startup property is applied in WPF XAML before the window is first shown. No changes were made to native fullscreen or the archive/reading pipeline.
+- CI validates the solution build, smoke tests, Windows x64 publishing, and Setup/portable packaging. No separate user hands-on gate is required for this isolated startup-default change.

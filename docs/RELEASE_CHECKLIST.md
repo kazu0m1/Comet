@@ -191,3 +191,14 @@ Pre-1.0 versions are published as GitHub prereleases.
 
 
 **v1.0.6 maintenance release: CLOSED on 2026-10-13.**
+
+## v1.0.7 maximized startup gate
+
+- [x] Default MainWindow startup state is Maximized in WPF XAML, before the first Show().
+- [x] Startup remains a standard window with normal taskbar and application chrome, not borderless fullscreen.
+- [x] F/F11, Esc, and fullscreen previous-state restoration logic are unchanged.
+- [x] No persisted-setting migration or new user-facing setting is required.
+- [x] Separate user hands-on gate not required for this isolated default-value change.
+- [ ] Final v1.0.7 CI, smoke tests, Windows x64 publish, and packaging succeed.
+- [ ] `v1.0.7` tag points to the release-gate commit and Release workflow succeeds.
+- [ ] Setup.exe, portable ZIP, and SHA256SUMS.txt are published as a normal release.

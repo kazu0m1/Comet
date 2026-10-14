@@ -2,6 +2,17 @@
 
 All notable changes to Comet are documented here.
 
+## [1.0.7] - 2026-10-14
+
+### Changed
+- Comet opens in a standard maximized window on startup instead of its former default normal-size window.
+- The initial maximized state is set before the window is shown, without a visible resize after startup. The normal-window dimensions remain available when users manually restore the window.
+- F/F11 fullscreen, Esc exit, original-state restoration, thumbnail visibility, and persisted reading settings retain their existing behavior.
+
+### Validation
+- WPF XAML startup state is set directly to Maximized; no reader navigation, native fullscreen transition, or persisted settings code is modified.
+- Windows x64 build, smoke, publish, and installer/portable packaging are validated by CI.
+
 ## [1.0.6] - 2026-10-13
 
 ### Fixed

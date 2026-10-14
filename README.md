@@ -2,7 +2,7 @@
 
 Comet is a Windows comic viewer focused on the parts of the MComix reading experience that matter most for this project: **fast startup, direct comic-archive reading, reliable fit modes, temporary zoom, and right-to-left manga reading**.
 
-> Status: **v1.0.6 released on 2026-10-13**. The thumbnail sidebar resynchronizes its scroll position to the current page when restored from fullscreen, hidden UI, or a sidebar toggle.
+> Status: **v1.0.7 release preparation is active**. Comet now opens maximized as a standard Windows window by default, while F/F11 continues to enter separate borderless fullscreen.
 
 ## v1.0 focus
 
@@ -26,7 +26,7 @@ v1.0 promotes the Windows-validated v0.3.0 baseline to the first general-availab
 - Thumbnail-wheel scrolling stays inside the thumbnail sidebar; clicking a thumbnail jumps directly to that page. After restoring a hidden sidebar (fullscreen, I, or thumbnail toggle), its scroll position catches up to the current page.
 - Right-clicking the main reader opens a context menu for navigation and common display actions.
 - Reading-position persistence and bookmarks.
-- Fullscreen, drag-and-drop, Japanese/English UI.
+- Maximized standard window on startup; F/F11 switches independently to borderless fullscreen. Drag-and-drop, Japanese/English UI.
 - Optional ZIP/CBZ/RAR/CBR/7z/CB7 file-association registration through the installer.
 
 Recursive archive reading is currently limited to ZIP/CBZ-inside-ZIP/CBZ. Nested archives are expanded to a temporary Comet workspace rather than being held wholly in RAM, are limited to 16 nested levels, and are cleaned up when the outer book is closed. PDF and library management remain deferred. RAR/CBR and 7z/CB7 have passed Windows hands-on validation in v0.2.0; see `CHANGELOG.md` and `docs/ROADMAP_v0.2.0.md`.
@@ -40,7 +40,7 @@ Prerequisites:
 For a self-contained build:
 
 ```powershell
-.\scripts\publish-win-x64.ps1 -Version 1.0.6
+.\scripts\publish-win-x64.ps1 -Version 1.0.7
 ```
 
 The publish output is written to `artifacts/win-x64`.
@@ -50,7 +50,7 @@ The publish output is written to `artifacts/win-x64`.
 Install Inno Setup 6, then run:
 
 ```powershell
-.\scripts\package-release.ps1 -Version 1.0.6 -BuildInstaller
+.\scripts\package-release.ps1 -Version 1.0.7 -BuildInstaller
 ```
 
 Assets are written to `artifacts/release` with SHA-256 hashes.
@@ -59,7 +59,7 @@ Assets are written to `artifacts/release` with SHA-256 hashes.
 
 The repository contains two workflows:
 - `CI`: build + smoke tests + Windows x64 publish on pushes and pull requests.
-- `Release`: triggered by `v*` tags; builds, tests, packages a portable ZIP and Setup.exe, calculates hashes, and creates a GitHub Release. Pre-release versions such as `0.x` or versions containing a hyphen are marked as prereleases; stable `1.x` versions such as `v1.0.6` are normal releases.
+- `Release`: triggered by `v*` tags; builds, tests, packages a portable ZIP and Setup.exe, calculates hashes, and creates a GitHub Release. Pre-release versions such as `0.x` or versions containing a hyphen are marked as prereleases; stable `1.x` versions such as `v1.0.7` are normal releases.
 
 Repository operations and tagging are performed through GitHub Desktop. See `docs/RELEASE_CHECKLIST.md` before tagging.
 
