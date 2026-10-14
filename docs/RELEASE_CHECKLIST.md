@@ -200,5 +200,7 @@ Pre-1.0 versions are published as GitHub prereleases.
 - [x] No persisted-setting migration or new user-facing setting is required.
 - [x] Separate user hands-on gate not required for this isolated default-value change.
 - [x] Final v1.0.7 CI #123, smoke tests, Windows x64 publish, and packaging succeed.
-- [ ] `v1.0.7` tag points to the release-gate commit and Release workflow succeeds.
-- [ ] Setup.exe, portable ZIP, and SHA256SUMS.txt are published as a normal release.
+- [x] `v1.0.7` tag points to `0cedd97a094b227d56686777f71b23cb14e372e5` and Release workflow #11 succeeds.
+- [x] `Comet-v1.0.7-win-x64-Setup.exe`, `Comet-v1.0.7-win-x64.zip`, and `SHA256SUMS.txt` published as a normal release (`prerelease: false`).
+
+**v1.0.7 maintenance release: CLOSED on 2026-10-14.**
