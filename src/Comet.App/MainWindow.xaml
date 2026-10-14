@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="clr-namespace:Comet.App.Controls"
         Title="Comet" Width="1200" Height="850" MinWidth="640" MinHeight="480"
+        WindowState="Maximized"
         Background="Black" AllowDrop="True"
         PreviewKeyDown="Window_KeyDown" PreviewMouseWheel="Window_PreviewMouseWheel"
         DpiChanged="Window_DpiChanged" Drop="Window_Drop">
