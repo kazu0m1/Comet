@@ -17,6 +17,7 @@ dotnet publish $project `
   -p:PublishSingleFile=false `
   -p:Version=$Version `
   -o $out
+if ($LASTEXITCODE -ne 0) { throw "Comet application publish failed." }
 
 # Publish the isolated PDFium worker only into its own subdirectory.
 # The executable and native DLL are never loaded on archive-only startup.
@@ -32,6 +33,12 @@ dotnet publish $workerProject `
   -p:Version=$Version `
   -o $workerOutput
 if ($LASTEXITCODE -ne 0) { throw "PDF worker publish failed." }
+
+# The NuGet package does not itself copy the upstream PDFium/third-party
+# notices to the published directory. Verify the native DLL against its
+# pinned upstream release and stage the complete license bundle.
+& (Join-Path $PSScriptRoot "collect-pdfium-licenses.ps1") -WorkerOutput $workerOutput
+
 
 # createdump.exe is a .NET diagnostics helper. Comet does not enable
 # automatic crash-dump generation, so omit it from end-user packages.
@@ -50,6 +57,4 @@ set "COMET_PROFILE_DIR=%~dp0Preview-Profile"
 start "" "%~dp0Comet.exe" %*
 '@ | Set-Content $previewScript -Encoding ascii
 }
-# Fail the production release until the PDFium redistribution notices are
-# verified and copied with the exact package artifact.
-Write-Host "Published to $out"
+Write-Host "Published to $out (including verified PDFium redistribution notices)"
