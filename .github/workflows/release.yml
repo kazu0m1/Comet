@@ -27,6 +27,9 @@ jobs:
         run: dotnet build .\Comet.sln -c Release --no-restore
       - name: Smoke tests
         run: dotnet run --project .\tests\Comet.SmokeTests\Comet.SmokeTests.csproj -c Release --no-build
+      - name: Verify PDFium native worker
+        shell: pwsh
+        run: .\scripts\smoke-pdf-worker.ps1
       - name: Install Inno Setup
         run: choco install innosetup --yes --no-progress
       - name: Package release assets
