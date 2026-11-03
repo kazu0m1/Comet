@@ -3,6 +3,8 @@ using System.Collections.ObjectModel;
 using System.Windows;
 using System.Runtime.CompilerServices;
 using System.Windows.Media.Imaging;
+using Comet.Core.Models;
+using Comet.Core.Services;
 
 namespace Comet.App.Services;
 
@@ -14,13 +16,13 @@ public sealed class PdfContinuousRow : INotifyPropertyChanged
     private BitmapSource? _secondImage;
     private double _firstWidth, _firstHeight, _secondWidth, _secondHeight;
 
-    public PdfContinuousRow(int firstPage, int? secondPage, bool rightToLeft = false)
+    public PdfContinuousRow(int firstPage, int? secondPage,
+        ReadingDirection direction = ReadingDirection.LeftToRight)
     {
         FirstPage = firstPage;
         SecondPage = secondPage;
         // Keep page indices in document order; only reverse the visual columns.
-        FirstColumn = rightToLeft && secondPage.HasValue ? 1 : 0;
-        SecondColumn = rightToLeft && secondPage.HasValue ? 0 : 1;
+        (FirstColumn, SecondColumn) = SpreadPlanner.DisplayColumns(direction, secondPage.HasValue);
     }
     public int FirstColumn { get; }
     public int SecondColumn { get; }
