@@ -99,6 +99,21 @@ Equal(0, SpreadPlanner.NormalizeStartIndex(0, 10, PageLayoutMode.DoublePage), "c
 Equal(1, SpreadPlanner.NormalizeStartIndex(2, 10, PageLayoutMode.DoublePage), "double spread normalize");
 Equal(3, SpreadPlanner.NextStartIndex(1, 2, 10), "next spread");
 Equal(1, SpreadPlanner.PreviousStartIndex(3, PageLayoutMode.DoublePage), "previous spread");
+Equal((0, 1), SpreadPlanner.DisplayColumns(ReadingDirection.LeftToRight, true),
+    "continuous LTR spread draws logical first page on left");
+Equal((1, 0), SpreadPlanner.DisplayColumns(ReadingDirection.RightToLeft, true),
+    "continuous manga RTL spread draws logical first page on right");
+Equal((0, 1), SpreadPlanner.DisplayColumns(ReadingDirection.RightToLeft, false),
+    "continuous manga single page is not misplaced");
+Equal("98,99,100", string.Join(',', SpreadPlanner.JumpNeighborhood(99, 300)),
+    "thumbnail page 100 primes pages 99, 100 and 101");
+Equal("0,1", string.Join(',', SpreadPlanner.JumpNeighborhood(0, 300)),
+    "first-page jump clips prefetch at start of document");
+Equal("298,299", string.Join(',', SpreadPlanner.JumpNeighborhood(299, 300)),
+    "last-page jump clips prefetch at end of document");
+Equal(0, SpreadPlanner.JumpNeighborhood(0, 0).Length,
+    "empty PDF jump neighborhood is empty");
+
 
 var zoom = new ZoomSessionState(FitMode.BestFit);
 zoom.AdjustTemporaryZoom(0.8);
