@@ -155,6 +155,7 @@ public partial class MainWindow : Window
             await RenderCurrentAsync(cancellationToken).ConfigureAwait(true);
             PerformanceTrace.Elapsed("open.first-render", openStartedAt, $"{source.Descriptor.Pages.Count} pages");
             await InitializeThumbnailSidebarAsync(source, cancellationToken).ConfigureAwait(true);
+            await LoadPdfOutlineAsync(cancellationToken).ConfigureAwait(true);
         }
         catch (OperationCanceledException)
         {
@@ -1019,6 +1020,7 @@ public partial class MainWindow : Window
 
         _imageCache?.Dispose();
         _imageCache = null;
+        ClosePdfUi();
         await _book.DisposeAsync().ConfigureAwait(true);
         _book = null;
         _bookmarks.Clear();
@@ -1113,6 +1115,9 @@ public partial class MainWindow : Window
         var modifiers = Keyboard.Modifiers;
         var key = e.Key == Key.System ? e.SystemKey : e.Key;
 
+        if (modifiers == ModifierKeys.Control && key == Key.F) { ShowPdfSearch(); e.Handled = true; return; }
+        if (key == Key.F3 && IsPdf) { await StepPdfMatchAsync(modifiers.HasFlag(ModifierKeys.Shift) ? -1 : 1); e.Handled = true; return; }
+        if (modifiers == ModifierKeys.None && key == Key.G && _book is not null) { ShowPageJump(); e.Handled = true; return; }
         if (modifiers == ModifierKeys.Control && key == Key.O) { Open_Click(sender, e); e.Handled = true; return; }
         if (modifiers == ModifierKeys.Control && key == Key.Q) { Close(); e.Handled = true; return; }
         if (modifiers == ModifierKeys.Control && key == Key.W) { await CloseCurrentBookAsync(true); StatusText.Text = _text["Ready"]; e.Handled = true; return; }
