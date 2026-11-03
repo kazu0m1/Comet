@@ -184,6 +184,7 @@
                     </controls:PageViewport.ContextMenu>
                 </controls:PageViewport>
                 <ListBox x:Name="PdfContinuousList" Visibility="Collapsed"
+                         PreviewKeyDown="PdfContinuousList_PreviewKeyDown"
                          SizeChanged="PdfContinuousList_SizeChanged"
                          ScrollViewer.ScrollChanged="PdfContinuousList_ScrollChanged"
                          PreviewMouseLeftButtonDown="PdfContinuousPan_Down"
