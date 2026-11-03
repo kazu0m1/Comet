@@ -251,9 +251,9 @@ public partial class MainWindow
     {
         if (_pdfSelecting && IsContinuousPdfView)
         {
-            var point = e.GetPosition(PdfContinuousList);
+            var selectionPoint = e.GetPosition(PdfContinuousList);
             var target = FindContinuousPageImage(
-                VisualTreeHelper.HitTest(PdfContinuousList, point)?.VisualHit);
+                VisualTreeHelper.HitTest(PdfContinuousList, selectionPoint)?.VisualHit);
             if (target is not null &&
                 TryHitContinuousCharacter(target, e.GetPosition(target), out var hit))
             {
