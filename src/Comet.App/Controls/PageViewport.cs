@@ -26,6 +26,9 @@ public sealed class PageViewport : FrameworkElement
     public double CurrentFirstPageDisplayWidthDip
         => FirstPage is null ? 0 : GetLayout().FirstWidth;
 
+    public double CurrentFirstPageDisplayHeightDip
+        => FirstPage is null ? 0 : GetLayout().FirstHeight;
+
     public double CurrentSecondPageDisplayWidthDip
         => SecondPage is null ? 0 : GetLayout().SecondWidth;
 
@@ -239,11 +242,17 @@ public sealed class PageViewport : FrameworkElement
             FitMode,
             StretchSmallImages,
             manualScale);
+        // Fixed Size specifies the *physical display pixel* dimension. It must
+        // not turn into a multiplier relative to the arbitrary raster resolution
+        // selected by the PDF worker. WPF drawing coordinates are in DIPs.
+        // Unlike Best Fit, a fixed 1,400 px target is absolute even if the
+        // optional "do not stretch small images" preference is disabled.
+        var fixedTargetDip = FixedSizeDip / Math.Max(0.01, dpiScale);
         var scale = (FitMode == FitMode.FixedSize
-            ? FitCalculator.FixedPageScale(first, FixedSizeAxis, FixedSizeDip, StretchSmallImages)
+            ? FitCalculator.FixedPageScale(first, FixedSizeAxis, fixedTargetDip, true)
             : baseScale) * TemporaryZoomFactor;
         var secondScale = (FitMode == FitMode.FixedSize && second is { } page
-            ? FitCalculator.FixedPageScale(page, FixedSizeAxis, FixedSizeDip, StretchSmallImages) * TemporaryZoomFactor
+            ? FitCalculator.FixedPageScale(page, FixedSizeAxis, fixedTargetDip, true) * TemporaryZoomFactor
             : scale);
         var firstWidth = first.Width * scale;
         var firstHeight = first.Height * scale;
