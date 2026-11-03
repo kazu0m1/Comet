@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Diagnostics;
 using Comet.Infrastructure.Sources;
 
 namespace Comet.App;
@@ -201,6 +202,47 @@ public partial class MainWindow
                 text, "PDF Properties", MessageBoxButton.OK, MessageBoxImage.Information);
         }
         catch (Exception ex) { MessageBox.Show(this, ex.Message, "Comet"); }
+    }
+
+    private async Task<bool> FollowPdfLinkAsync(Point location)
+    {
+        if (_book is not PdfBookSource pdf) return false;
+        for (var offset = 0; offset < _displayedPageCount; offset++)
+        {
+            var rect = Viewport.GetPageRect(offset);
+            var index = _pageIndex + offset;
+            if (rect.IsEmpty || !rect.Contains(location) || index >= pdf.Pages.Count) continue;
+            var page = pdf.Pages[index];
+            if (page.Width <= 0 || page.Height <= 0) return false;
+            var x = (location.X - rect.Left) / rect.Width * page.Width;
+            var y = page.Height - (location.Y - rect.Top) / rect.Height * page.Height;
+            try
+            {
+                var link = await pdf.GetLinkAsync(index, x, y).ConfigureAwait(true);
+                if (!ReferenceEquals(_book, pdf)) return true;
+                if (link.LinkPageIndex >= 0 && link.LinkPageIndex < pdf.Pages.Count)
+                {
+                    await GoToPageAsync(link.LinkPageIndex);
+                    return true;
+                }
+                if (link.LinkUrl is { Length: > 0 } url &&
+                    Uri.TryCreate(url, UriKind.Absolute, out var parsed) &&
+                    (parsed.Scheme == Uri.UriSchemeHttp || parsed.Scheme == Uri.UriSchemeHttps))
+                {
+                    if (MessageBox.Show(this, "Open this external link in your browser?\n" + url,
+                        "Comet PDF link", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                        Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, "Unable to open PDF link: " + ex.Message, "Comet");
+                return true;
+            }
+            return false;
+        }
+        return false;
     }
 
     private void ClosePdfUi()
