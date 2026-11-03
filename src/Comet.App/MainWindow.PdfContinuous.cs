@@ -25,6 +25,20 @@ public partial class MainWindow
 
     private bool IsContinuousPdfView => IsPdf && _pdfView?.ContinuousScroll == true;
 
+    private void PdfContinuousList_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (!IsContinuousPdfView || Keyboard.Modifiers != ModifierKeys.None)
+            return;
+
+        // WPF ListBox type-to-search can consume M before Window_KeyDown.
+        // The manga shortcut must work whether focus is on the list or not.
+        if (e.Key == Key.M)
+        {
+            ToggleManga();
+            e.Handled = true;
+        }
+    }
+
     private async void PdfContinuous_Click(object sender, RoutedEventArgs e)
     {
         if (_pdfView is null || _book is not PdfBookSource) return;
