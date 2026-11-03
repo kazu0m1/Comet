@@ -23,6 +23,7 @@ public static class FitCalculator
             FitMode.FitWidth => sx,
             FitMode.FitHeight => sy,
             FitMode.Manual => manualScale,
+            FitMode.FixedSize => manualScale,
             _ => 1.0
         };
 
@@ -30,6 +31,13 @@ public static class FitCalculator
             scale = Math.Min(scale, 1.0);
 
         return Math.Clamp(scale, 0.01, 32.0);
+    }
+
+    public static double FixedPageScale(PixelSize page, FixedSizeAxis axis, double targetDip, bool stretchSmallImages)
+    {
+        if (!page.IsValid || !double.IsFinite(targetDip)) return 1.0;
+        var scale = Math.Clamp(targetDip / (axis == FixedSizeAxis.Width ? page.Width : page.Height), 0.01, 32.0);
+        return stretchSmallImages ? scale : Math.Min(scale, 1.0);
     }
 
     public static PixelSize CombineSpread(PixelSize first, PixelSize? second, int gapPixels = 12)
