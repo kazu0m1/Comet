@@ -265,6 +265,8 @@ public partial class MainWindow : Window
     {
         if (_settings.FitMode == FitMode.Manual)
             return 0;
+        if (_settings.FitMode == FitMode.FixedSize && _settings.FixedSizeAxis == FixedSizeAxis.Width)
+            return (int)Math.Clamp(Math.Ceiling(_settings.FixedSizeDip * VisualTreeHelper.GetDpi(Viewport).DpiScaleX), 512, 4096);
 
         var dpi = VisualTreeHelper.GetDpi(Viewport).DpiScaleX;
         var width = Viewport.ActualWidth > 1 ? Viewport.ActualWidth : 1600;
@@ -582,6 +584,38 @@ public partial class MainWindow : Window
             _ = RenderCurrentAsync();
     }
 
+    private void ConfigureFixedSize()
+    {
+        var japanese = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ja";
+        var window = new Window
+        {
+            Title = japanese ? "固定サイズ表示" : "Fixed Size",
+            Owner = this, Width = 350, Height = 190, ResizeMode = ResizeMode.NoResize,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner
+        };
+        var panel = new StackPanel { Margin = new Thickness(16) };
+        var axis = new ComboBox { ItemsSource = japanese ? new[] { "幅", "高さ" } : new[] { "Width", "Height" }, SelectedIndex = _settings.FixedSizeAxis == FixedSizeAxis.Width ? 0 : 1 };
+        var size = new TextBox { Text = _settings.FixedSizeDip.ToString(System.Globalization.CultureInfo.InvariantCulture), Margin = new Thickness(0, 8, 0, 8) };
+        var ok = new Button { Content = "OK", Width = 80, HorizontalAlignment = HorizontalAlignment.Right };
+        ok.Click += (_, _) =>
+        {
+            if (!double.TryParse(size.Text, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var value)
+                || !double.IsFinite(value) || value < 64 || value > 10000)
+            {
+                MessageBox.Show(window, japanese ? "64〜10000の数値を指定してください。" : "Enter a size between 64 and 10000 DIP.", "Comet");
+                return;
+            }
+            _settings = _settings with { FixedSizeDip = value, FixedSizeAxis = axis.SelectedIndex == 0 ? FixedSizeAxis.Width : FixedSizeAxis.Height };
+            Viewport.FixedSizeDip = value;
+            Viewport.FixedSizeAxis = _settings.FixedSizeAxis;
+            _ = SaveSettingsSafeAsync();
+            window.DialogResult = true;
+        };
+        panel.Children.Add(axis); panel.Children.Add(size); panel.Children.Add(ok);
+        window.Content = panel;
+        if (window.ShowDialog() == true) SetFit(FitMode.FixedSize);
+    }
+
     private void AdjustZoom(double factor)
     {
         _zoom.AdjustTemporaryZoom(factor);
@@ -670,6 +704,8 @@ public partial class MainWindow : Window
     private void ApplySettingsToViewport()
     {
         Viewport.FitMode = _settings.FitMode;
+        Viewport.FixedSizeDip = _settings.FixedSizeDip;
+        Viewport.FixedSizeAxis = _settings.FixedSizeAxis;
         Viewport.ReadingDirection = _settings.ReadingDirection;
         Viewport.StretchSmallImages = _settings.StretchSmallImages;
         Viewport.TemporaryZoomFactor = _zoom.TemporaryZoomFactor;
@@ -681,6 +717,7 @@ public partial class MainWindow : Window
         FitWidthMenuItem.IsChecked = _settings.FitMode == FitMode.FitWidth;
         FitHeightMenuItem.IsChecked = _settings.FitMode == FitMode.FitHeight;
         ManualMenuItem.IsChecked = _settings.FitMode == FitMode.Manual;
+        FixedSizeMenuItem.IsChecked = _settings.FitMode == FitMode.FixedSize;
         DoublePageMenuItem.IsChecked = _settings.PageLayoutMode == PageLayoutMode.DoublePage;
         MangaModeMenuItem.IsChecked = _settings.ReadingDirection == ReadingDirection.RightToLeft;
         StretchMenuItem.IsChecked = _settings.StretchSmallImages;
@@ -1088,6 +1125,7 @@ public partial class MainWindow : Window
         if (key == Key.W) { SetFit(FitMode.FitWidth); e.Handled = true; return; }
         if (key == Key.H) { SetFit(FitMode.FitHeight); e.Handled = true; return; }
         if (key == Key.A) { SetFit(FitMode.Manual); e.Handled = true; return; }
+        if (key == Key.S) { SetFit(FitMode.FixedSize); e.Handled = true; return; }
         if (key == Key.M) { ToggleManga(); e.Handled = true; return; }
         if (key == Key.D) { await ToggleDoublePageAsync(); e.Handled = true; return; }
         if (key == Key.Y) { ToggleStretch(); e.Handled = true; return; }
@@ -1304,6 +1342,8 @@ public partial class MainWindow : Window
     private void Stretch_Click(object sender, RoutedEventArgs e) => ToggleStretch();
     private void ThumbnailSidebar_Click(object sender, RoutedEventArgs e) => ToggleThumbnailSidebar();
     private void Fullscreen_Click(object sender, RoutedEventArgs e) => ToggleFullscreen();
+    private void FixedSize_Click(object sender, RoutedEventArgs e) => SetFit(FitMode.FixedSize);
+    private void FixedSizeSettings_Click(object sender, RoutedEventArgs e) => ConfigureFixedSize();
     private void AddBookmark_Click(object sender, RoutedEventArgs e) => AddBookmark();
     private async void EditBookmarks_Click(object sender, RoutedEventArgs e) => await ShowBookmarksAsync();
 }

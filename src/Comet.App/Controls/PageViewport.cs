@@ -19,6 +19,8 @@ public sealed class PageViewport : FrameworkElement
     public bool StretchSmallImages { get; set; } = true;
     public double TemporaryZoomFactor { get; set; } = 1.0;
     public double Gap { get; set; } = 0;
+    public double FixedSizeDip { get; set; } = 1400;
+    public FixedSizeAxis FixedSizeAxis { get; set; } = FixedSizeAxis.Height;
 
     public double CurrentFirstPageDisplayWidthDip
         => FirstPage is null ? 0 : GetLayout().FirstWidth;
@@ -209,12 +211,17 @@ public sealed class PageViewport : FrameworkElement
             FitMode,
             StretchSmallImages,
             manualScale);
-        var scale = baseScale * TemporaryZoomFactor;
+        var scale = (FitMode == FitMode.FixedSize
+            ? FitCalculator.FixedPageScale(first, FixedSizeAxis, FixedSizeDip, StretchSmallImages)
+            : baseScale) * TemporaryZoomFactor;
+        var secondScale = (FitMode == FitMode.FixedSize && second is { } page
+            ? FitCalculator.FixedPageScale(page, FixedSizeAxis, FixedSizeDip, StretchSmallImages) * TemporaryZoomFactor
+            : scale);
         var firstWidth = first.Width * scale;
         var firstHeight = first.Height * scale;
-        var secondWidth = second?.Width * scale ?? 0;
-        var secondHeight = second?.Height * scale ?? 0;
-        var gapScaled = SecondPage is null ? 0 : Gap * scale;
+        var secondWidth = second?.Width * secondScale ?? 0;
+        var secondHeight = second?.Height * secondScale ?? 0;
+        var gapScaled = SecondPage is null ? 0 : Gap * Math.Min(scale, secondScale);
         return new LayoutMetrics(
             firstWidth + secondWidth + gapScaled,
             Math.Max(firstHeight, secondHeight),

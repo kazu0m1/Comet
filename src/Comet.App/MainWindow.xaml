@@ -29,6 +29,8 @@
                 <MenuItem x:Name="FitWidthMenuItem" IsCheckable="True" InputGestureText="W" Click="FitWidth_Click" />
                 <MenuItem x:Name="FitHeightMenuItem" IsCheckable="True" InputGestureText="H" Click="FitHeight_Click" />
                 <MenuItem x:Name="ManualMenuItem" IsCheckable="True" InputGestureText="A" Click="Manual_Click" />
+                <MenuItem x:Name="FixedSizeMenuItem" IsCheckable="True" InputGestureText="S" Header="Fixed Size" Click="FixedSize_Click" />
+                <MenuItem Header="Fixed Size Settings..." Click="FixedSizeSettings_Click" />
                 <Separator />
                 <MenuItem x:Name="DoublePageMenuItem" IsCheckable="True" InputGestureText="D" Click="DoublePage_Click" />
                 <MenuItem x:Name="MangaModeMenuItem" IsCheckable="True" InputGestureText="M" Click="MangaMode_Click" />
@@ -153,6 +155,8 @@
                             <MenuItem Tag="FitWidth" IsCheckable="True" InputGestureText="W" Click="FitWidth_Click" />
                             <MenuItem Tag="FitHeight" IsCheckable="True" InputGestureText="H" Click="FitHeight_Click" />
                             <MenuItem Tag="Manual" IsCheckable="True" InputGestureText="A" Click="Manual_Click" />
+                            <MenuItem Tag="FixedSize" Header="Fixed Size" InputGestureText="S" IsCheckable="True" Click="FixedSize_Click" />
+                            <MenuItem Header="Fixed Size Settings..." Click="FixedSizeSettings_Click" />
                             <Separator />
                             <MenuItem Tag="DoublePage" IsCheckable="True" InputGestureText="D" Click="DoublePage_Click" />
                             <MenuItem Tag="MangaMode" IsCheckable="True" InputGestureText="M" Click="MangaMode_Click" />
