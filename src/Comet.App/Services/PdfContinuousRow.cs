@@ -25,6 +25,9 @@ public sealed class PdfContinuousRow : INotifyPropertyChanged
     public int? SecondPage { get; }
     public bool IsLoading { get; set; }
     public bool Realized { get; set; }
+    // Virtualization can re-realize a row while its previous async load is in flight.
+    // Queue a new load after the in-flight operation rather than losing the request.
+    public bool ReloadAfterCurrentLoad { get; set; }
     public BitmapSource? FirstImage { get => _firstImage; set { _firstImage = value; Notify(); } }
     public BitmapSource? SecondImage { get => _secondImage; set { _secondImage = value; Notify(); } }
     public double FirstWidth { get => _firstWidth; set { _firstWidth = value; Notify(); } }
