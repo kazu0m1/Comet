@@ -39,6 +39,7 @@
                 <MenuItem x:Name="PdfRotatePageMenuItem" Header="PDF: Rotate Page Clockwise" Click="PdfRotatePage_Click" />
                 <MenuItem x:Name="PdfRotateAllMenuItem" Header="PDF: Rotate All Pages Clockwise" Click="PdfRotateAll_Click" />
                 <MenuItem x:Name="PdfContinuousMenuItem" Header="PDF: Continuous Scroll" IsCheckable="True" Click="PdfContinuous_Click" />
+                <MenuItem x:Name="PdfAutoCropMenuItem" Header="PDF: Auto-Crop White Margins" IsCheckable="True" Click="PdfAutoCrop_Click" />
                 <MenuItem x:Name="StretchMenuItem" IsCheckable="True" InputGestureText="Y" Click="Stretch_Click" />
                 <MenuItem x:Name="ThumbnailSidebarMenuItem" IsCheckable="True" Click="ThumbnailSidebar_Click" />
                 <Separator />

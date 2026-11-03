@@ -73,6 +73,12 @@ for (var quarterTurns = 0; quarterTurns < 4; quarterTurns++)
     Near(0.7, roundTrip.V, "PDF rotation " + quarterTurns + " y inverse");
 }
 
+var cropBounds = new PdfCropBounds(0.1, 0.2, 0.9, 0.8);
+var orig = cropBounds.ToOriginal(0.25, 0.75);
+var mapped = cropBounds.FromOriginal(orig.U, orig.V);
+Near(0.25, mapped.U, "PDF crop coordinate roundtrip X");
+Near(0.75, mapped.V, "PDF crop coordinate roundtrip Y");
+
 var weightedCache = new LruCache<int, string>(capacity: 3, maxWeight: 5, weightSelector: value => value.Length);
 weightedCache.Set(1, "aaa");
 weightedCache.Set(2, "bbb");

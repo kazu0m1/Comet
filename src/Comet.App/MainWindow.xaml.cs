@@ -129,6 +129,7 @@ public partial class MainWindow : Window
                 _pdfView = savedState?.Pdf ?? new PdfViewState(
                     _settings.PdfReadingDirection, _settings.PdfPageLayoutMode, _settings.PdfFitMode);
                 pdf.ApplyRotationState(_pdfView.RotationAll, _pdfView.PageRotations);
+                pdf.AutoCrop = _pdfView.AutoCrop;
             }
             _zoom.SetBaseFitMode(CurrentFitMode);
             ApplySettingsToViewport();
@@ -349,7 +350,10 @@ public partial class MainWindow : Window
             .OpenAsync(source.Descriptor.Path, _thumbnailCts.Token)
             .ConfigureAwait(true);
         if (_thumbnailBook is PdfBookSource thumb && _pdfView is not null)
+        {
             thumb.ApplyRotationState(_pdfView.RotationAll, _pdfView.PageRotations);
+            thumb.AutoCrop = _pdfView.AutoCrop;
+        }
 
         _thumbnailImageCache = new PageImageCache(
             _thumbnailBook,
@@ -761,6 +765,25 @@ public partial class MainWindow : Window
         await RenderCurrentAsync();
     }
 
+    private async void PdfAutoCrop_Click(object sender, RoutedEventArgs e)
+    {
+        if (_book is not PdfBookSource pdf || _pdfView is null) return;
+        _pdfView = _pdfView with { AutoCrop = !_pdfView.AutoCrop };
+        pdf.AutoCrop = _pdfView.AutoCrop;
+        if (_thumbnailBook is PdfBookSource thumb) thumb.AutoCrop = _pdfView.AutoCrop;
+        _imageCache?.Dispose();
+        _imageCache = new PageImageCache(pdf, _decoder);
+        _thumbnailImageCache?.Dispose();
+        if (_thumbnailBook is not null)
+            _thumbnailImageCache = new PageImageCache(_thumbnailBook, _decoder, 64, 64, 192, false);
+        foreach (var item in _thumbnailItems) item.Image = null;
+        ClearPdfTextSelection();
+        RebuildContinuousPdfView();
+        UpdateMenuChecks();
+        ScheduleStateSave();
+        await RenderCurrentAsync();
+    }
+
     private async void PdfRotatePage_Click(object sender, RoutedEventArgs e) => await RotatePdfAsync(all: false);
     private async void PdfRotateAll_Click(object sender, RoutedEventArgs e) => await RotatePdfAsync(all: true);
 
@@ -861,6 +884,8 @@ public partial class MainWindow : Window
         PdfRotateAllMenuItem.IsEnabled = IsPdf;
         PdfContinuousMenuItem.IsEnabled = IsPdf;
         PdfContinuousMenuItem.IsChecked = IsContinuousPdfView;
+        PdfAutoCropMenuItem.IsEnabled = IsPdf;
+        PdfAutoCropMenuItem.IsChecked = IsPdf && _pdfView?.AutoCrop == true;
         StretchMenuItem.IsChecked = _settings.StretchSmallImages;
         ThumbnailSidebarMenuItem.IsChecked = _settings.ShowThumbnails;
         UpdateViewportContextMenu();
