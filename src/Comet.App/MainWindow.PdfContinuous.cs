@@ -369,6 +369,35 @@ public partial class MainWindow
             PdfContinuousList.ReleaseMouseCapture();
     }
 
+    private void PdfContinuousRow_DataContextChanged(object sender,
+        DependencyPropertyChangedEventArgs e)
+    {
+        if (e.OldValue is PdfContinuousRow oldRow && !ReferenceEquals(e.OldValue, e.NewValue))
+        {
+            oldRow.Realized = false;
+            oldRow.FirstImage = null;
+            oldRow.SecondImage = null;
+        }
+
+        if (sender is not FrameworkElement element ||
+            e.NewValue is not PdfContinuousRow newRow)
+            return;
+
+        var owner = _continuousCts;
+        // A recycling virtualizing panel may retain the same Border while
+        // changing its DataContext, without raising Border.Loaded again.
+        _ = Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded,
+            new Action(() =>
+            {
+                if (owner is null || !ReferenceEquals(owner, _continuousCts) ||
+                    !IsContinuousPdfView || !element.IsLoaded ||
+                    !ReferenceEquals(element.DataContext, newRow))
+                    return;
+                newRow.Realized = true;
+                _ = LoadContinuousRowAsync(newRow);
+            }));
+    }
+
     private void PdfContinuousRow_Loaded(object sender, RoutedEventArgs e)
     {
         if (sender is FrameworkElement { DataContext: PdfContinuousRow row })
