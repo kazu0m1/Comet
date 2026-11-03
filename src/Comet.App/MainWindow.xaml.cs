@@ -244,7 +244,7 @@ public partial class MainWindow : Window
                 {
                     return;
                 }
-                catch (Exception) when (!token.IsCancellationRequested)
+                catch (Exception renderFailure) when (!token.IsCancellationRequested)
                 {
                     Viewport.SecondPage = null;
                     _displayedPageCount = 1;
@@ -276,11 +276,16 @@ public partial class MainWindow : Window
         catch (Exception) when (!token.IsCancellationRequested)
         {
             if (generation != Volatile.Read(ref _renderGeneration)) return;
+            PerformanceTrace.Event("render.error",
+                $"page={renderPageIndex + 1}; {renderFailure.GetType().Name}: {renderFailure.Message}");
             Viewport.FirstPage = null;
             Viewport.SecondPage = null;
             _displayedPageCount = 1;
             Viewport.ErrorMessage =
                 $"{_text["PageLoadFailed"]} ({renderPageIndex + 1})\n{_text["PageLoadFailedHint"]}";
+            if (IsPdf && !string.IsNullOrWhiteSpace(
+                    Environment.GetEnvironmentVariable("COMET_PROFILE_DIR")))
+                Viewport.ErrorMessage += $"\n{renderFailure.GetType().Name}: {renderFailure.Message}";
             Viewport.ResetScroll();
             Viewport.Refresh();
             StatusText.Text = $"{_text["PageLoadFailed"]} ({renderPageIndex + 1})";
