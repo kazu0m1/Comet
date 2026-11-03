@@ -735,6 +735,13 @@ public partial class MainWindow : Window
         else _settings = _settings with { ReadingDirection = direction };
         Viewport.ReadingDirection = direction;
         Viewport.ResetScroll();
+        if (IsContinuousPdfView)
+        {
+            // The continuous viewer has its own row layout, independent of
+            // PageViewport. Recreate its visual columns when manga toggles.
+            RebuildContinuousPdfView();
+            _ = RenderCurrentAsync();
+        }
         UpdateMenuChecks();
         UpdateImageInfo();
         _ = SaveSettingsSafeAsync();
