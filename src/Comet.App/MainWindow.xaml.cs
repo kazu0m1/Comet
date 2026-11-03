@@ -24,10 +24,12 @@ public partial class MainWindow : Window
     private readonly IBookStateStore _stateStore;
     private readonly AdjacentArchiveFinder _archiveFinder;
     private readonly WpfBitmapDecoder _decoder = new();
+    private PdfViewState? _pdfView;
     private bool IsPdf => _book is PdfBookSource;
-    private FitMode CurrentFitMode => IsPdf ? _settings.PdfFitMode : _settings.FitMode;
-    private ReadingDirection CurrentReadingDirection => IsPdf ? _settings.PdfReadingDirection : _settings.ReadingDirection;
-    private PageLayoutMode CurrentPageLayoutMode => IsPdf ? _settings.PdfPageLayoutMode : _settings.PageLayoutMode;
+    private FitMode CurrentFitMode => IsPdf ? (_pdfView?.FitMode ?? _settings.PdfFitMode) : _settings.FitMode;
+    private ReadingDirection CurrentReadingDirection => IsPdf ? (_pdfView?.ReadingDirection ?? _settings.PdfReadingDirection) : _settings.ReadingDirection;
+    private PageLayoutMode CurrentPageLayoutMode => IsPdf ? (_pdfView?.PageLayoutMode ?? _settings.PdfPageLayoutMode) : _settings.PageLayoutMode;
+    private bool CoverAlone => !IsPdf || _pdfView?.CoverAlone != false;
     private readonly Localizer _text = new();
     private readonly ZoomSessionState _zoom;
     private readonly DragPanGesture _dragPan = new();
@@ -111,9 +113,7 @@ public partial class MainWindow : Window
                 cancellationToken.ThrowIfCancellationRequested();
             }
             _book = source;
-            _zoom.SetBaseFitMode(CurrentFitMode);
-            ApplySettingsToViewport();
-            UpdateMenuChecks();
+            _pdfView = null;
             _imageCache = new PageImageCache(source, _decoder);
             _navigationHistory.Clear();
             Title = $"Comet — {source.Descriptor.DisplayName}";
@@ -123,6 +123,15 @@ public partial class MainWindow : Window
                 savedState = null;
 
             _bookmarks = savedState?.Bookmarks?.ToList() ?? new List<Bookmark>();
+            if (source is PdfBookSource pdf)
+            {
+                _pdfView = savedState?.Pdf ?? new PdfViewState(
+                    _settings.PdfReadingDirection, _settings.PdfPageLayoutMode, _settings.PdfFitMode);
+                pdf.ApplyRotationState(_pdfView.RotationAll, _pdfView.PageRotations);
+            }
+            _zoom.SetBaseFitMode(CurrentFitMode);
+            ApplySettingsToViewport();
+            UpdateMenuChecks();
 
             if (source.Descriptor.Pages.Count == 0)
             {
@@ -150,7 +159,7 @@ public partial class MainWindow : Window
             }
 
             if (reason == BookOpenReason.AdjacentPrevious && CurrentPageLayoutMode == PageLayoutMode.DoublePage)
-                _pageIndex = SpreadPlanner.NormalizeStartIndex(_pageIndex, source.Descriptor.Pages.Count, CurrentPageLayoutMode);
+                _pageIndex = SpreadPlanner.NormalizeStartIndex(_pageIndex, source.Descriptor.Pages.Count, CurrentPageLayoutMode, CoverAlone);
 
             await RenderCurrentAsync(cancellationToken).ConfigureAwait(true);
             PerformanceTrace.Elapsed("open.first-render", openStartedAt, $"{source.Descriptor.Pages.Count} pages");
@@ -200,7 +209,7 @@ public partial class MainWindow : Window
             _displayedPageCount = 1;
 
             if (CurrentPageLayoutMode == PageLayoutMode.DoublePage
-                && renderPageIndex > 0
+                && (renderPageIndex > 0 || !CoverAlone)
                 && renderPageIndex + 1 < _book.Descriptor.Pages.Count
                 && first.PixelWidth <= first.PixelHeight)
             {
@@ -324,6 +333,8 @@ public partial class MainWindow : Window
         _thumbnailBook = await _sourceFactory
             .OpenAsync(source.Descriptor.Path, _thumbnailCts.Token)
             .ConfigureAwait(true);
+        if (_thumbnailBook is PdfBookSource thumb && _pdfView is not null)
+            thumb.ApplyRotationState(_pdfView.RotationAll, _pdfView.PageRotations);
 
         _thumbnailImageCache = new PageImageCache(
             _thumbnailBook,
@@ -526,7 +537,7 @@ public partial class MainWindow : Window
         }
         else
         {
-            _pageIndex = SpreadPlanner.PreviousStartIndex(_pageIndex, CurrentPageLayoutMode);
+            _pageIndex = SpreadPlanner.PreviousStartIndex(_pageIndex, CurrentPageLayoutMode, CoverAlone);
         }
         await RenderCurrentAsync();
     }
@@ -587,7 +598,12 @@ public partial class MainWindow : Window
     private void SetFit(FitMode mode)
     {
         _zoom.SetBaseFitMode(mode);
-        _settings = IsPdf ? _settings with { PdfFitMode = mode } : _settings with { FitMode = mode };
+        if (IsPdf && _pdfView is not null)
+        {
+            _pdfView = _pdfView with { FitMode = mode };
+            ScheduleStateSave();
+        }
+        else _settings = _settings with { FitMode = mode };
         Viewport.FitMode = mode;
         Viewport.TemporaryZoomFactor = _zoom.TemporaryZoomFactor;
         Viewport.ResetScroll();
@@ -685,7 +701,12 @@ public partial class MainWindow : Window
         var direction = CurrentReadingDirection == ReadingDirection.RightToLeft
             ? ReadingDirection.LeftToRight
             : ReadingDirection.RightToLeft;
-        _settings = IsPdf ? _settings with { PdfReadingDirection = direction } : _settings with { ReadingDirection = direction };
+        if (IsPdf && _pdfView is not null)
+        {
+            _pdfView = _pdfView with { ReadingDirection = direction };
+            ScheduleStateSave();
+        }
+        else _settings = _settings with { ReadingDirection = direction };
         Viewport.ReadingDirection = direction;
         Viewport.ResetScroll();
         UpdateMenuChecks();
@@ -698,12 +719,59 @@ public partial class MainWindow : Window
         var mode = CurrentPageLayoutMode == PageLayoutMode.DoublePage
             ? PageLayoutMode.SinglePage
             : PageLayoutMode.DoublePage;
-        _settings = IsPdf ? _settings with { PdfPageLayoutMode = mode } : _settings with { PageLayoutMode = mode };
+        if (IsPdf && _pdfView is not null)
+        {
+            _pdfView = _pdfView with { PageLayoutMode = mode };
+            ScheduleStateSave();
+        }
+        else _settings = _settings with { PageLayoutMode = mode };
         if (_book is not null && mode == PageLayoutMode.DoublePage)
-            _pageIndex = SpreadPlanner.NormalizeStartIndex(_pageIndex, _book.Descriptor.Pages.Count, mode);
+            _pageIndex = SpreadPlanner.NormalizeStartIndex(_pageIndex, _book.Descriptor.Pages.Count, mode, CoverAlone);
         UpdateMenuChecks();
         await SaveSettingsSafeAsync();
         await RenderCurrentAsync();
+    }
+
+    private async void PdfCover_Click(object sender, RoutedEventArgs e)
+    {
+        if (_book is not PdfBookSource || _pdfView is null) return;
+        _pdfView = _pdfView with { CoverAlone = !_pdfView.CoverAlone };
+        _pageIndex = SpreadPlanner.NormalizeStartIndex(_pageIndex, _book.Descriptor.Pages.Count,
+            CurrentPageLayoutMode, CoverAlone);
+        UpdateMenuChecks();
+        ScheduleStateSave();
+        await RenderCurrentAsync();
+    }
+
+    private async void PdfRotatePage_Click(object sender, RoutedEventArgs e) => await RotatePdfAsync(all: false);
+    private async void PdfRotateAll_Click(object sender, RoutedEventArgs e) => await RotatePdfAsync(all: true);
+
+    private async Task RotatePdfAsync(bool all)
+    {
+        if (_book is not PdfBookSource pdf || _pdfView is null) return;
+        if (all)
+            _pdfView = _pdfView with { RotationAll = (_pdfView.RotationAll + 1) % 4, PageRotations = null };
+        else
+        {
+            var overrides = _pdfView.PageRotations is null ? new Dictionary<int,int>()
+                : new Dictionary<int,int>(_pdfView.PageRotations);
+            var current = pdf.GetPageRotation(_pageIndex);
+            overrides[_pageIndex] = (current + 1) % 4;
+            _pdfView = _pdfView with { PageRotations = overrides };
+        }
+        pdf.ApplyRotationState(_pdfView.RotationAll, _pdfView.PageRotations);
+        if (_thumbnailBook is PdfBookSource thumb)
+            thumb.ApplyRotationState(_pdfView.RotationAll, _pdfView.PageRotations);
+        _imageCache?.Dispose();
+        _imageCache = new PageImageCache(pdf, _decoder);
+        _thumbnailImageCache?.Dispose();
+        if (_thumbnailBook is not null)
+            _thumbnailImageCache = new PageImageCache(_thumbnailBook, _decoder, 64, 64, 192, false);
+        foreach (var item in _thumbnailItems) item.Image = null;
+        ClearPdfTextSelection();
+        await RenderCurrentAsync();
+        ScheduleStateSave();
+        if (_thumbnailCts is not null) _ = WarmThumbnailNeighborhoodAsync(_pageIndex, _thumbnailCts.Token);
     }
 
     private void ToggleStretch()
@@ -768,6 +836,10 @@ public partial class MainWindow : Window
         FixedSizeMenuItem.IsChecked = CurrentFitMode == FitMode.FixedSize;
         DoublePageMenuItem.IsChecked = CurrentPageLayoutMode == PageLayoutMode.DoublePage;
         MangaModeMenuItem.IsChecked = CurrentReadingDirection == ReadingDirection.RightToLeft;
+        PdfCoverMenuItem.IsChecked = IsPdf && CoverAlone;
+        PdfCoverMenuItem.IsEnabled = IsPdf;
+        PdfRotatePageMenuItem.IsEnabled = IsPdf;
+        PdfRotateAllMenuItem.IsEnabled = IsPdf;
         StretchMenuItem.IsChecked = _settings.StretchSmallImages;
         ThumbnailSidebarMenuItem.IsChecked = _settings.ShowThumbnails;
         UpdateViewportContextMenu();
@@ -988,7 +1060,7 @@ public partial class MainWindow : Window
         }
         catch (IOException) { }
         catch (UnauthorizedAccessException) { }
-        return new BookState(_pageIndex, _bookmarks.ToArray(), length, modified);
+        return new BookState(_pageIndex, _bookmarks.ToArray(), length, modified, IsPdf ? _pdfView : null);
     }
 
     private async Task SaveCurrentStateNowAsync()
@@ -1027,6 +1099,7 @@ public partial class MainWindow : Window
         _imageCache?.Dispose();
         _imageCache = null;
         ClosePdfUi();
+        _pdfView = null;
         await _book.DisposeAsync().ConfigureAwait(true);
         _book = null;
         _bookmarks.Clear();
