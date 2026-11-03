@@ -25,9 +25,27 @@ public partial class MainWindow
                 var result = await pdf.GetTextAsync(index, true, token).ConfigureAwait(true);
                 if (!ReferenceEquals(_book, pdf) || token.IsCancellationRequested) return;
                 _pdfVisibleText[index] = result;
-                // Keep text geometry of current spread and its few nearest pages only.
-                foreach (var stale in _pdfVisibleText.Keys.Where(k => Math.Abs(k - pageIndex) > 3).ToArray())
+                // In continuous mode, multiple realized rows can be visible
+                // simultaneously. Do not evict their text geometry merely
+                // because a nearby row has finished loading more recently.
+                var visiblePages = IsContinuousPdfView
+                    ? _continuousRows.Where(row => row.Realized)
+                        .SelectMany(row => row.SecondPage is int second
+                            ? new[] { row.FirstPage, second }
+                            : new[] { row.FirstPage })
+                        .ToHashSet()
+                    : new HashSet<int>();
+                foreach (var stale in _pdfVisibleText.Keys.ToArray())
+                {
+                    if (IsContinuousPdfView)
+                    {
+                        if (_pdfVisibleText.Count <= 36 || visiblePages.Contains(stale)
+                            || Math.Abs(stale - pageIndex) <= 8)
+                            continue;
+                    }
+                    else if (Math.Abs(stale - pageIndex) <= 3) continue;
                     _pdfVisibleText.Remove(stale);
+                }
             }
             UpdatePdfHighlightRects();
         }
@@ -97,11 +115,22 @@ public partial class MainWindow
         return true;
     }
 
-    private void ClearPdfTextSelection()
+    // Escape removes only the selection. Keep text geometry cached so the next
+    // drag can immediately select text without another PDFium roundtrip.
+    private void ClearPdfSelectionRange()
     {
         _pdfSelecting = false;
+        if (Mouse.Captured == PdfContinuousList || Mouse.Captured == Viewport
+            || Mouse.Captured is System.Windows.Controls.Image)
+            Mouse.Capture(null);
         _pdfSelectionAnchor = null;
         _pdfSelectionEnd = null;
+        UpdatePdfHighlightRects();
+    }
+
+    private void ClearPdfTextSelection()
+    {
+        ClearPdfSelectionRange();
         _pdfVisibleText.Clear();
         Viewport.PdfHighlightRects = Array.Empty<Rect>();
         Viewport.Refresh();
