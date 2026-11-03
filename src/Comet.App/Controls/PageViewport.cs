@@ -19,6 +19,7 @@ public sealed class PageViewport : FrameworkElement
     public bool StretchSmallImages { get; set; } = true;
     public double TemporaryZoomFactor { get; set; } = 1.0;
     public double Gap { get; set; } = 0;
+    public IReadOnlyList<Rect> PdfHighlightRects { get; set; } = Array.Empty<Rect>();
     public double FixedSizeDip { get; set; } = 1400;
     public FixedSizeAxis FixedSizeAxis { get; set; } = FixedSizeAxis.Height;
 
@@ -71,6 +72,7 @@ public sealed class PageViewport : FrameworkElement
         {
             firstRect.Location = new Point(originX, originY + (layout.ContentHeight - firstRect.Height) / 2);
             dc.DrawImage(FirstPage, firstRect);
+            DrawPdfHighlights(dc);
             return;
         }
 
@@ -82,6 +84,32 @@ public sealed class PageViewport : FrameworkElement
         secondRect.Location = new Point(secondX, originY + (layout.ContentHeight - secondRect.Height) / 2);
         dc.DrawImage(FirstPage, firstRect);
         dc.DrawImage(SecondPage, secondRect);
+        DrawPdfHighlights(dc);
+    }
+
+    private void DrawPdfHighlights(DrawingContext dc)
+    {
+        if (PdfHighlightRects.Count == 0) return;
+        var brush = new SolidColorBrush(Color.FromArgb(95, 64, 160, 250));
+        brush.Freeze();
+        foreach (var rect in PdfHighlightRects)
+            if (!rect.IsEmpty && rect.Width > 0 && rect.Height > 0)
+                dc.DrawRectangle(brush, null, rect);
+    }
+
+    public Rect GetPageRect(int pageInSpread)
+    {
+        if (FirstPage is null || (pageInSpread > 0 && SecondPage is null)) return Rect.Empty;
+        var layout = GetLayout();
+        var originX = layout.ContentWidth <= ActualWidth ? (ActualWidth - layout.ContentWidth) / 2 : -_offsetX;
+        var originY = layout.ContentHeight <= ActualHeight ? (ActualHeight - layout.ContentHeight) / 2 : -_offsetY;
+        if (SecondPage is null) return new Rect(originX, originY + (layout.ContentHeight - layout.FirstHeight) / 2, layout.FirstWidth, layout.FirstHeight);
+        var firstOnRight = ReadingDirection == ReadingDirection.RightToLeft;
+        var firstX = firstOnRight ? originX + layout.SecondWidth + layout.GapScaled : originX;
+        var secondX = firstOnRight ? originX : originX + layout.FirstWidth + layout.GapScaled;
+        return pageInSpread == 0
+            ? new Rect(firstX, originY + (layout.ContentHeight - layout.FirstHeight) / 2, layout.FirstWidth, layout.FirstHeight)
+            : new Rect(secondX, originY + (layout.ContentHeight - layout.SecondHeight) / 2, layout.SecondWidth, layout.SecondHeight);
     }
 
     public void ResetScroll()
