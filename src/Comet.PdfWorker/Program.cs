@@ -89,6 +89,9 @@ internal static class Program
             case "outline":
                 EnsureOpen();
                 return new PdfReply { Ok = true, Outline = ReadOutline() };
+            case "link":
+                EnsureOpen();
+                return HitLink(request.Index, request.X, request.Y);
             case "metadata":
                 EnsureOpen();
                 return new PdfReply { Ok = true, Metadata = new Dictionary<string,string>
@@ -146,6 +149,47 @@ internal static class Program
                 return new PdfReply { Ok = true, ImagePath = filename, Width = w, Height = h };
             }
             finally { Native.FPDFBitmap_Destroy(bitmap); }
+        }
+        finally { Native.FPDF_ClosePage(page); }
+    }
+
+    private static PdfReply HitLink(int index, double x, double y)
+    {
+        var page = Native.FPDF_LoadPage(_document, index);
+        if (page == IntPtr.Zero) return new PdfReply { Ok = true };
+        try
+        {
+            var link = Native.FPDFLink_GetLinkAtPoint(page, x, y);
+            if (link == IntPtr.Zero) return new PdfReply { Ok = true };
+            var dest = Native.FPDFLink_GetDest(_document, link);
+            var action = Native.FPDFLink_GetAction(link);
+            if (dest == IntPtr.Zero && action != IntPtr.Zero && Native.FPDFAction_GetType(action) == 1)
+                dest = Native.FPDFAction_GetDest(_document, action);
+            if (dest != IntPtr.Zero)
+                return new PdfReply { Ok = true, LinkPageIndex = Native.FPDFDest_GetDestPageIndex(_document, dest) };
+            if (action != IntPtr.Zero && Native.FPDFAction_GetType(action) == 3)
+            {
+                var size = Native.FPDFAction_GetURIPath(_document, action, IntPtr.Zero, 0);
+                if (size > 1 && size <= 8192)
+                {
+                    var ptr = Marshal.AllocHGlobal((int)size);
+                    try
+                    {
+                        var length = Native.FPDFAction_GetURIPath(_document, action, ptr, size);
+                        if (length == size)
+                        {
+                            var data = new byte[size];
+                            Marshal.Copy(ptr, data, 0, data.Length);
+                            var url = Encoding.UTF8.GetString(data).TrimEnd('\0');
+                            if (Uri.TryCreate(url, UriKind.Absolute, out var parsed) &&
+                                (parsed.Scheme == Uri.UriSchemeHttp || parsed.Scheme == Uri.UriSchemeHttps))
+                                return new PdfReply { Ok = true, LinkUrl = url };
+                        }
+                    }
+                    finally { Marshal.FreeHGlobal(ptr); }
+                }
+            }
+            return new PdfReply { Ok = true };
         }
         finally { Native.FPDF_ClosePage(page); }
     }
@@ -234,6 +278,8 @@ internal sealed class PdfRequest
     public int Width { get; set; }
     public int Rotation { get; set; }
     public bool WithBoxes { get; set; }
+    public double X { get; set; }
+    public double Y { get; set; }
 }
 internal sealed class PdfReply
 {
@@ -250,6 +296,8 @@ internal sealed class PdfReply
     public List<CharRect>? Boxes { get; set; }
     public List<OutlineItem>? Outline { get; set; }
     public Dictionary<string,string>? Metadata { get; set; }
+    public int LinkPageIndex { get; set; } = -1;
+    public string? LinkUrl { get; set; }
 }
 internal sealed class PageInfo { public float Width { get; set; } public float Height { get; set; } public string Label { get; set; } = ""; }
 internal sealed class CharRect { public int Index { get; set; } public double Left { get; set; } public double Right { get; set; } public double Bottom { get; set; } public double Top { get; set; } }
@@ -286,6 +334,12 @@ internal static class Native
     [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)] internal static extern uint FPDFBookmark_GetTitle(IntPtr bookmark,IntPtr buffer,uint length);
     [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)] internal static extern IntPtr FPDFBookmark_GetDest(IntPtr doc,IntPtr bookmark);
     [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)] internal static extern int FPDFDest_GetDestPageIndex(IntPtr doc,IntPtr dest);
+    [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)] internal static extern IntPtr FPDFLink_GetLinkAtPoint(IntPtr page, double x, double y);
+    [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)] internal static extern IntPtr FPDFLink_GetDest(IntPtr doc, IntPtr link);
+    [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)] internal static extern IntPtr FPDFLink_GetAction(IntPtr link);
+    [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)] internal static extern int FPDFAction_GetType(IntPtr action);
+    [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)] internal static extern IntPtr FPDFAction_GetDest(IntPtr doc, IntPtr action);
+    [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)] internal static extern uint FPDFAction_GetURIPath(IntPtr doc, IntPtr action, IntPtr buffer, uint buflen);
     [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)] internal static extern uint FPDF_GetPageLabel(IntPtr doc,int index,IntPtr buffer,uint buflen);
     [DllImport(Lib, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)] internal static extern uint FPDF_GetMetaText(IntPtr doc,string tag,IntPtr buffer,uint buflen);
 }
