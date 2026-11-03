@@ -244,8 +244,10 @@ public partial class MainWindow : Window
                 {
                     return;
                 }
-                catch (Exception renderFailure) when (!token.IsCancellationRequested)
+                catch (Exception secondPageFailure) when (!token.IsCancellationRequested)
                 {
+                    PerformanceTrace.Event("render.second-page.error",
+                        $"page={renderPageIndex + 2}; {secondPageFailure.GetType().Name}: {secondPageFailure.Message}");
                     Viewport.SecondPage = null;
                     _displayedPageCount = 1;
                 }
@@ -273,7 +275,7 @@ public partial class MainWindow : Window
         {
             // A newer render/open/close request superseded this render.
         }
-        catch (Exception) when (!token.IsCancellationRequested)
+        catch (Exception renderFailure) when (!token.IsCancellationRequested)
         {
             if (generation != Volatile.Read(ref _renderGeneration)) return;
             PerformanceTrace.Event("render.error",
