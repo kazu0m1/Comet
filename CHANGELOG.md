@@ -2,6 +2,27 @@
 
 All notable changes to Comet are documented here.
 
+## [1.1.0] - 2026-11-03
+
+### Added
+- Native PDF reading in a separate PDFium worker, with encrypted-file prompts, outline navigation, page labels, metadata and internal/external links.
+- PDF-only per-document single/double-page and continuous modes, left/right opening, cover-alone preference, rotation and optional white-margin crop.
+- Fixed Size display in absolute physical pixels (default 1,400 px height).
+- Selection and clipboard copy of pre-existing PDF text, including multiple pages, and Ctrl+F search with highlight; no OCR creation.
+- Mixed PDF and comic-archive navigation and optional PDF file association.
+
+### Fixed
+- Tall PDF covers and enlarged page turns no longer fail due solely to oversized raster requests.
+- Continuous PDF page gaps, background color, drag panning, Esc, status/thumbnail tracking and text selection.
+- Missing adjacent spread pages on thumbnail jump, plus RTL manga spread placement.
+- Initial continuous PDF opening no longer starts speculative three-page prefetch; explicit jumps retain it.
+- Existing settings migration and optional association scope.
+
+### Validation
+- User Windows hands-on retesting confirmed issues 1-9 resolved and accepted remaining minor subjective open-time difference. No precise millisecond benchmark is claimed.
+- GitHub Actions builds, smoke tests, PDFium native integration and Windows release packaging run on the release candidate.
+- Exact PDFium binary origin and license/third-party notice distribution verified during publishing.
+
 ## [1.0.7] - 2026-10-14
 
 ### Changed
