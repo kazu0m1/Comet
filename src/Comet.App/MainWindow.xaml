@@ -228,9 +228,7 @@
                                         <Image Source="{Binding FirstImage}" Width="{Binding FirstWidth}"
                                                Height="{Binding FirstHeight}" Stretch="Fill"
                                                Tag="{Binding FirstPage}"
-                                               PreviewMouseLeftButtonDown="PdfContinuousImage_Down"
-                                               MouseMove="PdfContinuousImage_Move"
-                                               PreviewMouseLeftButtonUp="PdfContinuousImage_Up"/>
+                                               />
                                         <ItemsControl ItemsSource="{Binding FirstHighlights}"
                                                       IsHitTestVisible="False"
                                                       Width="{Binding FirstWidth}" Height="{Binding FirstHeight}">
@@ -254,9 +252,7 @@
                                         <Image Source="{Binding SecondImage}" Width="{Binding SecondWidth}"
                                                Height="{Binding SecondHeight}" Stretch="Fill"
                                                Tag="{Binding SecondPage}"
-                                               PreviewMouseLeftButtonDown="PdfContinuousImage_Down"
-                                               MouseMove="PdfContinuousImage_Move"
-                                               PreviewMouseLeftButtonUp="PdfContinuousImage_Up"/>
+                                               />
                                         <ItemsControl ItemsSource="{Binding SecondHighlights}"
                                                       IsHitTestVisible="False"
                                                       Width="{Binding SecondWidth}" Height="{Binding SecondHeight}">
