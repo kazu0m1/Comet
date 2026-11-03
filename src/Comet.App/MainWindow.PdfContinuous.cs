@@ -155,7 +155,7 @@ public partial class MainWindow
             var dpi = VisualTreeHelper.GetDpi(PdfContinuousList).DpiScaleX;
             var displayWidth = row.FirstPage == page ? row.FirstWidth : row.SecondWidth;
             var width = (int)Math.Clamp(Math.Ceiling(Math.Max(1, displayWidth) * dpi * 1.35), 512, 4096);
-            _imageCache.Prefetch(new[] { page - 1, page, page + 1 }, width);
+            _imageCache.Prefetch(SpreadPlanner.JumpNeighborhood(page, _book!.Descriptor.Pages.Count), width);
         }
 
         // Do not select a ListBoxItem. List selection (including Escape
