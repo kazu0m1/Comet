@@ -21,6 +21,7 @@ public partial class MainWindow
     private bool _suppressContinuousTracking;
     private Point _continuousPanStart;
     private Point _continuousPanLast;
+    private int _continuousLastPrefetchedPage = -1;
 
     private bool IsContinuousPdfView => IsPdf && _pdfView?.ContinuousScroll == true;
 
@@ -38,6 +39,7 @@ public partial class MainWindow
     {
         CancelContinuousPan();
         _continuousScrollViewer = null;
+        _continuousLastPrefetchedPage = -1;
         _continuousCts?.Cancel();
         _continuousCts?.Dispose();
         _continuousCts = null;
@@ -61,6 +63,7 @@ public partial class MainWindow
         }
         _continuousCts = new CancellationTokenSource();
         _continuousScrollViewer = null;
+        _continuousLastPrefetchedPage = -1;
         var count = pdf.Descriptor.Pages.Count;
         var index = 0;
         while (index < count)
@@ -143,18 +146,62 @@ public partial class MainWindow
             ?? _continuousRows.LastOrDefault(x => x.FirstPage <= page);
         if (row is null) return;
 
-        // Do not select a ListBoxItem. List selection (including Escape restoring
-        // selection) must never control the user's scroll position.
+        // Target a small page neighborhood rather than full-document
+        // pre-rendering. Prefetch is advisory: the visible-row loader below
+        // always remains responsible for the images on screen.
+        if (_continuousLastPrefetchedPage != page && _imageCache is not null)
+        {
+            _continuousLastPrefetchedPage = page;
+            var dpi = VisualTreeHelper.GetDpi(PdfContinuousList).DpiScaleX;
+            var displayWidth = row.FirstPage == page ? row.FirstWidth : row.SecondWidth;
+            var width = (int)Math.Clamp(Math.Ceiling(Math.Max(1, displayWidth) * dpi * 1.35), 512, 4096);
+            _imageCache.Prefetch(new[] { page - 1, page, page + 1 }, width);
+        }
+
+        // Do not select a ListBoxItem. List selection (including Escape
+        // restoring selection) must never control the scroll position.
         _suppressContinuousTracking = true;
         try { PdfContinuousList.ScrollIntoView(row); }
         finally { _suppressContinuousTracking = false; }
+
+        // Recycling can keep a ListBoxItem alive while replacing its DataContext,
+        // so its inner Border.Loaded event need not fire again. After layout
+        // completes, explicitly ensure every visible row has a rendering request.
+        var owner = _continuousCts;
+        _ = Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded,
+            new Action(() =>
+            {
+                if (owner is not null && ReferenceEquals(owner, _continuousCts) &&
+                    IsContinuousPdfView)
+                    EnsureContinuousVisibleRowsLoaded();
+            }));
+    }
+
+    private void EnsureContinuousVisibleRowsLoaded()
+    {
+        var panel = FindVisualChild<VirtualizingStackPanel>(PdfContinuousList);
+        if (panel is null || _continuousCts is null || !IsContinuousPdfView) return;
+
+        foreach (UIElement child in panel.Children)
+        {
+            if (child is not ListBoxItem { DataContext: PdfContinuousRow row } item ||
+                !item.IsVisible) continue;
+            // The container has been recycled or just realized. Using its
+            // current DataContext is more reliable than relying on Loaded.
+            row.Realized = true;
+            if (row.FirstImage is null || (row.SecondPage.HasValue && row.SecondImage is null))
+                _ = LoadContinuousRowAsync(row);
+        }
     }
 
     private void PdfContinuousList_ScrollChanged(object sender, ScrollChangedEventArgs e)
     {
-        if (!IsContinuousPdfView || _suppressContinuousTracking ||
-            _book is null || PdfContinuousList.Visibility != Visibility.Visible)
+        if (!IsContinuousPdfView || _book is null ||
+            PdfContinuousList.Visibility != Visibility.Visible)
             return;
+
+        EnsureContinuousVisibleRowsLoaded();
+        if (_suppressContinuousTracking) return;
 
         // The panel only contains realized rows. Read actual screen position,
         // not ListBox.SelectedItem, since wheel and drag do not select rows.
