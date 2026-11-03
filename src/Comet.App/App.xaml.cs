@@ -11,8 +11,11 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
-        var settingsStore = new JsonSettingsStore();
-        var stateStore = new JsonBookStateStore();
+        // Explicit development/test profile isolation; production defaults stay unchanged.
+        var profile = Environment.GetEnvironmentVariable("COMET_PROFILE_DIR");
+        if (string.IsNullOrWhiteSpace(profile)) profile = null;
+        var settingsStore = new JsonSettingsStore(profile);
+        var stateStore = new JsonBookStateStore(profile);
         var settings = await settingsStore.LoadAsync();
         var window = new MainWindow(
             new BookSourceFactory(),

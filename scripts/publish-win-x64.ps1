@@ -42,4 +42,12 @@ if (Test-Path $workerDump) { Remove-Item $workerDump -Force }
 
 Copy-Item (Join-Path $root "LICENSE") $out
 Copy-Item (Join-Path $root "NOTICE.md") $out
+if ($Version.Contains("-dev")) {
+    $previewScript = Join-Path $out "Start-Comet-PDF-Preview.cmd"
+    @'
+@echo off
+set "COMET_PROFILE_DIR=%~dp0Preview-Profile"
+start "" "%~dp0Comet.exe" %*
+'@ | Set-Content $previewScript -Encoding ascii
+}
 Write-Host "Published to $out"
