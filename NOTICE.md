@@ -37,9 +37,13 @@ MIT-licensed test suite:
 
 Comet's optional PDF worker uses PDFium, built from the Chromium PDFium project.
 PDFium is distributed under a BSD-style license and includes third-party
-components with their own license notices. The Windows binary is redistributed
-via the Apache-2.0-licensed bblanchon.PDFium.Win32 NuGet package
-(version 158.0.8125). Production packaging must include the upstream PDFium
-LICENSE and third-party notices from the exact binary distribution; Comet's
-MIT license does not supersede those terms. The PDF worker does not load in
-non-PDF reading sessions.
+components with their own license notices. The Windows binary is redistributed via the bblanchon.PDFium.Win32
+NuGet package (version 158.0.8125; package metadata declares Apache-2.0).
+The published PDF worker includes the exact upstream PDFium LICENSE and
+original third-party license files in `pdf-worker/licenses/`, copied from
+the pinned PDFium 158.0.8125.0 archive. Publishing checks the upstream
+archive SHA-256 and verifies that the NuGet-supplied `pdfium.dll` is
+byte-identical to that binary. PDFium carries its own BSD-style and
+Apache-2.0 conditions; bundled dependencies have their own license texts.
+Comet's MIT license does not supersede those terms. The PDF worker does
+not load in archive-only sessions.
