@@ -72,6 +72,7 @@ public partial class MainWindow : Window
 
         InitializeComponent();
         ThumbnailList.ItemsSource = _thumbnailItems;
+        PdfContinuousList.ItemsSource = _continuousRows;
         LocalizeUi();
         ApplySettingsToViewport();
         ApplyThumbnailSidebarVisibility();
@@ -161,6 +162,7 @@ public partial class MainWindow : Window
             if (reason == BookOpenReason.AdjacentPrevious && CurrentPageLayoutMode == PageLayoutMode.DoublePage)
                 _pageIndex = SpreadPlanner.NormalizeStartIndex(_pageIndex, source.Descriptor.Pages.Count, CurrentPageLayoutMode, CoverAlone);
 
+            RebuildContinuousPdfView();
             await RenderCurrentAsync(cancellationToken).ConfigureAwait(true);
             PerformanceTrace.Elapsed("open.first-render", openStartedAt, $"{source.Descriptor.Pages.Count} pages");
             await InitializeThumbnailSidebarAsync(source, cancellationToken).ConfigureAwait(true);
@@ -184,6 +186,19 @@ public partial class MainWindow : Window
     {
         if (_book is null || _imageCache is null || _book.Descriptor.Pages.Count == 0)
             return;
+        if (IsContinuousPdfView)
+        {
+            JumpContinuousToPage(_pageIndex);
+            var row = _continuousRows.FirstOrDefault(x => x.FirstPage == _pageIndex || x.SecondPage == _pageIndex);
+            if (row is not null && row.FirstImage is null)
+            {
+                row.Realized = true;
+                await LoadContinuousRowAsync(row);
+            }
+            UpdateStatus();
+            ScheduleStateSave();
+            return;
+        }
 
         var renderStartedAt = PerformanceTrace.Start();
         _pageIndex = Math.Clamp(_pageIndex, 0, _book.Descriptor.Pages.Count - 1);
@@ -610,6 +625,7 @@ public partial class MainWindow : Window
         UpdateMenuChecks();
         UpdateImageInfo();
         _ = SaveSettingsSafeAsync();
+        if (IsContinuousPdfView) RebuildContinuousPdfView();
         if (_book is not null)
             _ = RenderCurrentAsync();
     }
@@ -728,6 +744,7 @@ public partial class MainWindow : Window
         if (_book is not null && mode == PageLayoutMode.DoublePage)
             _pageIndex = SpreadPlanner.NormalizeStartIndex(_pageIndex, _book.Descriptor.Pages.Count, mode, CoverAlone);
         UpdateMenuChecks();
+        RebuildContinuousPdfView();
         await SaveSettingsSafeAsync();
         await RenderCurrentAsync();
     }
@@ -739,6 +756,7 @@ public partial class MainWindow : Window
         _pageIndex = SpreadPlanner.NormalizeStartIndex(_pageIndex, _book.Descriptor.Pages.Count,
             CurrentPageLayoutMode, CoverAlone);
         UpdateMenuChecks();
+        RebuildContinuousPdfView();
         ScheduleStateSave();
         await RenderCurrentAsync();
     }
@@ -769,6 +787,7 @@ public partial class MainWindow : Window
             _thumbnailImageCache = new PageImageCache(_thumbnailBook, _decoder, 64, 64, 192, false);
         foreach (var item in _thumbnailItems) item.Image = null;
         ClearPdfTextSelection();
+        RebuildContinuousPdfView();
         await RenderCurrentAsync();
         ScheduleStateSave();
         if (_thumbnailCts is not null) _ = WarmThumbnailNeighborhoodAsync(_pageIndex, _thumbnailCts.Token);
@@ -840,6 +859,8 @@ public partial class MainWindow : Window
         PdfCoverMenuItem.IsEnabled = IsPdf;
         PdfRotatePageMenuItem.IsEnabled = IsPdf;
         PdfRotateAllMenuItem.IsEnabled = IsPdf;
+        PdfContinuousMenuItem.IsEnabled = IsPdf;
+        PdfContinuousMenuItem.IsChecked = IsContinuousPdfView;
         StretchMenuItem.IsChecked = _settings.StretchSmallImages;
         ThumbnailSidebarMenuItem.IsChecked = _settings.ShowThumbnails;
         UpdateViewportContextMenu();
@@ -1096,6 +1117,7 @@ public partial class MainWindow : Window
         _thumbnailItems.Clear();
 
         ClearPdfTextSelection();
+        ResetContinuousPdfView();
         _imageCache?.Dispose();
         _imageCache = null;
         ClosePdfUi();
@@ -1132,6 +1154,7 @@ public partial class MainWindow : Window
         _openCts?.Cancel();
         _renderCts?.Cancel();
         _thumbnailCts?.Cancel();
+        _continuousCts?.Cancel();
         _stateSaveCts?.Cancel();
         Interlocked.Increment(ref _renderGeneration);
 
@@ -1276,9 +1299,12 @@ public partial class MainWindow : Window
         if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
         {
             AdjustZoom(e.Delta > 0 ? 1.10 : 1 / 1.10);
+            if (IsContinuousPdfView) RebuildContinuousPdfView();
             e.Handled = true;
             return;
         }
+        // Allow the virtualized list's ScrollViewer to handle ordinary wheel motion.
+        if (IsContinuousPdfView && PdfContinuousList.IsMouseOver) return;
 
         await SmartScrollOrFlipAsync(e.Delta < 0 ? 1 : -1);
         e.Handled = true;

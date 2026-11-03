@@ -183,6 +183,7 @@
                     </controls:PageViewport.ContextMenu>
                 </controls:PageViewport>
                 <ListBox x:Name="PdfContinuousList" Visibility="Collapsed"
+                         SizeChanged="PdfContinuousList_SizeChanged"
                          Background="#151515" BorderThickness="0"
                          Foreground="White"
                          SelectionChanged="PdfContinuousList_SelectionChanged"
