@@ -112,11 +112,11 @@ Equal(0, rtlContinuousSpread.SecondColumn, "RTL continuous 101st page in left co
 
 Equal((0, 1), SpreadPlanner.DisplayColumns(ReadingDirection.RightToLeft, false),
     "continuous manga single page is not misplaced");
-Equal("98,99,100", string.Join(',', SpreadPlanner.JumpNeighborhood(99, 300)),
+Equal("99,100,98", string.Join(',', SpreadPlanner.JumpNeighborhood(99, 300)),
     "thumbnail page 100 primes pages 99, 100 and 101");
 Equal("0,1", string.Join(',', SpreadPlanner.JumpNeighborhood(0, 300)),
     "first-page jump clips prefetch at start of document");
-Equal("298,299", string.Join(',', SpreadPlanner.JumpNeighborhood(299, 300)),
+Equal("299,298", string.Join(',', SpreadPlanner.JumpNeighborhood(299, 300)),
     "last-page jump clips prefetch at end of document");
 Equal(0, SpreadPlanner.JumpNeighborhood(0, 0).Length,
     "empty PDF jump neighborhood is empty");
