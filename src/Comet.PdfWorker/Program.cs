@@ -121,7 +121,11 @@ internal static class Program
             var pageHeight = Native.FPDF_GetPageHeightF(page);
             if (pageWidth <= 0 || pageHeight <= 0) throw new InvalidDataException("Invalid page geometry");
             var w = Math.Clamp(requestedWidth <= 0 ? 1600 : requestedWidth, 64, 4096);
-            var h = checked((int)Math.Round(pageHeight * w / pageWidth));
+            var turns = ((rotation % 4) + 4) % 4;
+            // The bitmap dimensions refer to the rotated page, not its raw MediaBox.
+            var displayWidth = turns % 2 == 0 ? pageWidth : pageHeight;
+            var displayHeight = turns % 2 == 0 ? pageHeight : pageWidth;
+            var h = checked((int)Math.Round(displayHeight * w / displayWidth));
             if (h < 1 || h > 8192 || (long)w * h > 24000000)
                 throw new InvalidDataException("Page exceeds rendering safety limits");
             var bitmap = Native.FPDFBitmap_Create(w, h, 1);

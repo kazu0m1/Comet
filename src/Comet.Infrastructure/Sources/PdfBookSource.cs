@@ -7,6 +7,8 @@ public sealed class PdfBookSource : IRasterBookSource
 {
     private readonly PdfWorkerClient _worker;
     private readonly PdfPageInfo[] _pages;
+    private int _allRotation;
+    private readonly Dictionary<int, int> _pageRotations = new();
     private PdfBookSource(string path, PdfWorkerClient worker, PdfReply info)
     {
         _worker = worker;
@@ -23,6 +25,19 @@ public sealed class PdfBookSource : IRasterBookSource
     public BookDescriptor Descriptor { get; }
     public ulong Permissions { get; }
     public IReadOnlyList<PdfPageInfo> Pages => _pages;
+    public void ApplyRotationState(int allRotation, IReadOnlyDictionary<int, int>? pageRotations)
+    {
+        _allRotation = ((allRotation % 4) + 4) % 4;
+        _pageRotations.Clear();
+        if (pageRotations is not null)
+            foreach (var (page, degrees) in pageRotations)
+                if ((uint)page < (uint)_pages.Length)
+                    _pageRotations[page] = ((degrees % 4) + 4) % 4;
+    }
+
+    public int GetPageRotation(int index)
+        => _pageRotations.TryGetValue(index, out var rotation) ? rotation : _allRotation;
+
     public bool CopyAllowed => (Permissions & 0x10UL) != 0 || Permissions == ulong.MaxValue;
 
     public static async ValueTask<PdfBookSource> OpenAsync(string path, CancellationToken token = default, string? password = null)
@@ -46,7 +61,7 @@ public sealed class PdfBookSource : IRasterBookSource
     public async ValueTask<byte[]> RenderPageBytesAsync(int pageIndex, int width, CancellationToken token = default)
     {
         if ((uint)pageIndex >= (uint)_pages.Length) throw new ArgumentOutOfRangeException(nameof(pageIndex));
-        var response = await _worker.SendAsync(new { Command = "render", Index = pageIndex, Width = width, Rotation = 0 }, token).ConfigureAwait(false);
+        var response = await _worker.SendAsync(new { Command = "render", Index = pageIndex, Width = width, Rotation = GetPageRotation(pageIndex) }, token).ConfigureAwait(false);
         var filename = response.ImagePath ?? throw new IOException("PDF worker did not return a rendered page");
         try { return await File.ReadAllBytesAsync(filename, token).ConfigureAwait(false); }
         finally { try { File.Delete(filename); } catch (IOException) { } }
