@@ -413,7 +413,7 @@ public partial class MainWindow
             {
                 // Queue on the dispatcher to avoid re-entering the image-loading
                 // method while the recycled container is completing layout.
-                Dispatcher.BeginInvoke(new Action(() => _ = LoadContinuousRowAsync(row)));
+                _ = Dispatcher.BeginInvoke(new Action(() => _ = LoadContinuousRowAsync(row)));
             }
         }
     }
