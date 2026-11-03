@@ -103,6 +103,13 @@ Equal((0, 1), SpreadPlanner.DisplayColumns(ReadingDirection.LeftToRight, true),
     "continuous LTR spread draws logical first page on left");
 Equal((1, 0), SpreadPlanner.DisplayColumns(ReadingDirection.RightToLeft, true),
     "continuous manga RTL spread draws logical first page on right");
+var ltrContinuousSpread = new PdfContinuousRow(99, 100, ReadingDirection.LeftToRight);
+var rtlContinuousSpread = new PdfContinuousRow(99, 100, ReadingDirection.RightToLeft);
+Equal(0, ltrContinuousSpread.FirstColumn, "LTR continuous 100th page in left column");
+Equal(1, ltrContinuousSpread.SecondColumn, "LTR continuous 101st page in right column");
+Equal(1, rtlContinuousSpread.FirstColumn, "RTL continuous 100th page in right column");
+Equal(0, rtlContinuousSpread.SecondColumn, "RTL continuous 101st page in left column");
+
 Equal((0, 1), SpreadPlanner.DisplayColumns(ReadingDirection.RightToLeft, false),
     "continuous manga single page is not misplaced");
 Equal("98,99,100", string.Join(',', SpreadPlanner.JumpNeighborhood(99, 300)),
