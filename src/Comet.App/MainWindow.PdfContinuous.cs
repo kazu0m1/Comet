@@ -153,7 +153,7 @@ public partial class MainWindow
         else { row.SecondWidth = 0; row.SecondHeight = 0; }
     }
 
-    private void JumpContinuousToPage(int page)
+    private void JumpContinuousToPage(int page, bool prefetchNeighbors = false)
     {
         if (!IsContinuousPdfView || _continuousRows.Count == 0) return;
         var row = _continuousRows.FirstOrDefault(x => x.FirstPage == page || x.SecondPage == page)
@@ -163,13 +163,15 @@ public partial class MainWindow
         // Target a small page neighborhood rather than full-document
         // pre-rendering. Prefetch is advisory: the visible-row loader below
         // always remains responsible for the images on screen.
-        if (_continuousLastPrefetchedPage != page && _imageCache is not null)
+        if (prefetchNeighbors && _continuousLastPrefetchedPage != page && _imageCache is not null)
         {
             _continuousLastPrefetchedPage = page;
             var dpi = VisualTreeHelper.GetDpi(PdfContinuousList).DpiScaleX;
             var displayWidth = row.FirstPage == page ? row.FirstWidth : row.SecondWidth;
             var width = (int)Math.Clamp(Math.Ceiling(Math.Max(1, displayWidth) * dpi * 1.35), 512, 4096);
             _imageCache.Prefetch(SpreadPlanner.JumpNeighborhood(page, _book!.Descriptor.Pages.Count), width);
+            PerformanceTrace.Event("pdf.continuous.jump-prefetch",
+                $"page={page + 1}; width={width}; reason=explicit");
         }
 
         // Do not select a ListBoxItem. List selection (including Escape
