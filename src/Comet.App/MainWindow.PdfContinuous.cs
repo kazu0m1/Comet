@@ -15,7 +15,12 @@ public partial class MainWindow
 {
     private readonly ObservableCollection<PdfContinuousRow> _continuousRows = new();
     private CancellationTokenSource? _continuousCts;
-    private bool _changingContinuousSelection;
+    private ScrollViewer? _continuousScrollViewer;
+    private bool _continuousPanActive;
+    private bool _continuousPanMoved;
+    private bool _suppressContinuousTracking;
+    private Point _continuousPanStart;
+    private Point _continuousPanLast;
 
     private bool IsContinuousPdfView => IsPdf && _pdfView?.ContinuousScroll == true;
 
@@ -31,6 +36,8 @@ public partial class MainWindow
 
     private void ResetContinuousPdfView()
     {
+        CancelContinuousPan();
+        _continuousScrollViewer = null;
         _continuousCts?.Cancel();
         _continuousCts?.Dispose();
         _continuousCts = null;
@@ -53,6 +60,7 @@ public partial class MainWindow
             return;
         }
         _continuousCts = new CancellationTokenSource();
+        _continuousScrollViewer = null;
         var count = pdf.Descriptor.Pages.Count;
         var index = 0;
         while (index < count)
@@ -134,21 +142,137 @@ public partial class MainWindow
         var row = _continuousRows.FirstOrDefault(x => x.FirstPage == page || x.SecondPage == page)
             ?? _continuousRows.LastOrDefault(x => x.FirstPage <= page);
         if (row is null) return;
-        _changingContinuousSelection = true;
-        try { PdfContinuousList.SelectedItem = row; PdfContinuousList.ScrollIntoView(row); }
-        finally { _changingContinuousSelection = false; }
+
+        // Do not select a ListBoxItem. List selection (including Escape restoring
+        // selection) must never control the user's scroll position.
+        _suppressContinuousTracking = true;
+        try { PdfContinuousList.ScrollIntoView(row); }
+        finally { _suppressContinuousTracking = false; }
     }
 
-    private void PdfContinuousList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void PdfContinuousList_ScrollChanged(object sender, ScrollChangedEventArgs e)
     {
-        if (_changingContinuousSelection || !IsContinuousPdfView) return;
-        if (PdfContinuousList.SelectedItem is PdfContinuousRow row && _book is not null)
+        if (!IsContinuousPdfView || _suppressContinuousTracking ||
+            _book is null || PdfContinuousList.Visibility != Visibility.Visible)
+            return;
+
+        // The panel only contains realized rows. Read actual screen position,
+        // not ListBox.SelectedItem, since wheel and drag do not select rows.
+        var panel = FindVisualChild<VirtualizingStackPanel>(PdfContinuousList);
+        if (panel is null) return;
+        var viewportHeight = PdfContinuousList.ActualHeight;
+        if (viewportHeight <= 0) return;
+        PdfContinuousRow? mostVisible = null;
+        var largestOverlap = 0.0;
+        foreach (UIElement child in panel.Children)
         {
-            _pageIndex = row.FirstPage;
-            _displayedPageCount = row.SecondPage.HasValue ? 2 : 1;
-            UpdateStatus();
-            ScheduleStateSave();
+            if (child is not ListBoxItem { DataContext: PdfContinuousRow row } item ||
+                item.ActualHeight <= 0 || !item.IsVisible) continue;
+            var top = item.TranslatePoint(new Point(0, 0), PdfContinuousList).Y;
+            var overlap = Math.Max(0,
+                Math.Min(viewportHeight, top + item.ActualHeight) - Math.Max(0, top));
+            if (overlap <= largestOverlap) continue;
+            largestOverlap = overlap;
+            mostVisible = row;
         }
+
+        if (mostVisible is null) return;
+        var shownCount = mostVisible.SecondPage.HasValue ? 2 : 1;
+        if (_pageIndex == mostVisible.FirstPage && _displayedPageCount == shownCount)
+            return;
+
+        _pageIndex = mostVisible.FirstPage;
+        _displayedPageCount = shownCount;
+        UpdateStatus();
+        UpdateThumbnailSelection();
+        ScheduleStateSave();
+    }
+
+    private void PdfContinuousPan_Down(object sender, MouseButtonEventArgs e)
+    {
+        if (!IsContinuousPdfView || e.ChangedButton != MouseButton.Left)
+            return;
+
+        // Leave scrollbars alone and let the image's existing handler select
+        // text when the drag starts over an actual PDF text character.
+        if (e.OriginalSource is DependencyObject source)
+        {
+            DependencyObject? ancestor = source;
+            while (ancestor is not null && ancestor != PdfContinuousList)
+            {
+                if (ancestor is ScrollBar) return;
+                ancestor = VisualTreeHelper.GetParent(ancestor);
+            }
+        }
+
+        var point = e.GetPosition(PdfContinuousList);
+        if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Alt))
+        {
+            DependencyObject? hit = VisualTreeHelper.HitTest(PdfContinuousList, point)?.VisualHit;
+            while (hit is not null && hit is not Image)
+                hit = VisualTreeHelper.GetParent(hit);
+            if (hit is Image image &&
+                TryHitContinuousCharacter(image, e.GetPosition(image), out _))
+                return;
+        }
+
+        _continuousScrollViewer ??= FindVisualChild<ScrollViewer>(PdfContinuousList);
+        if (_continuousScrollViewer is null) return;
+        _continuousPanActive = true;
+        _continuousPanMoved = false;
+        _continuousPanStart = point;
+        _continuousPanLast = point;
+        PdfContinuousList.CaptureMouse();
+        e.Handled = true;
+    }
+
+    private void PdfContinuousPan_Move(object sender, MouseEventArgs e)
+    {
+        if (!_continuousPanActive || _continuousScrollViewer is null) return;
+        if (e.LeftButton != MouseButtonState.Pressed)
+        {
+            CancelContinuousPan();
+            return;
+        }
+
+        var point = e.GetPosition(PdfContinuousList);
+        if (!_continuousPanMoved)
+        {
+            if (Math.Abs(point.X - _continuousPanStart.X) <
+                    SystemParameters.MinimumHorizontalDragDistance &&
+                Math.Abs(point.Y - _continuousPanStart.Y) <
+                    SystemParameters.MinimumVerticalDragDistance) return;
+            _continuousPanMoved = true;
+        }
+
+        // Drag content with the cursor, just like panning in normal PDF view.
+        _continuousScrollViewer.ScrollToVerticalOffset(
+            _continuousScrollViewer.VerticalOffset - (point.Y - _continuousPanLast.Y));
+        _continuousScrollViewer.ScrollToHorizontalOffset(
+            _continuousScrollViewer.HorizontalOffset - (point.X - _continuousPanLast.X));
+        _continuousPanLast = point;
+        e.Handled = true;
+    }
+
+    private void PdfContinuousPan_Up(object sender, MouseButtonEventArgs e)
+    {
+        if (!_continuousPanActive || e.ChangedButton != MouseButton.Left) return;
+        CancelContinuousPan();
+        e.Handled = true;
+    }
+
+    private void PdfContinuousPan_LostCapture(object sender, MouseEventArgs e)
+    {
+        _continuousPanActive = false;
+        _continuousPanMoved = false;
+    }
+
+    private void CancelContinuousPan()
+    {
+        _continuousPanActive = false;
+        _continuousPanMoved = false;
+        if (Mouse.Captured == PdfContinuousList)
+            PdfContinuousList.ReleaseMouseCapture();
     }
 
     private void PdfContinuousRow_Loaded(object sender, RoutedEventArgs e)
