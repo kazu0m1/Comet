@@ -280,7 +280,7 @@ internal static class Native
     [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)] internal static extern int FPDFText_CountChars(IntPtr textPage);
     [DllImport(Lib, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Unicode)] internal static extern int FPDFText_GetText(IntPtr textPage,int start,int count,[Out] char[] chars);
     [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)] internal static extern int FPDFText_GetCharBox(IntPtr textPage,int index,out double l,out double r,out double b,out double t);
-    [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)] internal static extern ulong FPDF_GetDocPermissions(IntPtr doc);
+    [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)] internal static extern uint FPDF_GetDocPermissions(IntPtr doc);
     [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)] internal static extern IntPtr FPDFBookmark_GetFirstChild(IntPtr doc,IntPtr bookmark);
     [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)] internal static extern IntPtr FPDFBookmark_GetNextSibling(IntPtr doc,IntPtr bookmark);
     [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)] internal static extern uint FPDFBookmark_GetTitle(IntPtr bookmark,IntPtr buffer,uint length);

@@ -50,4 +50,6 @@ set "COMET_PROFILE_DIR=%~dp0Preview-Profile"
 start "" "%~dp0Comet.exe" %*
 '@ | Set-Content $previewScript -Encoding ascii
 }
+# Fail the production release until the PDFium redistribution notices are
+# verified and copied with the exact package artifact.
 Write-Host "Published to $out"

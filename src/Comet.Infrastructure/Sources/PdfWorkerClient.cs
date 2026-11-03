@@ -51,9 +51,15 @@ public sealed class PdfWorkerClient : IAsyncDisposable
             if (_process.HasExited) throw new IOException("PDF worker exited unexpectedly");
             // Separate native crash from the reader. Cancelled/closed clients kill the worker.
             var line = JsonSerializer.Serialize(request, Json);
-            await _process.StandardInput.WriteLineAsync(line.AsMemory(), cancellationToken).ConfigureAwait(false);
-            await _process.StandardInput.FlushAsync(cancellationToken).ConfigureAwait(false);
-            var replyLine = await _process.StandardOutput.ReadLineAsync(cancellationToken).ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
+            await _process.StandardInput.WriteLineAsync(line).ConfigureAwait(false);
+            await _process.StandardInput.FlushAsync().ConfigureAwait(false);
+            // After a request is sent, finish reading its matching response even if
+            // the caller cancels. Otherwise a stale reply can be misrouted to the
+            // next operation. Native hangs time out rather than blocking forever.
+            var replyLine = await _process.StandardOutput.ReadLineAsync()
+                .WaitAsync(TimeSpan.FromSeconds(90)).ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
             if (string.IsNullOrEmpty(replyLine)) throw new IOException("PDF worker disconnected");
             var reply = JsonSerializer.Deserialize<PdfReply>(replyLine, Json)
                 ?? throw new IOException("Invalid PDF worker response");

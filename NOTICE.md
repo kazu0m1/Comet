@@ -33,3 +33,13 @@ MIT-licensed test suite:
   `ef56f892bf4ed17e1c54bd5f0fce65e3c1a5ec0b`).
 - `SharpCompress_7Zip_Solid.cb7` from `7Zip.solid.7z` (Git blob
   `5ac695e59aeff2385e9065cb8841118f1bde06e1`).
+
+
+Comet's optional PDF worker uses PDFium, built from the Chromium PDFium project.
+PDFium is distributed under a BSD-style license and includes third-party
+components with their own license notices. The Windows binary is redistributed
+via the Apache-2.0-licensed bblanchon.PDFium.Win32 NuGet package
+(version 158.0.8125). Production packaging must include the upstream PDFium
+LICENSE and third-party notices from the exact binary distribution; Comet's
+MIT license does not supersede those terms. The PDF worker does not load in
+non-PDF reading sessions.
