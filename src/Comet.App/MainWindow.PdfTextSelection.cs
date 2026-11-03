@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Input;
 using Comet.Infrastructure.Sources;
+using Comet.Core.Services;
 
 namespace Comet.App;
 
@@ -46,8 +47,12 @@ public partial class MainWindow
                 continue;
             var dims = pdf.Pages[index];
             if (dims.Width <= 0 || dims.Height <= 0) continue;
-            var pdfX = (screen.X - display.Left) / display.Width * dims.Width;
-            var pdfY = dims.Height - (screen.Y - display.Top) / display.Height * dims.Height;
+            var normalized = PdfCoordinateMapper.DisplayToPdf(
+                (screen.X - display.Left) / display.Width,
+                (screen.Y - display.Top) / display.Height,
+                pdf.GetPageRotation(index));
+            var pdfX = normalized.X * dims.Width;
+            var pdfY = normalized.Y * dims.Height;
             foreach (var c in data.Boxes)
             {
                 if (pdfX >= c.Left - 1 && pdfX <= c.Right + 1 &&
@@ -128,10 +133,14 @@ public partial class MainWindow
                 foreach (var ch in text.Boxes)
                 {
                     if (ch.Index < selection.Begin || ch.Index >= selection.End) continue;
-                    var left = viewport.Left + ch.Left / dims.Width * viewport.Width;
-                    var right = viewport.Left + ch.Right / dims.Width * viewport.Width;
-                    var top = viewport.Top + (dims.Height - ch.Top) / dims.Height * viewport.Height;
-                    var bottom = viewport.Top + (dims.Height - ch.Bottom) / dims.Height * viewport.Height;
+                    var c1 = PdfCoordinateMapper.PdfToDisplay(ch.Left / dims.Width, ch.Bottom / dims.Height,
+                        pdf.GetPageRotation(page));
+                    var c2 = PdfCoordinateMapper.PdfToDisplay(ch.Right / dims.Width, ch.Top / dims.Height,
+                        pdf.GetPageRotation(page));
+                    var left = viewport.Left + Math.Min(c1.U, c2.U) * viewport.Width;
+                    var right = viewport.Left + Math.Max(c1.U, c2.U) * viewport.Width;
+                    var top = viewport.Top + Math.Min(c1.V, c2.V) * viewport.Height;
+                    var bottom = viewport.Top + Math.Max(c1.V, c2.V) * viewport.Height;
                     if (double.IsFinite(left) && double.IsFinite(top) && right > left && bottom > top)
                         rects.Add(new Rect(left, top, right - left, bottom - top));
                 }

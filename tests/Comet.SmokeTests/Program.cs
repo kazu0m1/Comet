@@ -65,6 +65,14 @@ Near(0.5, DpiScaleCalculator.ManualDipScale(2.0), "manual 100 at 200 percent DPI
 Near(1.0, DpiScaleCalculator.PhysicalZoom(800, 1200, 1.5), "physical zoom reports true 100 percent");
 Near(0.75, DpiScaleCalculator.PhysicalZoom(600, 1200, 1.5), "physical zoom reports true 75 percent");
 
+for (var quarterTurns = 0; quarterTurns < 4; quarterTurns++)
+{
+    var normalized = PdfCoordinateMapper.DisplayToPdf(0.3, 0.7, quarterTurns);
+    var roundTrip = PdfCoordinateMapper.PdfToDisplay(normalized.X, normalized.Y, quarterTurns);
+    Near(0.3, roundTrip.U, "PDF rotation " + quarterTurns + " x inverse");
+    Near(0.7, roundTrip.V, "PDF rotation " + quarterTurns + " y inverse");
+}
+
 var weightedCache = new LruCache<int, string>(capacity: 3, maxWeight: 5, weightSelector: value => value.Length);
 weightedCache.Set(1, "aaa");
 weightedCache.Set(2, "bbb");

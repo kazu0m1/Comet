@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Diagnostics;
 using Comet.Infrastructure.Sources;
+using Comet.Core.Services;
 
 namespace Comet.App;
 
@@ -214,8 +215,10 @@ public partial class MainWindow
             if (rect.IsEmpty || !rect.Contains(location) || index >= pdf.Pages.Count) continue;
             var page = pdf.Pages[index];
             if (page.Width <= 0 || page.Height <= 0) return false;
-            var x = (location.X - rect.Left) / rect.Width * page.Width;
-            var y = page.Height - (location.Y - rect.Top) / rect.Height * page.Height;
+            var normal = PdfCoordinateMapper.DisplayToPdf((location.X - rect.Left) / rect.Width,
+                (location.Y - rect.Top) / rect.Height, pdf.GetPageRotation(index));
+            var x = normal.X * page.Width;
+            var y = normal.Y * page.Height;
             try
             {
                 var link = await pdf.GetLinkAsync(index, x, y).ConfigureAwait(true);
