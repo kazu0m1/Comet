@@ -982,6 +982,35 @@ public partial class MainWindow : Window
 
     private void UpdateImageInfo()
     {
+        if (_book is PdfBookSource continuousPdf && IsContinuousPdfView)
+        {
+            var shown = _continuousRows.FirstOrDefault(row =>
+                row.FirstPage == _pageIndex || row.SecondPage == _pageIndex);
+            if (shown is null) return;
+
+            var dpi = VisualTreeHelper.GetDpi(PdfContinuousList).DpiScaleX;
+            var dimensions = new List<string>
+            {
+                $"PDF display: {shown.FirstWidth * dpi:0}x{shown.FirstHeight * dpi:0} px"
+            };
+            var labels = new List<string> { continuousPdf.Descriptor.Pages[shown.FirstPage].Name };
+            if (shown.SecondPage is int second)
+            {
+                dimensions.Add($"PDF display: {shown.SecondWidth * dpi:0}x{shown.SecondHeight * dpi:0} px");
+                labels.Add(continuousPdf.Descriptor.Pages[second].Name);
+            }
+            if (CurrentReadingDirection == ReadingDirection.RightToLeft && labels.Count > 1)
+            {
+                dimensions.Reverse();
+                labels.Reverse();
+            }
+            PageMetricsText.Text = string.Join(", ", dimensions);
+            BookNameText.Text = Path.GetFileName(continuousPdf.Descriptor.Path);
+            PageNameText.Text = string.Join(", ", labels);
+            FileSizeText.Text = string.Empty;
+            return;
+        }
+
         if (_book is null || _imageCache is null || Viewport.FirstPage is null
             || !_imageCache.TryGetSourcePixelSize(_pageIndex, out var firstSize))
         {
@@ -1255,6 +1284,27 @@ public partial class MainWindow : Window
     {
         var modifiers = Keyboard.Modifiers;
         var key = e.Key == Key.System ? e.SystemKey : e.Key;
+
+        if (key == Key.Escape && IsContinuousPdfView)
+        {
+            // Escape clears the text selection without changing the visible
+            // row or resetting the ListBox scroll offset.
+            var hadSelection = _pdfSelecting || _pdfSelectionAnchor is not null;
+            if (_continuousPanActive) CancelContinuousPan();
+            if (hadSelection)
+            {
+                _pdfSelecting = false;
+                if (Mouse.Captured is Image)
+                    Mouse.Capture(null);
+                _pdfSelectionAnchor = null;
+                _pdfSelectionEnd = null;
+                UpdatePdfHighlightRects();
+            }
+            else if (_fullscreen)
+                ToggleFullscreen();
+            e.Handled = true;
+            return;
+        }
 
         if (modifiers == ModifierKeys.Control && key == Key.C && IsPdf && _pdfSelectionAnchor is not null)
         { await CopyPdfSelectionAsync(); e.Handled = true; return; }
