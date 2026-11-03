@@ -215,8 +215,10 @@ public partial class MainWindow
             if (rect.IsEmpty || !rect.Contains(location) || index >= pdf.Pages.Count) continue;
             var page = pdf.Pages[index];
             if (page.Width <= 0 || page.Height <= 0) return false;
-            var normal = PdfCoordinateMapper.DisplayToPdf((location.X - rect.Left) / rect.Width,
-                (location.Y - rect.Top) / rect.Height, pdf.GetPageRotation(index));
+            var unCropped = pdf.GetCrop(index).ToOriginal((location.X - rect.Left) / rect.Width,
+                (location.Y - rect.Top) / rect.Height);
+            var normal = PdfCoordinateMapper.DisplayToPdf(unCropped.U,
+                unCropped.V, pdf.GetPageRotation(index));
             var x = normal.X * page.Width;
             var y = normal.Y * page.Height;
             try

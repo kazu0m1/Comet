@@ -47,10 +47,11 @@ public partial class MainWindow
                 continue;
             var dims = pdf.Pages[index];
             if (dims.Width <= 0 || dims.Height <= 0) continue;
-            var normalized = PdfCoordinateMapper.DisplayToPdf(
+            var unCropped = pdf.GetCrop(index).ToOriginal(
                 (screen.X - display.Left) / display.Width,
-                (screen.Y - display.Top) / display.Height,
-                pdf.GetPageRotation(index));
+                (screen.Y - display.Top) / display.Height);
+            var normalized = PdfCoordinateMapper.DisplayToPdf(
+                unCropped.U, unCropped.V, pdf.GetPageRotation(index));
             var pdfX = normalized.X * dims.Width;
             var pdfY = normalized.Y * dims.Height;
             foreach (var c in data.Boxes)
@@ -137,10 +138,13 @@ public partial class MainWindow
                         pdf.GetPageRotation(page));
                     var c2 = PdfCoordinateMapper.PdfToDisplay(ch.Right / dims.Width, ch.Top / dims.Height,
                         pdf.GetPageRotation(page));
-                    var left = viewport.Left + Math.Min(c1.U, c2.U) * viewport.Width;
-                    var right = viewport.Left + Math.Max(c1.U, c2.U) * viewport.Width;
-                    var top = viewport.Top + Math.Min(c1.V, c2.V) * viewport.Height;
-                    var bottom = viewport.Top + Math.Max(c1.V, c2.V) * viewport.Height;
+                    var crop = pdf.GetCrop(page);
+                    var d1 = crop.FromOriginal(c1.U, c1.V);
+                    var d2 = crop.FromOriginal(c2.U, c2.V);
+                    var left = viewport.Left + Math.Clamp(Math.Min(d1.U, d2.U), 0, 1) * viewport.Width;
+                    var right = viewport.Left + Math.Clamp(Math.Max(d1.U, d2.U), 0, 1) * viewport.Width;
+                    var top = viewport.Top + Math.Clamp(Math.Min(d1.V, d2.V), 0, 1) * viewport.Height;
+                    var bottom = viewport.Top + Math.Clamp(Math.Max(d1.V, d2.V), 0, 1) * viewport.Height;
                     if (double.IsFinite(left) && double.IsFinite(top) && right > left && bottom > top)
                         rects.Add(new Rect(left, top, right - left, bottom - top));
                 }
