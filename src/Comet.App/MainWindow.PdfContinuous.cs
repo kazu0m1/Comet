@@ -78,7 +78,7 @@ public partial class MainWindow
                     ? q.Width > q.Height : q.Height > q.Width;
                 if (!otherLandscape) second = index + 1;
             }
-            var row = new PdfContinuousRow(index, second);
+            var row = new PdfContinuousRow(index, second, CurrentReadingDirection);
             UpdateContinuousRowSize(pdf, row);
             _continuousRows.Add(row);
             index += second.HasValue ? 2 : 1;
