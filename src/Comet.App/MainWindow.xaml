@@ -223,8 +223,14 @@
                         <DataTemplate>
                             <Border Loaded="PdfContinuousRow_Loaded" Margin="0" BorderThickness="0"
                                     Background="#282828">
-                                <StackPanel Orientation="Horizontal">
-                                    <Grid>
+                                <!-- Grid columns are swapped in RTL manga mode.
+                                     Do not mirror/flip the actual PDF image pixels. -->
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid Grid.Column="{Binding FirstColumn}">
                                         <Image Source="{Binding FirstImage}" Width="{Binding FirstWidth}"
                                                Height="{Binding FirstHeight}" Stretch="Fill"
                                                Tag="{Binding FirstPage}"
@@ -248,7 +254,7 @@
                                             </ItemsControl.ItemTemplate>
                                         </ItemsControl>
                                     </Grid>
-                                    <Grid>
+                                    <Grid Grid.Column="{Binding SecondColumn}">
                                         <Image Source="{Binding SecondImage}" Width="{Binding SecondWidth}"
                                                Height="{Binding SecondHeight}" Stretch="Fill"
                                                Tag="{Binding SecondPage}"
@@ -272,7 +278,7 @@
                                             </ItemsControl.ItemTemplate>
                                         </ItemsControl>
                                     </Grid>
-                                </StackPanel>
+                                </Grid>
                             </Border>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
