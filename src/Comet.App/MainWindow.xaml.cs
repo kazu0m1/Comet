@@ -191,11 +191,10 @@ public partial class MainWindow : Window
         {
             JumpContinuousToPage(_pageIndex);
             var row = _continuousRows.FirstOrDefault(x => x.FirstPage == _pageIndex || x.SecondPage == _pageIndex);
-            if (row is not null && row.FirstImage is null)
-            {
-                row.Realized = true;
-                await LoadContinuousRowAsync(row);
-            }
+            // ScrollIntoView virtualizes and realizes the row asynchronously.
+            // Loading here before WPF realization causes lost second-page
+            // assignments and permanently blank pages after thumbnail jumps.
+            // PdfContinuousRow_Loaded is the sole owner of requesting images.
             UpdateStatus();
             ScheduleStateSave();
             return;
@@ -1285,25 +1284,23 @@ public partial class MainWindow : Window
         var modifiers = Keyboard.Modifiers;
         var key = e.Key == Key.System ? e.SystemKey : e.Key;
 
-        if (key == Key.Escape && IsContinuousPdfView)
+        if (key == Key.Escape && IsPdf)
         {
-            // Escape clears the text selection without changing the visible
-            // row or resetting the ListBox scroll offset.
-            var hadSelection = _pdfSelecting || _pdfSelectionAnchor is not null;
-            if (_continuousPanActive) CancelContinuousPan();
-            if (hadSelection)
+            // Selection is owned by the PDF view, not by ListBox selection.
+            // Escape clears the selection in both modes without navigating.
+            if (_pdfSelecting || _pdfSelectionAnchor is not null)
             {
-                _pdfSelecting = false;
-                if (Mouse.Captured is Image)
-                    Mouse.Capture(null);
-                _pdfSelectionAnchor = null;
-                _pdfSelectionEnd = null;
-                UpdatePdfHighlightRects();
+                ClearPdfSelectionRange();
+                e.Handled = true;
+                return;
             }
-            else if (_fullscreen)
-                ToggleFullscreen();
-            e.Handled = true;
-            return;
+            if (IsContinuousPdfView)
+            {
+                if (_continuousPanActive) CancelContinuousPan();
+                else if (_fullscreen) ToggleFullscreen();
+                e.Handled = true;
+                return;
+            }
         }
 
         if (modifiers == ModifierKeys.Control && key == Key.C && IsPdf && _pdfSelectionAnchor is not null)
