@@ -14,11 +14,16 @@ public sealed class PdfContinuousRow : INotifyPropertyChanged
     private BitmapSource? _secondImage;
     private double _firstWidth, _firstHeight, _secondWidth, _secondHeight;
 
-    public PdfContinuousRow(int firstPage, int? secondPage)
+    public PdfContinuousRow(int firstPage, int? secondPage, bool rightToLeft = false)
     {
         FirstPage = firstPage;
         SecondPage = secondPage;
+        // Keep page indices in document order; only reverse the visual columns.
+        FirstColumn = rightToLeft && secondPage.HasValue ? 1 : 0;
+        SecondColumn = rightToLeft && secondPage.HasValue ? 0 : 1;
     }
+    public int FirstColumn { get; }
+    public int SecondColumn { get; }
     public ObservableCollection<Rect> FirstHighlights { get; } = new();
     public ObservableCollection<Rect> SecondHighlights { get; } = new();
     public int FirstPage { get; }
