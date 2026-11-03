@@ -188,32 +188,53 @@ public partial class MainWindow
         ScheduleStateSave();
     }
 
+    private static Image? FindContinuousPageImage(DependencyObject? source)
+    {
+        while (source is not null)
+        {
+            if (source is Image { Tag: int } image) return image;
+            source = source is Visual
+                ? VisualTreeHelper.GetParent(source)
+                : LogicalTreeHelper.GetParent(source);
+        }
+        return null;
+    }
+
     private void PdfContinuousPan_Down(object sender, MouseButtonEventArgs e)
     {
         if (!IsContinuousPdfView || e.ChangedButton != MouseButton.Left)
             return;
 
-        // Leave scrollbars alone and let the image's existing handler select
-        // text when the drag starts over an actual PDF text character.
+        // Both text selection and panning must be decided at the SAME preview
+        // handler. Otherwise the parent ListBox may capture the mouse before
+        // the Image's text-selection handler receives the event.
         if (e.OriginalSource is DependencyObject source)
         {
             DependencyObject? ancestor = source;
             while (ancestor is not null && ancestor != PdfContinuousList)
             {
                 if (ancestor is ScrollBar) return;
-                ancestor = VisualTreeHelper.GetParent(ancestor);
+                ancestor = ancestor is Visual
+                    ? VisualTreeHelper.GetParent(ancestor)
+                    : LogicalTreeHelper.GetParent(ancestor);
             }
         }
 
         var point = e.GetPosition(PdfContinuousList);
-        if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Alt))
+        var hitImage = FindContinuousPageImage(e.OriginalSource as DependencyObject);
+        if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Alt) &&
+            hitImage is not null &&
+            TryHitContinuousCharacter(hitImage, e.GetPosition(hitImage), out var hit))
         {
-            DependencyObject? hit = VisualTreeHelper.HitTest(PdfContinuousList, point)?.VisualHit;
-            while (hit is not null && hit is not Image)
-                hit = VisualTreeHelper.GetParent(hit);
-            if (hit is Image image &&
-                TryHitContinuousCharacter(image, e.GetPosition(image), out _))
-                return;
+            if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Shift) || _pdfSelectionAnchor is null)
+                _pdfSelectionAnchor = hit;
+            _pdfSelectionEnd = hit;
+            _pdfSelecting = true;
+            _continuousPanActive = false;
+            PdfContinuousList.CaptureMouse();
+            UpdatePdfHighlightRects();
+            e.Handled = true;
+            return;
         }
 
         _continuousScrollViewer ??= FindVisualChild<ScrollViewer>(PdfContinuousList);
@@ -228,6 +249,21 @@ public partial class MainWindow
 
     private void PdfContinuousPan_Move(object sender, MouseEventArgs e)
     {
+        if (_pdfSelecting && IsContinuousPdfView)
+        {
+            var point = e.GetPosition(PdfContinuousList);
+            var target = FindContinuousPageImage(
+                VisualTreeHelper.HitTest(PdfContinuousList, point)?.VisualHit);
+            if (target is not null &&
+                TryHitContinuousCharacter(target, e.GetPosition(target), out var hit))
+            {
+                _pdfSelectionEnd = hit;
+                UpdatePdfHighlightRects();
+            }
+            e.Handled = true;
+            return;
+        }
+
         if (!_continuousPanActive || _continuousScrollViewer is null) return;
         if (e.LeftButton != MouseButtonState.Pressed)
         {
@@ -256,7 +292,17 @@ public partial class MainWindow
 
     private void PdfContinuousPan_Up(object sender, MouseButtonEventArgs e)
     {
-        if (!_continuousPanActive || e.ChangedButton != MouseButton.Left) return;
+        if (e.ChangedButton != MouseButton.Left) return;
+        if (_pdfSelecting)
+        {
+            _pdfSelecting = false;
+            if (Mouse.Captured == PdfContinuousList)
+                PdfContinuousList.ReleaseMouseCapture();
+            UpdatePdfHighlightRects();
+            e.Handled = true;
+            return;
+        }
+        if (!_continuousPanActive) return;
         CancelContinuousPan();
         e.Handled = true;
     }
@@ -265,6 +311,7 @@ public partial class MainWindow
     {
         _continuousPanActive = false;
         _continuousPanMoved = false;
+        _pdfSelecting = false;
     }
 
     private void CancelContinuousPan()
