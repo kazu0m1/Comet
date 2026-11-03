@@ -120,14 +120,25 @@ internal static class Program
             var pageWidth = Native.FPDF_GetPageWidthF(page);
             var pageHeight = Native.FPDF_GetPageHeightF(page);
             if (pageWidth <= 0 || pageHeight <= 0) throw new InvalidDataException("Invalid page geometry");
-            var w = Math.Clamp(requestedWidth <= 0 ? 1600 : requestedWidth, 64, 4096);
             var turns = ((rotation % 4) + 4) % 4;
-            // The bitmap dimensions refer to the rotated page, not its raw MediaBox.
+            // The canvas is the rotated page. A legal PDF page can be much taller
+            // than a typical A4 page (e.g. a scanned cover). Do not reject such
+            // pages merely because the requested raster width is too large.
+            // Instead cap the resolution to fit inside the existing memory budget.
             var displayWidth = turns % 2 == 0 ? pageWidth : pageHeight;
             var displayHeight = turns % 2 == 0 ? pageHeight : pageWidth;
-            var h = checked((int)Math.Round(displayHeight * w / displayWidth));
-            if (h < 1 || h > 8192 || (long)w * h > 24000000)
-                throw new InvalidDataException("Page exceeds rendering safety limits");
+            var ratio = (double)displayHeight / displayWidth;
+            if (!double.IsFinite(ratio) || ratio <= 0)
+                throw new InvalidDataException("PDF page has invalid aspect ratio");
+            const double maxPixels = 24_000_000;
+            const int maxHeight = 8192;
+            var requested = Math.Clamp(requestedWidth <= 0 ? 1600 : requestedWidth, 1, 4096);
+            var maximumWidth = Math.Min(4096.0,
+                Math.Min((maxHeight - 0.5) / ratio, Math.Sqrt((maxPixels - 4096) / ratio)));
+            var w = Math.Min(requested, Math.Max(1, (int)Math.Floor(maximumWidth)));
+            var h = checked((int)Math.Max(1, Math.Round(ratio * w)));
+            if (h > maxHeight || (long)w * h > maxPixels)
+                throw new InvalidDataException("PDF page aspect ratio exceeds the safe raster size");
             var bitmap = Native.FPDFBitmap_Create(w, h, 1);
             if (bitmap == IntPtr.Zero) throw new OutOfMemoryException("PDF bitmap allocation failed");
             try
