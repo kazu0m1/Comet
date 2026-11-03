@@ -218,10 +218,12 @@ Pre-1.0 versions are published as GitHub prereleases.
 - [x] Preserve `backup/v1.1.0-ebb920ae` at commit `ebb920aec6cf4a63b2a2f44c93c2ecdb715aef1d`, successful CI #41574965785.
 - [x] Bundle PDFium source license and third-party notices from the exact 158.0.8125 upstream asset, checking archive SHA-256 and verifying NuGet DLL identity.
 - [x] Keep optional .pdf association independent of comic-archive associations.
-- [ ] Final v1.1.0 release-candidate Windows CI succeeds (native smoke, full self-contained publish, license audit, installer and portable ZIP).
-- [ ] Merge approved PR #1 into `main` without changing the recovery branch.
-- [ ] Tag the final release-gate `main` commit with `v1.1.0` via GitHub Desktop and push origin.
-- [ ] Tag-triggered Release workflow publishes as a normal non-draft, non-prerelease release.
-- [ ] Verify Setup.exe, portable ZIP and SHA256SUMS.txt release assets.
+- [x] Final v1.1.0 release-candidate Windows CI succeeds (native smoke, full self-contained publish, license audit, installer and portable ZIP).
+- [x] Merge approved PR #1 into `main` without changing the recovery branch.
+- [x] Tag the final release-gate `main` commit with `v1.1.0` via GitHub Desktop and push origin.
+- [x] Tag-triggered Release workflow publishes as a normal non-draft, non-prerelease release.
+- [x] Verify Setup.exe, portable ZIP and SHA256SUMS.txt release assets.
 
 **Performance evidence:** The user accepted the final subjective responsiveness, including a small open-time difference. No fresh objective N01-N10 threshold measurements are claimed for v1.1.0.
+
+**v1.1.0 stable release: CLOSED on 2026-11-03.** Tag `v1.1.0` resolves to merge commit `56b8ff813adc7699196528dd199ad7e2785b9e25`. Tag-triggered Release CI #41583573866 passed and created https://github.com/kazu0m1/Comet/releases/tag/v1.1.0 as a normal public release. GitHub asset records confirm `Comet-v1.1.0-win-x64-Setup.exe`, `Comet-v1.1.0-win-x64.zip`, and `SHA256SUMS.txt` published. Upstream PDFium license bundle verification passed in CI. Retain rollback branch `backup/v1.1.0-ebb920ae` unchanged.
