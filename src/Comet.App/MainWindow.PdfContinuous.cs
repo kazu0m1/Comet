@@ -446,46 +446,6 @@ public partial class MainWindow
         return false;
     }
 
-    private void PdfContinuousImage_Down(object sender, MouseButtonEventArgs e)
-    {
-        if (!IsContinuousPdfView || e.ChangedButton != MouseButton.Left ||
-            Keyboard.Modifiers.HasFlag(ModifierKeys.Alt) || sender is not Image image)
-            return;
-        if (!TryHitContinuousCharacter(image, e.GetPosition(image), out var hit)) return;
-        if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Shift) || _pdfSelectionAnchor is null)
-            _pdfSelectionAnchor = hit;
-        _pdfSelectionEnd = hit;
-        _pdfSelecting = true;
-        image.CaptureMouse();
-        UpdatePdfHighlightRects();
-        e.Handled = true;
-    }
-
-    private void PdfContinuousImage_Move(object sender, MouseEventArgs e)
-    {
-        if (!_pdfSelecting || !IsContinuousPdfView || sender is not Image) return;
-        var p = e.GetPosition(PdfContinuousList);
-        var picked = VisualTreeHelper.HitTest(PdfContinuousList, p)?.VisualHit;
-        while (picked is not null && picked is not Image)
-            picked = VisualTreeHelper.GetParent(picked);
-        if (picked is Image target &&
-            TryHitContinuousCharacter(target, e.GetPosition(target), out var hit))
-        {
-            _pdfSelectionEnd = hit;
-            UpdatePdfHighlightRects();
-        }
-        e.Handled = true;
-    }
-
-    private void PdfContinuousImage_Up(object sender, MouseButtonEventArgs e)
-    {
-        if (!_pdfSelecting || e.ChangedButton != MouseButton.Left) return;
-        _pdfSelecting = false;
-        if (Mouse.Captured is not null) Mouse.Capture(null);
-        UpdatePdfHighlightRects();
-        e.Handled = true;
-    }
-
     // Each item is virtualized. Only visible rows own WPF glyph highlight elements.
     private void UpdatePdfContinuousHighlights()
     {
