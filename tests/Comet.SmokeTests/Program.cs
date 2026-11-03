@@ -371,7 +371,7 @@ try
         }
         """);
     var migrated = await settingsStore.LoadAsync();
-    Equal(2, migrated.SettingsSchemaVersion, "settings migrate schema");
+    Equal(3, migrated.SettingsSchemaVersion, "settings migrate schema");
     Equal(false, migrated.ShowThumbnails, "settings migration preserves explicit visibility");
     Equal(72d, migrated.ThumbnailWidth, "settings migration adopts compact thumbnails");
 

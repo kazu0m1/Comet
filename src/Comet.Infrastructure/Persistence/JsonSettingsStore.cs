@@ -40,10 +40,12 @@ public sealed class JsonSettingsStore : ISettingsStore
             }
             else if (settings.SettingsSchemaVersion < AppSettingsNormalizer.CurrentSchemaVersion)
             {
+                // Width migration belongs to schema 2 only. Do not reset users'
+                // existing sidebar width when introducing the schema 3 PDF fields.
                 settings = settings with
                 {
                     SettingsSchemaVersion = AppSettingsNormalizer.CurrentSchemaVersion,
-                    ThumbnailWidth = 72
+                    ThumbnailWidth = settings.SettingsSchemaVersion < 2 ? 72 : settings.ThumbnailWidth
                 };
             }
 
