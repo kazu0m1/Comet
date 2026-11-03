@@ -32,18 +32,19 @@ Name: "{userdesktop}\Comet"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopic
 
 [Tasks]
 Name: "assoc"; Description: "Register Comet as an available app for ZIP/CBZ/RAR/CBR/7Z/CB7 files"; Flags: unchecked
+Name: "pdfassoc"; Description: "Register Comet as an available app for PDF files"; Flags: unchecked
 Name: "desktopicon"; Description: "Create a desktop shortcut"; Flags: unchecked
 
 [Registry]
-Root: HKCU; Subkey: "Software\Comet\Capabilities"; ValueType: string; ValueName: "ApplicationName"; ValueData: "Comet"; Tasks: assoc; Flags: uninsdeletekeyifempty
-Root: HKCU; Subkey: "Software\Comet\Capabilities"; ValueType: string; ValueName: "ApplicationDescription"; ValueData: "Fast comic archive viewer"; Tasks: assoc
+Root: HKCU; Subkey: "Software\Comet\Capabilities"; ValueType: string; ValueName: "ApplicationName"; ValueData: "Comet"; Tasks: assoc pdfassoc; Flags: uninsdeletekeyifempty
+Root: HKCU; Subkey: "Software\Comet\Capabilities"; ValueType: string; ValueName: "ApplicationDescription"; ValueData: "Fast comic archive and PDF viewer"; Tasks: assoc pdfassoc
 Root: HKCU; Subkey: "Software\Comet\Capabilities\FileAssociations"; ValueType: string; ValueName: ".zip"; ValueData: "Comet.Zip"; Tasks: assoc
 Root: HKCU; Subkey: "Software\Comet\Capabilities\FileAssociations"; ValueType: string; ValueName: ".cbz"; ValueData: "Comet.Cbz"; Tasks: assoc
 Root: HKCU; Subkey: "Software\Comet\Capabilities\FileAssociations"; ValueType: string; ValueName: ".rar"; ValueData: "Comet.Rar"; Tasks: assoc
 Root: HKCU; Subkey: "Software\Comet\Capabilities\FileAssociations"; ValueType: string; ValueName: ".cbr"; ValueData: "Comet.Cbr"; Tasks: assoc
 Root: HKCU; Subkey: "Software\Comet\Capabilities\FileAssociations"; ValueType: string; ValueName: ".7z"; ValueData: "Comet.SevenZip"; Tasks: assoc
 Root: HKCU; Subkey: "Software\Comet\Capabilities\FileAssociations"; ValueType: string; ValueName: ".cb7"; ValueData: "Comet.Cb7"; Tasks: assoc
-Root: HKCU; Subkey: "Software\RegisteredApplications"; ValueType: string; ValueName: "Comet"; ValueData: "Software\Comet\Capabilities"; Tasks: assoc; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\RegisteredApplications"; ValueType: string; ValueName: "Comet"; ValueData: "Software\Comet\Capabilities"; Tasks: assoc pdfassoc; Flags: uninsdeletevalue
 Root: HKCU; Subkey: "Software\Classes\Comet.Zip"; ValueType: string; ValueName: ""; ValueData: "Comet ZIP comic"; Tasks: assoc; Flags: uninsdeletekey
 Root: HKCU; Subkey: "Software\Classes\Comet.Zip\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\{#MyAppExeName},0"; Tasks: assoc
 Root: HKCU; Subkey: "Software\Classes\Comet.Zip\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" ""%1"""; Tasks: assoc
@@ -68,6 +69,12 @@ Root: HKCU; Subkey: "Software\Classes\.rar\OpenWithProgids"; ValueType: none; Va
 Root: HKCU; Subkey: "Software\Classes\.cbr\OpenWithProgids"; ValueType: none; ValueName: "Comet.Cbr"; Tasks: assoc; Flags: uninsdeletevalue
 Root: HKCU; Subkey: "Software\Classes\.7z\OpenWithProgids"; ValueType: none; ValueName: "Comet.SevenZip"; Tasks: assoc; Flags: uninsdeletevalue
 Root: HKCU; Subkey: "Software\Classes\.cb7\OpenWithProgids"; ValueType: none; ValueName: "Comet.Cb7"; Tasks: assoc; Flags: uninsdeletevalue
+
+Root: HKCU; Subkey: "Software\Comet\Capabilities\FileAssociations"; ValueType: string; ValueName: ".pdf"; ValueData: "Comet.Pdf"; Tasks: pdfassoc
+Root: HKCU; Subkey: "Software\Classes\Comet.Pdf"; ValueType: string; ValueName: ""; ValueData: "Comet PDF document"; Tasks: pdfassoc; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\Classes\Comet.Pdf\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\{#MyAppExeName},0"; Tasks: pdfassoc
+Root: HKCU; Subkey: "Software\Classes\Comet.Pdf\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" ""%1"""; Tasks: pdfassoc
+Root: HKCU; Subkey: "Software\Classes\.pdf\OpenWithProgids"; ValueType: none; ValueName: "Comet.Pdf"; Tasks: pdfassoc; Flags: uninsdeletevalue
 
 [Run]
 Filename: "ms-settings:defaultapps?registeredAppUser=Comet"; Description: "Open Windows Default Apps settings for Comet"; Flags: postinstall shellexec skipifsilent; Tasks: assoc

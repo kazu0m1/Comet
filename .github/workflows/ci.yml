@@ -23,6 +23,9 @@ jobs:
         run: dotnet build .\Comet.sln -c Release --no-restore
       - name: Smoke tests
         run: dotnet run --project .\tests\Comet.SmokeTests\Comet.SmokeTests.csproj -c Release --no-build
+      - name: Verify PDFium native worker
+        shell: pwsh
+        run: .\scripts\smoke-pdf-worker.ps1
       - name: Verify performance summary script
         shell: pwsh
         run: |
@@ -37,7 +40,7 @@ jobs:
           .\scripts\summarize-performance.ps1 -Path $sample
       - name: Publish Windows x64
         shell: pwsh
-        run: .\scripts\publish-win-x64.ps1 -Version 1.0.7
+        run: .\scripts\publish-win-x64.ps1 -Version 1.1.0-rc
       - name: Upload portable build
         uses: actions/upload-artifact@v7
         with:
@@ -46,12 +49,12 @@ jobs:
           if-no-files-found: error
       - name: Install Inno Setup
         run: choco install innosetup --yes --no-progress
-      - name: Package v1.0.7 build
+      - name: Package v1.1.0-rc build
         shell: pwsh
-        run: .\scripts\package-release.ps1 -Version 1.0.7 -BuildInstaller
+        run: .\scripts\package-release.ps1 -Version 1.1.0-rc -BuildInstaller
       - name: Upload release candidate
         uses: actions/upload-artifact@v7
         with:
-          name: Comet-v1.0.7
+          name: Comet-v1.1.0-rc
           path: artifacts/release/*
           if-no-files-found: error

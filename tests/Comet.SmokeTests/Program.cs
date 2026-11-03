@@ -53,6 +53,18 @@ var stretch = FitCalculator.CalculateScale(new PixelSize(100, 100), new Viewport
 Equal(5.0, stretch, "stretch small images");
 var noStretch = FitCalculator.CalculateScale(new PixelSize(100, 100), new ViewportSize(1000, 500), FitMode.BestFit, false);
 Equal(1.0, noStretch, "do not stretch small images");
+Near(0.7, FitCalculator.FixedPageScale(new PixelSize(1000, 2000), FixedSizeAxis.Height, 1400, true), "fixed height DIP scale");
+Near(1.2, FitCalculator.FixedPageScale(new PixelSize(1000, 2000), FixedSizeAxis.Width, 1200, true), "fixed width DIP scale");
+Near(1.0, FitCalculator.FixedPageScale(new PixelSize(1000, 2000), FixedSizeAxis.Width, 1200, false), "fixed width obeys stretch flag");
+Near(1400.0, AppSettingsNormalizer.Normalize(new AppSettings { FixedSizeDip = double.NaN }).FixedSizeDip, "fixed size rejects NaN");
+
+foreach (var dpi in new[] { 1.0, 1.25, 1.5, 2.0 })
+{
+    var pxTarget = 1400.0;
+    var displayedDip = 1920.0 * FitCalculator.FixedPageScale(
+        new PixelSize(1200, 1920), FixedSizeAxis.Height, pxTarget / dpi, true);
+    Near(pxTarget, displayedDip * dpi, "fixed height absolute pixels at DPI " + dpi);
+}
 
 Near(1.0, DpiScaleCalculator.ManualDipScale(1.0), "manual 100 at 100 percent DPI");
 Near(0.8, DpiScaleCalculator.ManualDipScale(1.25), "manual 100 at 125 percent DPI");
@@ -60,6 +72,20 @@ Near(2.0 / 3.0, DpiScaleCalculator.ManualDipScale(1.5), "manual 100 at 150 perce
 Near(0.5, DpiScaleCalculator.ManualDipScale(2.0), "manual 100 at 200 percent DPI");
 Near(1.0, DpiScaleCalculator.PhysicalZoom(800, 1200, 1.5), "physical zoom reports true 100 percent");
 Near(0.75, DpiScaleCalculator.PhysicalZoom(600, 1200, 1.5), "physical zoom reports true 75 percent");
+
+for (var quarterTurns = 0; quarterTurns < 4; quarterTurns++)
+{
+    var normalized = PdfCoordinateMapper.DisplayToPdf(0.3, 0.7, quarterTurns);
+    var roundTrip = PdfCoordinateMapper.PdfToDisplay(normalized.X, normalized.Y, quarterTurns);
+    Near(0.3, roundTrip.U, "PDF rotation " + quarterTurns + " x inverse");
+    Near(0.7, roundTrip.V, "PDF rotation " + quarterTurns + " y inverse");
+}
+
+var cropBounds = new PdfCropBounds(0.1, 0.2, 0.9, 0.8);
+var orig = cropBounds.ToOriginal(0.25, 0.75);
+var mapped = cropBounds.FromOriginal(orig.U, orig.V);
+Near(0.25, mapped.U, "PDF crop coordinate roundtrip X");
+Near(0.75, mapped.V, "PDF crop coordinate roundtrip Y");
 
 var weightedCache = new LruCache<int, string>(capacity: 3, maxWeight: 5, weightSelector: value => value.Length);
 weightedCache.Set(1, "aaa");
@@ -73,6 +99,28 @@ Equal(0, SpreadPlanner.NormalizeStartIndex(0, 10, PageLayoutMode.DoublePage), "c
 Equal(1, SpreadPlanner.NormalizeStartIndex(2, 10, PageLayoutMode.DoublePage), "double spread normalize");
 Equal(3, SpreadPlanner.NextStartIndex(1, 2, 10), "next spread");
 Equal(1, SpreadPlanner.PreviousStartIndex(3, PageLayoutMode.DoublePage), "previous spread");
+Equal((0, 1), SpreadPlanner.DisplayColumns(ReadingDirection.LeftToRight, true),
+    "continuous LTR spread draws logical first page on left");
+Equal((1, 0), SpreadPlanner.DisplayColumns(ReadingDirection.RightToLeft, true),
+    "continuous manga RTL spread draws logical first page on right");
+var ltrContinuousSpread = new PdfContinuousRow(99, 100, ReadingDirection.LeftToRight);
+var rtlContinuousSpread = new PdfContinuousRow(99, 100, ReadingDirection.RightToLeft);
+Equal(0, ltrContinuousSpread.FirstColumn, "LTR continuous 100th page in left column");
+Equal(1, ltrContinuousSpread.SecondColumn, "LTR continuous 101st page in right column");
+Equal(1, rtlContinuousSpread.FirstColumn, "RTL continuous 100th page in right column");
+Equal(0, rtlContinuousSpread.SecondColumn, "RTL continuous 101st page in left column");
+
+Equal((0, 1), SpreadPlanner.DisplayColumns(ReadingDirection.RightToLeft, false),
+    "continuous manga single page is not misplaced");
+Equal("99,100,98", string.Join(',', SpreadPlanner.JumpNeighborhood(99, 300)),
+    "thumbnail page 100 primes pages 99, 100 and 101");
+Equal("0,1", string.Join(',', SpreadPlanner.JumpNeighborhood(0, 300)),
+    "first-page jump clips prefetch at start of document");
+Equal("299,298", string.Join(',', SpreadPlanner.JumpNeighborhood(299, 300)),
+    "last-page jump clips prefetch at end of document");
+Equal(0, SpreadPlanner.JumpNeighborhood(0, 0).Length,
+    "empty PDF jump neighborhood is empty");
+
 
 var zoom = new ZoomSessionState(FitMode.BestFit);
 zoom.AdjustTemporaryZoom(0.8);
@@ -367,7 +415,7 @@ try
         }
         """);
     var migrated = await settingsStore.LoadAsync();
-    Equal(2, migrated.SettingsSchemaVersion, "settings migrate schema");
+    Equal(3, migrated.SettingsSchemaVersion, "settings migrate schema");
     Equal(false, migrated.ShowThumbnails, "settings migration preserves explicit visibility");
     Equal(72d, migrated.ThumbnailWidth, "settings migration adopts compact thumbnails");
 
@@ -375,7 +423,7 @@ try
     Directory.CreateDirectory(corruptRoot);
     await File.WriteAllTextAsync(Path.Combine(corruptRoot, "settings.json"), "{ definitely not json");
     var corruptSettings = await new JsonSettingsStore(corruptRoot).LoadAsync();
-    Equal(2, corruptSettings.SettingsSchemaVersion, "corrupt settings fallback schema");
+    Equal(3, corruptSettings.SettingsSchemaVersion, "corrupt settings fallback schema");
     Equal(FitMode.BestFit, corruptSettings.FitMode, "corrupt settings fallback fit");
     Equal(true, corruptSettings.ShowThumbnails, "corrupt settings fallback thumbnails");
 

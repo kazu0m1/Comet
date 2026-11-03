@@ -204,3 +204,24 @@ Pre-1.0 versions are published as GitHub prereleases.
 - [x] `Comet-v1.0.7-win-x64-Setup.exe`, `Comet-v1.0.7-win-x64.zip`, and `SHA256SUMS.txt` published as a normal release (`prerelease: false`).
 
 **v1.0.7 maintenance release: CLOSED on 2026-10-14.**
+
+## v1.1.0 PDF viewer release gate
+
+- [x] Develop on a separate branch, preserving published v1.0.7 and `main` during user validation.
+- [x] PDFium isolated native worker; direct PDF opening, password input, text extraction, metadata and outline.
+- [x] PDF two-page and continuous viewing, LTR/RTL direction, cover and page rotation preferences.
+- [x] Fixed Size / Fit to Size target 1,400 physical screen pixels; cross-page selection and text search without OCR.
+- [x] User tested and confirmed cover, high-zoom page turns and Fixed Size regressions resolved.
+- [x] User tested and confirmed continuous gaps, background, dragging, Esc, page status and thumbnail tracking.
+- [x] User tested and confirmed continuous selection, paged Escape, adjacent 100/101-page rendering and RTL manga layout (issues 1-9).
+- [x] User accepted remaining minor subjective PDF opening-time difference; startup prefetch limited to explicit jumps. No unmeasured speedup is claimed.
+- [x] Preserve `backup/v1.1.0-ebb920ae` at commit `ebb920aec6cf4a63b2a2f44c93c2ecdb715aef1d`, successful CI #41574965785.
+- [x] Bundle PDFium source license and third-party notices from the exact 158.0.8125 upstream asset, checking archive SHA-256 and verifying NuGet DLL identity.
+- [x] Keep optional .pdf association independent of comic-archive associations.
+- [ ] Final v1.1.0 release-candidate Windows CI succeeds (native smoke, full self-contained publish, license audit, installer and portable ZIP).
+- [ ] Merge approved PR #1 into `main` without changing the recovery branch.
+- [ ] Tag the final release-gate `main` commit with `v1.1.0` via GitHub Desktop and push origin.
+- [ ] Tag-triggered Release workflow publishes as a normal non-draft, non-prerelease release.
+- [ ] Verify Setup.exe, portable ZIP and SHA256SUMS.txt release assets.
+
+**Performance evidence:** The user accepted the final subjective responsiveness, including a small open-time difference. No fresh objective N01-N10 threshold measurements are claimed for v1.1.0.

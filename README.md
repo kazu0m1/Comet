@@ -2,7 +2,22 @@
 
 Comet is a Windows comic viewer focused on the parts of the MComix reading experience that matter most for this project: **fast startup, direct comic-archive reading, reliable fit modes, temporary zoom, and right-to-left manga reading**.
 
-> Status: **v1.0.7 released on 2026-10-14**. Comet opens maximized as a standard Windows window by default; F/F11 remains a separate borderless fullscreen mode.
+> Status: **v1.1.0 stable release candidate (2026-11-03)**. PDF viewing has been implemented and Windows-tested; publication requires the v1.1.0 tag and Release workflow.
+
+## PDF reading (v1.1)
+
+- Open PDFs directly using the PDFium rendering engine in a separate worker process.
+- Single-page, facing spread and virtualized continuous scroll; PDF-specific left/right reading direction, standalone cover and saved document preferences.
+- Drag over text to select, Ctrl+C to copy and Ctrl+F to find and highlight existing PDF text. Text selection can span pages, including in continuous mode.
+- Use the embedded outline, internal links, page numbers/labels and metadata. External HTTP(S) links require confirmation.
+- Fixed Size (`S`): choose physical screen-pixel width or height, initially 1,400 px high; other existing fit/zoom modes remain.
+- Rotate individual/all pages; optionally crop white margins for display without modifying source files.
+- Continuous mode has no gaps, uses the `#282828` background, supports dragging blank space to scroll, and tracks current page/thumbnail.
+- Move among PDF and comic archives in a mixed sequence.
+
+Comet reads **existing PDF text layers**, including OCR-scanned PDFs containing such layers. It **never performs OCR**. Image-only scanned PDFs remain viewable but have no selectable/searchable text. Comet does not edit or annotate PDFs.
+
+Portable ZIP and installer distributions include `pdf-worker/licenses/` containing the PDFium license and complete third-party notices from the verified pinned upstream binary. See `NOTICE.md`.
 
 ## v1.0 focus
 
@@ -29,7 +44,7 @@ v1.0 promotes the Windows-validated v0.3.0 baseline to the first general-availab
 - Maximized standard window on startup; F/F11 switches independently to borderless fullscreen. Drag-and-drop, Japanese/English UI.
 - Optional ZIP/CBZ/RAR/CBR/7z/CB7 file-association registration through the installer.
 
-Recursive archive reading is currently limited to ZIP/CBZ-inside-ZIP/CBZ. Nested archives are expanded to a temporary Comet workspace rather than being held wholly in RAM, are limited to 16 nested levels, and are cleaned up when the outer book is closed. PDF and library management remain deferred. RAR/CBR and 7z/CB7 have passed Windows hands-on validation in v0.2.0; see `CHANGELOG.md` and `docs/ROADMAP_v0.2.0.md`.
+Recursive archive reading is currently limited to ZIP/CBZ-inside-ZIP/CBZ. Nested archives are expanded to a temporary Comet workspace rather than being held wholly in RAM, are limited to 16 nested levels, and are cleaned up when the outer book is closed. Library management remains outside the product scope. RAR/CBR and 7z/CB7 have passed Windows hands-on validation in v0.2.0; see `CHANGELOG.md` and `docs/ROADMAP_v0.2.0.md`.
 
 ## Build on Windows
 
@@ -40,7 +55,7 @@ Prerequisites:
 For a self-contained build:
 
 ```powershell
-.\scripts\publish-win-x64.ps1 -Version 1.0.7
+.\scripts\publish-win-x64.ps1 -Version 1.1.0
 ```
 
 The publish output is written to `artifacts/win-x64`.
@@ -50,7 +65,7 @@ The publish output is written to `artifacts/win-x64`.
 Install Inno Setup 6, then run:
 
 ```powershell
-.\scripts\package-release.ps1 -Version 1.0.7 -BuildInstaller
+.\scripts\package-release.ps1 -Version 1.1.0 -BuildInstaller
 ```
 
 Assets are written to `artifacts/release` with SHA-256 hashes.
@@ -59,7 +74,7 @@ Assets are written to `artifacts/release` with SHA-256 hashes.
 
 The repository contains two workflows:
 - `CI`: build + smoke tests + Windows x64 publish on pushes and pull requests.
-- `Release`: triggered by `v*` tags; builds, tests, packages a portable ZIP and Setup.exe, calculates hashes, and creates a GitHub Release. Pre-release versions such as `0.x` or versions containing a hyphen are marked as prereleases; stable `1.x` versions such as `v1.0.7` are normal releases.
+- `Release`: triggered by `v*` tags; builds, tests, packages a portable ZIP and Setup.exe, calculates hashes, and creates a GitHub Release. Pre-release versions such as `0.x` or versions containing a hyphen are marked as prereleases; stable `1.x` versions such as `v1.1.0` are normal releases.
 
 Repository operations and tagging are performed through GitHub Desktop. See `docs/RELEASE_CHECKLIST.md` before tagging.
 
@@ -72,7 +87,7 @@ The project deliberately follows MComix key behavior where the corresponding fea
 - `PageUp` / Backspace: previous page or spread
 - `Space` / wheel: smart scroll, then flip page/archive at the edge
 - Arrow keys: scroll/page navigation; at book boundaries continue into the adjacent archive according to reading direction
-- `B`, `W`, `H`, `A`: Best Fit / Fit Width / Fit Height / Manual 100%
+- `B`, `W`, `H`, `A`, `S`: Best Fit / Fit Width / Fit Height / Manual 100% / Fixed Size
 - `Ctrl+wheel`, `+`, `-`, `Ctrl+0`: temporary zoom
 - `D`: double-page mode
 - `M`: manga mode
@@ -91,7 +106,8 @@ Comet.App (WPF UI, input, page cache)
 Comet.Core       Comet.Platform.Windows
        |
        v
-Comet.Infrastructure (comic archives, folders, settings, reading state)
+Comet.Infrastructure (comic archives, PDF sources, settings, reading state)
+Comet.PdfWorker (isolated PDFium native worker process)
 ```
 
 The UI thread does not perform archive extraction or image decoding. Current-page work is prioritized and nearby pages are prefetched into a bounded LRU cache. The full-page cache is bounded by both item count and an estimated decoded-bitmap memory budget. Fit calculations use the actual image viewport.
@@ -102,7 +118,7 @@ See `docs/Comet_v1.0_Technical_Architecture_v0.1.md` for the full rationale.
 
 ## File associations
 
-The installer can register Comet as an available handler for `.zip`, `.cbz`, `.rar`, `.cbr`, `.7z`, and `.cb7`. It does **not** silently replace the user's current default application. After installation, Windows Default Apps is opened so the user can select Comet. Once selected, double-clicking a supported archive opens it directly in Comet.
+The installer can register Comet as an available handler for `.zip`, `.cbz`, `.rar`, `.cbr`, `.7z`, `.cb7`, and optionally `.pdf`. It does **not** silently replace the user's current default application. After installation, Windows Default Apps is opened so the user can select Comet. Once selected, double-clicking a supported archive opens it directly in Comet.
 
 ## Project relationship to MComix
 
@@ -110,4 +126,4 @@ Comet is an independent implementation. MComix is used as a behavioral/UX refere
 
 ## License
 
-MIT. See `LICENSE`.
+The Comet application is MIT-licensed; see `LICENSE`. The PDFium native worker and dependencies include additional licenses; see `pdf-worker/licenses/` in the distribution and `NOTICE.md`.

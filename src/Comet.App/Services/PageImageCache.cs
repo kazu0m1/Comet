@@ -207,7 +207,9 @@ public sealed class PageImageCache : IDisposable
         cancellationToken.ThrowIfCancellationRequested();
 
         var readStartedAt = PerformanceTrace.Start();
-        var bytes = await _source.ReadPageBytesAsync(pageIndex, cancellationToken).ConfigureAwait(false);
+        var bytes = _source is IRasterBookSource raster
+            ? await raster.RenderPageBytesAsync(pageIndex, targetPixelWidth <= 0 ? 1600 : targetPixelWidth, cancellationToken).ConfigureAwait(false)
+            : await _source.ReadPageBytesAsync(pageIndex, cancellationToken).ConfigureAwait(false);
         PerformanceTrace.Elapsed("page.read", readStartedAt, $"page={pageIndex + 1}; bytes={bytes.Length}");
 
         cancellationToken.ThrowIfCancellationRequested();

@@ -15,6 +15,9 @@ public sealed class BookSourceFactory : IBookSourceFactory
         if (!File.Exists(fullPath))
             throw new FileNotFoundException("Book source not found.", fullPath);
 
+        if (Path.GetExtension(fullPath).Equals(".pdf", StringComparison.OrdinalIgnoreCase))
+            return await PdfBookSource.OpenAsync(fullPath, cancellationToken);
+
         if (SupportedImages.IsSupported(fullPath))
             return await FolderBookSource.OpenAsync(Path.GetDirectoryName(fullPath)!, cancellationToken);
 

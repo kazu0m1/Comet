@@ -19,9 +19,15 @@ public sealed class PageViewport : FrameworkElement
     public bool StretchSmallImages { get; set; } = true;
     public double TemporaryZoomFactor { get; set; } = 1.0;
     public double Gap { get; set; } = 0;
+    public IReadOnlyList<Rect> PdfHighlightRects { get; set; } = Array.Empty<Rect>();
+    public double FixedSizeDip { get; set; } = 1400;
+    public FixedSizeAxis FixedSizeAxis { get; set; } = FixedSizeAxis.Height;
 
     public double CurrentFirstPageDisplayWidthDip
         => FirstPage is null ? 0 : GetLayout().FirstWidth;
+
+    public double CurrentFirstPageDisplayHeightDip
+        => FirstPage is null ? 0 : GetLayout().FirstHeight;
 
     public double CurrentSecondPageDisplayWidthDip
         => SecondPage is null ? 0 : GetLayout().SecondWidth;
@@ -69,6 +75,7 @@ public sealed class PageViewport : FrameworkElement
         {
             firstRect.Location = new Point(originX, originY + (layout.ContentHeight - firstRect.Height) / 2);
             dc.DrawImage(FirstPage, firstRect);
+            DrawPdfHighlights(dc);
             return;
         }
 
@@ -80,6 +87,32 @@ public sealed class PageViewport : FrameworkElement
         secondRect.Location = new Point(secondX, originY + (layout.ContentHeight - secondRect.Height) / 2);
         dc.DrawImage(FirstPage, firstRect);
         dc.DrawImage(SecondPage, secondRect);
+        DrawPdfHighlights(dc);
+    }
+
+    private void DrawPdfHighlights(DrawingContext dc)
+    {
+        if (PdfHighlightRects.Count == 0) return;
+        var brush = new SolidColorBrush(Color.FromArgb(95, 64, 160, 250));
+        brush.Freeze();
+        foreach (var rect in PdfHighlightRects)
+            if (!rect.IsEmpty && rect.Width > 0 && rect.Height > 0)
+                dc.DrawRectangle(brush, null, rect);
+    }
+
+    public Rect GetPageRect(int pageInSpread)
+    {
+        if (FirstPage is null || (pageInSpread > 0 && SecondPage is null)) return Rect.Empty;
+        var layout = GetLayout();
+        var originX = layout.ContentWidth <= ActualWidth ? (ActualWidth - layout.ContentWidth) / 2 : -_offsetX;
+        var originY = layout.ContentHeight <= ActualHeight ? (ActualHeight - layout.ContentHeight) / 2 : -_offsetY;
+        if (SecondPage is null) return new Rect(originX, originY + (layout.ContentHeight - layout.FirstHeight) / 2, layout.FirstWidth, layout.FirstHeight);
+        var firstOnRight = ReadingDirection == ReadingDirection.RightToLeft;
+        var firstX = firstOnRight ? originX + layout.SecondWidth + layout.GapScaled : originX;
+        var secondX = firstOnRight ? originX : originX + layout.FirstWidth + layout.GapScaled;
+        return pageInSpread == 0
+            ? new Rect(firstX, originY + (layout.ContentHeight - layout.FirstHeight) / 2, layout.FirstWidth, layout.FirstHeight)
+            : new Rect(secondX, originY + (layout.ContentHeight - layout.SecondHeight) / 2, layout.SecondWidth, layout.SecondHeight);
     }
 
     public void ResetScroll()
@@ -209,12 +242,23 @@ public sealed class PageViewport : FrameworkElement
             FitMode,
             StretchSmallImages,
             manualScale);
-        var scale = baseScale * TemporaryZoomFactor;
+        // Fixed Size specifies the *physical display pixel* dimension. It must
+        // not turn into a multiplier relative to the arbitrary raster resolution
+        // selected by the PDF worker. WPF drawing coordinates are in DIPs.
+        // Unlike Best Fit, a fixed 1,400 px target is absolute even if the
+        // optional "do not stretch small images" preference is disabled.
+        var fixedTargetDip = FixedSizeDip / Math.Max(0.01, dpiScale);
+        var scale = (FitMode == FitMode.FixedSize
+            ? FitCalculator.FixedPageScale(first, FixedSizeAxis, fixedTargetDip, true)
+            : baseScale) * TemporaryZoomFactor;
+        var secondScale = (FitMode == FitMode.FixedSize && second is { } page
+            ? FitCalculator.FixedPageScale(page, FixedSizeAxis, fixedTargetDip, true) * TemporaryZoomFactor
+            : scale);
         var firstWidth = first.Width * scale;
         var firstHeight = first.Height * scale;
-        var secondWidth = second?.Width * scale ?? 0;
-        var secondHeight = second?.Height * scale ?? 0;
-        var gapScaled = SecondPage is null ? 0 : Gap * scale;
+        var secondWidth = second?.Width * secondScale ?? 0;
+        var secondHeight = second?.Height * secondScale ?? 0;
+        var gapScaled = SecondPage is null ? 0 : Gap * Math.Min(scale, secondScale);
         return new LayoutMetrics(
             firstWidth + secondWidth + gapScaled,
             Math.Max(firstHeight, secondHeight),

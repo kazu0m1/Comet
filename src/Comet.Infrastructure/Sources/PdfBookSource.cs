@@ -1,0 +1,93 @@
+using Comet.Core.Abstractions;
+using Comet.Core.Models;
+
+namespace Comet.Infrastructure.Sources;
+
+public sealed class PdfBookSource : IRasterBookSource
+{
+    private readonly PdfWorkerClient _worker;
+    private readonly PdfPageInfo[] _pages;
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<int, PdfCropBounds> _cropped = new();
+    private bool _autoCrop;
+    public bool AutoCrop
+    {
+        get => _autoCrop;
+        set { if (_autoCrop != value) { _autoCrop = value; _cropped.Clear(); } }
+    }
+    public PdfCropBounds GetCrop(int index) => _cropped.TryGetValue(index, out var crop) ? crop : PdfCropBounds.Full;
+    private int _allRotation;
+    private readonly Dictionary<int, int> _pageRotations = new();
+    private PdfBookSource(string path, PdfWorkerClient worker, PdfReply info)
+    {
+        _worker = worker;
+        _pages = info.Pages?.ToArray() ?? [];
+        Permissions = info.Permissions;
+        Descriptor = new BookDescriptor(
+            path, path, Path.GetFileName(path),
+            _pages.Select((page, index) =>
+                new PageDescriptor(index,
+                    string.IsNullOrWhiteSpace(page.Label) ? (index + 1).ToString() : page.Label,
+                    ".pdf", 0)).ToArray());
+    }
+
+    public BookDescriptor Descriptor { get; }
+    public ulong Permissions { get; }
+    public IReadOnlyList<PdfPageInfo> Pages => _pages;
+    public void ApplyRotationState(int allRotation, IReadOnlyDictionary<int, int>? pageRotations)
+    {
+        _allRotation = ((allRotation % 4) + 4) % 4;
+        _pageRotations.Clear();
+        _cropped.Clear();
+        if (pageRotations is not null)
+            foreach (var (page, degrees) in pageRotations)
+                if ((uint)page < (uint)_pages.Length)
+                    _pageRotations[page] = ((degrees % 4) + 4) % 4;
+    }
+
+    public int GetPageRotation(int index)
+        => _pageRotations.TryGetValue(index, out var rotation) ? rotation : _allRotation;
+
+    public bool CopyAllowed => (Permissions & 0x10UL) != 0 || Permissions == ulong.MaxValue;
+
+    public static async ValueTask<PdfBookSource> OpenAsync(string path, CancellationToken token = default, string? password = null)
+    {
+        var worker = PdfWorkerClient.Start();
+        try
+        {
+            var info = await worker.SendAsync(new { Command = "open", Path = path, Password = password }, token).ConfigureAwait(false);
+            return new PdfBookSource(path, worker, info);
+        }
+        catch
+        {
+            await worker.DisposeAsync().ConfigureAwait(false);
+            throw;
+        }
+    }
+
+    public ValueTask<byte[]> ReadPageBytesAsync(int pageIndex, CancellationToken token = default)
+        => RenderPageBytesAsync(pageIndex, 1600, token);
+
+    public async ValueTask<byte[]> RenderPageBytesAsync(int pageIndex, int width, CancellationToken token = default)
+    {
+        if ((uint)pageIndex >= (uint)_pages.Length) throw new ArgumentOutOfRangeException(nameof(pageIndex));
+        var response = await _worker.SendAsync(new { Command = "render", Index = pageIndex, Width = width, Rotation = GetPageRotation(pageIndex), Crop = AutoCrop }, token).ConfigureAwait(false);
+        var filename = response.ImagePath ?? throw new IOException("PDF worker did not return a rendered page");
+        _cropped[pageIndex] = new PdfCropBounds(response.CropLeft, response.CropTop, response.CropRight, response.CropBottom);
+        try { return await File.ReadAllBytesAsync(filename, token).ConfigureAwait(false); }
+        finally { try { File.Delete(filename); } catch (IOException) { } }
+    }
+
+    public Task<PdfReply> GetTextAsync(int pageIndex, bool includeBoxes, CancellationToken token = default)
+        => _worker.SendAsync(new { Command = "text", Index = pageIndex, WithBoxes = includeBoxes }, token);
+
+    public Task<PdfReply> GetOutlineAsync(CancellationToken token = default)
+        => _worker.SendAsync(new { Command = "outline" }, token);
+
+    public Task<PdfReply> GetLinkAsync(int pageIndex, double x, double y, CancellationToken token = default)
+        => _worker.SendAsync(new { Command = "link", Index = pageIndex, X = x, Y = y }, token);
+
+    public Task<PdfReply> GetMetadataAsync(CancellationToken token = default)
+        => _worker.SendAsync(new { Command = "metadata" }, token);
+
+    public ValueTask DisposeAsync() => _worker.DisposeAsync();
+}

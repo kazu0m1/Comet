@@ -5,8 +5,11 @@ public enum FitMode
     BestFit,
     FitWidth,
     FitHeight,
-    Manual
+    Manual,
+    FixedSize
 }
+
+public enum FixedSizeAxis { Width, Height }
 
 public enum ReadingDirection
 {
