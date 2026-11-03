@@ -230,6 +230,11 @@ public partial class MainWindow : Window
             if (generation != Volatile.Read(ref _renderGeneration)) return;
             Viewport.TemporaryZoomFactor = _zoom.TemporaryZoomFactor;
             Viewport.ResetScroll();
+            if (IsPdf)
+                _ = LoadPdfTextGeometryAsync(renderPageIndex, _displayedPageCount, token);
+            else
+                Viewport.PdfHighlightRects = Array.Empty<Rect>();
+            UpdatePdfHighlightRects();
             UpdateStatus();
             PrefetchNeighbors(targetWidth, renderPageIndex, _displayedPageCount);
             UpdateThumbnailSelection();
@@ -1018,6 +1023,7 @@ public partial class MainWindow : Window
         }
         _thumbnailItems.Clear();
 
+        ClearPdfTextSelection();
         _imageCache?.Dispose();
         _imageCache = null;
         ClosePdfUi();
@@ -1115,6 +1121,8 @@ public partial class MainWindow : Window
         var modifiers = Keyboard.Modifiers;
         var key = e.Key == Key.System ? e.SystemKey : e.Key;
 
+        if (modifiers == ModifierKeys.Control && key == Key.C && IsPdf && _pdfSelectionAnchor is not null)
+        { await CopyPdfSelectionAsync(); e.Handled = true; return; }
         if (modifiers == ModifierKeys.Control && key == Key.F) { ShowPdfSearch(); e.Handled = true; return; }
         if (key == Key.F3 && IsPdf) { await StepPdfMatchAsync(modifiers.HasFlag(ModifierKeys.Shift) ? -1 : 1); e.Handled = true; return; }
         if (modifiers == ModifierKeys.None && key == Key.G && _book is not null) { ShowPageJump(); e.Handled = true; return; }
@@ -1275,12 +1283,19 @@ public partial class MainWindow : Window
 
         Viewport.Focus();
         var position = e.GetPosition(Viewport);
+        if (TryBeginPdfSelection(position))
+        {
+            Viewport.CaptureMouse();
+            e.Handled = true;
+            return;
+        }
         _dragPan.Begin(position.X, position.Y);
         e.Handled = true;
     }
 
     private void Viewport_MouseMove(object sender, MouseEventArgs e)
     {
+        if (MovePdfSelection(e.GetPosition(Viewport))) { e.Handled = true; return; }
         if (!_dragPan.IsTracking)
             return;
 
@@ -1314,6 +1329,12 @@ public partial class MainWindow : Window
         if (e.ChangedButton != MouseButton.Left)
             return;
 
+        if (EndPdfSelection())
+        {
+            if (Viewport.IsMouseCaptured) Viewport.ReleaseMouseCapture();
+            e.Handled = true;
+            return;
+        }
         var wasDragging = _dragPan.End();
         if (Viewport.IsMouseCaptured)
             Viewport.ReleaseMouseCapture();
@@ -1338,6 +1359,7 @@ public partial class MainWindow : Window
     private void Viewport_LostMouseCapture(object sender, MouseEventArgs e)
     {
         _dragPan.Cancel();
+        _pdfSelecting = false;
         Viewport.Cursor = null;
     }
 
