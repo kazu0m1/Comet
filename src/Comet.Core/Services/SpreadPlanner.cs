@@ -4,6 +4,13 @@ namespace Comet.Core.Services;
 
 public static class SpreadPlanner
 {
+    // The document's logical page sequence never changes. Only the physical
+    // left/right columns of each visible double-page spread are reversed.
+    public static (int FirstColumn, int SecondColumn) DisplayColumns(
+        ReadingDirection direction, bool hasSecondPage)
+        => direction == ReadingDirection.RightToLeft && hasSecondPage
+            ? (1, 0) : (0, 1);
+
     public static int NormalizeStartIndex(int requestedIndex, int pageCount, PageLayoutMode layout, bool coverAlone = true)
     {
         if (pageCount <= 0) return 0;
