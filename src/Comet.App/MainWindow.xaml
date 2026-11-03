@@ -206,10 +206,58 @@
                             <Border Loaded="PdfContinuousRow_Loaded" Margin="0,6,0,6"
                                     Background="White">
                                 <StackPanel Orientation="Horizontal">
-                                    <Image Source="{Binding FirstImage}" Width="{Binding FirstWidth}"
-                                           Height="{Binding FirstHeight}" Stretch="Fill"/>
-                                    <Image Source="{Binding SecondImage}" Width="{Binding SecondWidth}"
-                                           Height="{Binding SecondHeight}" Stretch="Fill"/>
+                                    <Grid>
+                                        <Image Source="{Binding FirstImage}" Width="{Binding FirstWidth}"
+                                               Height="{Binding FirstHeight}" Stretch="Fill"
+                                               Tag="{Binding FirstPage}"
+                                               MouseLeftButtonDown="PdfContinuousImage_Down"
+                                               MouseMove="PdfContinuousImage_Move"
+                                               MouseLeftButtonUp="PdfContinuousImage_Up"/>
+                                        <ItemsControl ItemsSource="{Binding FirstHighlights}"
+                                                      IsHitTestVisible="False"
+                                                      Width="{Binding FirstWidth}" Height="{Binding FirstHeight}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate><Canvas/></ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemContainerStyle>
+                                                <Style TargetType="ContentPresenter">
+                                                    <Setter Property="Canvas.Left" Value="{Binding Left}"/>
+                                                    <Setter Property="Canvas.Top" Value="{Binding Top}"/>
+                                                </Style>
+                                            </ItemsControl.ItemContainerStyle>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Rectangle Width="{Binding Width}" Height="{Binding Height}" Fill="#6670AAFA"/>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </Grid>
+                                    <Grid>
+                                        <Image Source="{Binding SecondImage}" Width="{Binding SecondWidth}"
+                                               Height="{Binding SecondHeight}" Stretch="Fill"
+                                               Tag="{Binding SecondPage}"
+                                               MouseLeftButtonDown="PdfContinuousImage_Down"
+                                               MouseMove="PdfContinuousImage_Move"
+                                               MouseLeftButtonUp="PdfContinuousImage_Up"/>
+                                        <ItemsControl ItemsSource="{Binding SecondHighlights}"
+                                                      IsHitTestVisible="False"
+                                                      Width="{Binding SecondWidth}" Height="{Binding SecondHeight}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate><Canvas/></ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemContainerStyle>
+                                                <Style TargetType="ContentPresenter">
+                                                    <Setter Property="Canvas.Left" Value="{Binding Left}"/>
+                                                    <Setter Property="Canvas.Top" Value="{Binding Top}"/>
+                                                </Style>
+                                            </ItemsControl.ItemContainerStyle>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Rectangle Width="{Binding Width}" Height="{Binding Height}" Fill="#6670AAFA"/>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </Grid>
                                 </StackPanel>
                             </Border>
                         </DataTemplate>

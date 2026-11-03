@@ -1,4 +1,6 @@
 using System.ComponentModel;
+using System.Collections.ObjectModel;
+using System.Windows;
 using System.Runtime.CompilerServices;
 using System.Windows.Media.Imaging;
 
@@ -17,6 +19,8 @@ public sealed class PdfContinuousRow : INotifyPropertyChanged
         FirstPage = firstPage;
         SecondPage = secondPage;
     }
+    public ObservableCollection<Rect> FirstHighlights { get; } = new();
+    public ObservableCollection<Rect> SecondHighlights { get; } = new();
     public int FirstPage { get; }
     public int? SecondPage { get; }
     public bool IsLoading { get; set; }
