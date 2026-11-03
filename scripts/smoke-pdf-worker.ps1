@@ -57,6 +57,41 @@ try {
         $pageText = Ask-Worker @{ command = "text"; index = 0 }
         if ($pageText.text -notlike "*Comet PDF smoke*") { throw "PDF text extraction failed." }
         $null = Ask-Worker @{ command = "outline" }
+        # Regression: a tall cover and a very high zoom request must render
+        # within a safe raster budget rather than failing the entire page.
+        $objects[2] = "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 1250] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>"
+        $builder = [System.Text.StringBuilder]::new()
+        [void]$builder.Append("%PDF-1.4" + $nl)
+        $offsets = @(0)
+        for ($i = 0; $i -lt $objects.Count; $i++) {
+            $offsets += $builder.Length
+            [void]$builder.Append(($i+1).ToString() + " 0 obj" + $nl + $objects[$i] + $nl + "endobj" + $nl)
+        }
+        $xref = $builder.Length
+        [void]$builder.Append("xref" + $nl + "0 " + ($objects.Count+1) + $nl + "0000000000 65535 f " + $nl)
+        foreach ($offset in $offsets[1..($offsets.Count-1)]) {
+            [void]$builder.Append(("{0:D10} 00000 n " -f [int]$offset) + $nl)
+        }
+        [void]$builder.Append("trailer" + $nl + "<< /Size " + ($objects.Count+1) + " /Root 1 0 R >>" + $nl +
+            "startxref" + $nl + $xref + $nl + "%%EOF" + $nl)
+        $tallPdf = Join-Path $dir "tall-cover.pdf"
+        [IO.File]::WriteAllText($tallPdf, $builder.ToString(), [Text.Encoding]::ASCII)
+        $tall = Ask-Worker @{ command = "open"; path = $tallPdf }
+        if ($tall.pageCount -ne 1) { throw "Tall cover PDF did not open." }
+        $tallRender = Ask-Worker @{ command = "render"; index = 0; width = 4096 }
+        if ($tallRender.width -ge 4096 -or $tallRender.height -gt 8192 -or
+            ($tallRender.width * $tallRender.height) -gt 24000000 -or
+            -not (Test-Path $tallRender.imagePath)) {
+            throw "Tall cover renderer failed to adapt to the safety limit."
+        }
+        # Simulate navigating back after the large, sideways-pan zoom case.
+        $again = Ask-Worker @{ command = "open"; path = $pdf }
+        if ($again.pageCount -ne 1) { throw "Reopening normal PDF failed." }
+        $normalHighZoom = Ask-Worker @{ command = "render"; index = 0; width = 4096 }
+        if (-not (Test-Path $normalHighZoom.imagePath)) { throw "High zoom page flip failed." }
+        $textAgain = Ask-Worker @{ command = "text"; index = 0 }
+        if ($textAgain.text -notlike "*Comet PDF smoke*") { throw "Text extraction after page flip failed." }
+        Write-Host "PDF aspect ratio, high-zoom page navigation: OK."
         $null = Ask-Worker @{ command = "close" }
         Write-Host "PDFium smoke: OK (render/text/outline)."
     }
