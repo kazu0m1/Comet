@@ -2,6 +2,8 @@ using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Input;
+using System.Windows.Media;
 using Comet.App.Services;
 using Comet.Core.Models;
 using Comet.Core.Services;
@@ -186,10 +188,133 @@ public partial class MainWindow
                 if (!token.IsCancellationRequested && row.Realized && ReferenceEquals(_book, pdf))
                     row.SecondImage = image;
             }
+            await LoadPdfTextGeometryAsync(row.FirstPage,
+                row.SecondPage.HasValue ? 2 : 1, token);
         }
         catch (OperationCanceledException) { }
         catch (Exception) { /* Broken page leaves the row blank, without aborting navigation. */ }
         finally { row.IsLoading = false; }
+    }
+
+    private bool TryHitContinuousCharacter(Image image, Point point, out (int Page, int Index) hit)
+    {
+        hit = default;
+        if (_book is not PdfBookSource pdf || image.Tag is not int page ||
+            page < 0 || page >= pdf.Pages.Count ||
+            image.ActualWidth <= 0 || image.ActualHeight <= 0 ||
+            !_pdfVisibleText.TryGetValue(page, out var text) || text.Boxes is null)
+            return false;
+        var dim = pdf.Pages[page];
+        if (dim.Width <= 0 || dim.Height <= 0) return false;
+        var original = pdf.GetCrop(page).ToOriginal(point.X / image.ActualWidth,
+            point.Y / image.ActualHeight);
+        var normal = PdfCoordinateMapper.DisplayToPdf(original.U, original.V,
+            pdf.GetPageRotation(page));
+        var x = normal.X * dim.Width;
+        var y = normal.Y * dim.Height;
+        foreach (var box in text.Boxes)
+        {
+            if (x >= box.Left - 1 && x <= box.Right + 1 &&
+                y >= box.Bottom - 1 && y <= box.Top + 1)
+            {
+                hit = (page, box.Index);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void PdfContinuousImage_Down(object sender, MouseButtonEventArgs e)
+    {
+        if (!IsContinuousPdfView || e.ChangedButton != MouseButton.Left ||
+            Keyboard.Modifiers.HasFlag(ModifierKeys.Alt) || sender is not Image image)
+            return;
+        if (!TryHitContinuousCharacter(image, e.GetPosition(image), out var hit)) return;
+        if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Shift) || _pdfSelectionAnchor is null)
+            _pdfSelectionAnchor = hit;
+        _pdfSelectionEnd = hit;
+        _pdfSelecting = true;
+        image.CaptureMouse();
+        UpdatePdfHighlightRects();
+        e.Handled = true;
+    }
+
+    private void PdfContinuousImage_Move(object sender, MouseEventArgs e)
+    {
+        if (!_pdfSelecting || !IsContinuousPdfView || sender is not Image) return;
+        var p = e.GetPosition(PdfContinuousList);
+        var picked = VisualTreeHelper.HitTest(PdfContinuousList, p)?.VisualHit;
+        while (picked is not null && picked is not Image)
+            picked = VisualTreeHelper.GetParent(picked);
+        if (picked is Image target &&
+            TryHitContinuousCharacter(target, e.GetPosition(target), out var hit))
+        {
+            _pdfSelectionEnd = hit;
+            UpdatePdfHighlightRects();
+        }
+        e.Handled = true;
+    }
+
+    private void PdfContinuousImage_Up(object sender, MouseButtonEventArgs e)
+    {
+        if (!_pdfSelecting || e.ChangedButton != MouseButton.Left) return;
+        _pdfSelecting = false;
+        if (Mouse.Captured is not null) Mouse.Capture(null);
+        UpdatePdfHighlightRects();
+        e.Handled = true;
+    }
+
+    // Each item is virtualized. Only visible rows own WPF glyph highlight elements.
+    private void UpdatePdfContinuousHighlights()
+    {
+        if (!IsContinuousPdfView || _book is not PdfBookSource pdf) return;
+        foreach (var row in _continuousRows)
+        {
+            if (!row.Realized) continue;
+            FillContinuousHighlights(row.FirstHighlights, row.FirstPage,
+                row.FirstWidth, row.FirstHeight, pdf);
+            if (row.SecondPage is int other)
+                FillContinuousHighlights(row.SecondHighlights, other,
+                    row.SecondWidth, row.SecondHeight, pdf);
+        }
+    }
+
+    private void FillContinuousHighlights(System.Collections.ObjectModel.ObservableCollection<Rect> output,
+        int page, double width, double height, PdfBookSource pdf)
+    {
+        output.Clear();
+        if (width <= 0 || height <= 0 ||
+            !_pdfVisibleText.TryGetValue(page, out var data) || data.Boxes is null)
+            return;
+        var selections = new List<(int Start, int End)>();
+        if (_pdfSelectionAnchor is { } start && _pdfSelectionEnd is { } end)
+        {
+            var a = start.Page < end.Page || (start.Page == end.Page && start.Index <= end.Index) ? start : end;
+            var z = a.Equals(start) ? end : start;
+            if (a.Page <= page && page <= z.Page)
+                selections.Add((a.Page == page ? a.Index : 0, z.Page == page ? z.Index + 1 : int.MaxValue));
+        }
+        foreach (var match in _pdfMatches.Where(x => x.Page == page))
+            selections.Add((match.Start, match.Start + match.Length));
+        if (selections.Count == 0) return;
+        var dim = pdf.Pages[page];
+        if (dim.Width <= 0 || dim.Height <= 0) return;
+        var crop = pdf.GetCrop(page);
+        var turns = pdf.GetPageRotation(page);
+        foreach (var c in data.Boxes)
+        {
+            if (!selections.Any(x => x.Start <= c.Index && c.Index < x.End)) continue;
+            var a = PdfCoordinateMapper.PdfToDisplay(c.Left / dim.Width, c.Bottom / dim.Height, turns);
+            var z = PdfCoordinateMapper.PdfToDisplay(c.Right / dim.Width, c.Top / dim.Height, turns);
+            var aa = crop.FromOriginal(a.U, a.V);
+            var zz = crop.FromOriginal(z.U, z.V);
+            var l = Math.Clamp(Math.Min(aa.U, zz.U), 0, 1) * width;
+            var r = Math.Clamp(Math.Max(aa.U, zz.U), 0, 1) * width;
+            var t = Math.Clamp(Math.Min(aa.V, zz.V), 0, 1) * height;
+            var b = Math.Clamp(Math.Max(aa.V, zz.V), 0, 1) * height;
+            if (r > l && b > t && double.IsFinite(l) && double.IsFinite(t))
+                output.Add(new Rect(l, t, r - l, b - t));
+        }
     }
 
     private void PdfContinuousList_SizeChanged(object sender, SizeChangedEventArgs e)
