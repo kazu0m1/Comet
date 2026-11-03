@@ -8,6 +8,12 @@ public interface IBookSource : IAsyncDisposable
     ValueTask<byte[]> ReadPageBytesAsync(int pageIndex, CancellationToken cancellationToken = default);
 }
 
+// A source able to render at a requested resolution without decoding every page first.
+public interface IRasterBookSource : IBookSource
+{
+    ValueTask<byte[]> RenderPageBytesAsync(int pageIndex, int targetPixelWidth, CancellationToken cancellationToken = default);
+}
+
 public interface IBookSourceFactory
 {
     ValueTask<IBookSource> OpenAsync(string path, CancellationToken cancellationToken = default);
