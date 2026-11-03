@@ -327,47 +327,95 @@ public partial class MainWindow
         if (sender is FrameworkElement { DataContext: PdfContinuousRow row })
         {
             row.Realized = true;
-            _ = LoadContinuousRowAsync(row);
+            if (row.IsLoading)
+                row.ReloadAfterCurrentLoad = true;
+            else
+                _ = LoadContinuousRowAsync(row);
         }
     }
 
     private void PdfContinuous_Cleanup(object sender, CleanUpVirtualizedItemEventArgs e)
     {
-        if (e.Value is PdfContinuousRow row)
-        {
-            row.Realized = false;
-            row.FirstImage = null;
-            row.SecondImage = null;
-        }
+        // Depending on the virtualizing panel, the cleanup value or its UI
+        // container carries the data item. Clear both page bitmaps on eviction.
+        var row = e.Value as PdfContinuousRow
+            ?? (e.UIElement as FrameworkElement)?.DataContext as PdfContinuousRow;
+        if (row is null) return;
+        row.Realized = false;
+        row.FirstImage = null;
+        row.SecondImage = null;
     }
 
     private async Task LoadContinuousRowAsync(PdfContinuousRow row)
     {
-        if (row.IsLoading || !row.Realized || _book is not PdfBookSource pdf ||
+        if (!row.Realized || _book is not PdfBookSource pdf ||
             _imageCache is null || _continuousCts is null) return;
+        if (row.IsLoading)
+        {
+            row.ReloadAfterCurrentLoad = true;
+            return;
+        }
+        if (row.FirstImage is not null &&
+            (row.SecondPage is null || row.SecondImage is not null))
+        {
+            // Images may already be restored from the page cache. Glyph
+            // geometry is handled independently and can still be missing.
+            if (!_pdfVisibleText.ContainsKey(row.FirstPage) ||
+                (row.SecondPage is int second && !_pdfVisibleText.ContainsKey(second)))
+                _ = LoadPdfTextGeometryAsync(row.FirstPage,
+                    row.SecondPage.HasValue ? 2 : 1, _continuousCts.Token);
+            return;
+        }
+
         var cache = _imageCache;
-        var token = _continuousCts.Token;
+        var sourceCts = _continuousCts;
+        var token = sourceCts.Token;
         row.IsLoading = true;
+        var failed = false;
         try
         {
-            var dpi = System.Windows.Media.VisualTreeHelper.GetDpi(PdfContinuousList).DpiScaleX;
-            var width = (int)Math.Clamp(Math.Ceiling(row.FirstWidth * dpi * 1.35), 512, 4096);
-            var first = await cache.GetAsync(row.FirstPage, width, token);
-            if (!token.IsCancellationRequested && row.Realized && ReferenceEquals(_book, pdf))
-                row.FirstImage = first;
-            if (row.SecondPage is int second)
+            var dpi = VisualTreeHelper.GetDpi(PdfContinuousList).DpiScaleX;
+            if (row.FirstImage is null)
             {
-                var w = (int)Math.Clamp(Math.Ceiling(row.SecondWidth * dpi * 1.35), 512, 4096);
-                var image = await cache.GetAsync(second, w, token);
-                if (!token.IsCancellationRequested && row.Realized && ReferenceEquals(_book, pdf))
+                var width = (int)Math.Clamp(Math.Ceiling(row.FirstWidth * dpi * 1.35), 512, 4096);
+                var first = await cache.GetAsync(row.FirstPage, width, token);
+                if (!token.IsCancellationRequested && row.Realized &&
+                    ReferenceEquals(_book, pdf) && ReferenceEquals(_continuousCts, sourceCts))
+                    row.FirstImage = first;
+            }
+            if (row.SecondPage is int second && row.SecondImage is null)
+            {
+                var width = (int)Math.Clamp(Math.Ceiling(row.SecondWidth * dpi * 1.35), 512, 4096);
+                var image = await cache.GetAsync(second, width, token);
+                if (!token.IsCancellationRequested && row.Realized &&
+                    ReferenceEquals(_book, pdf) && ReferenceEquals(_continuousCts, sourceCts))
                     row.SecondImage = image;
             }
-            await LoadPdfTextGeometryAsync(row.FirstPage,
-                row.SecondPage.HasValue ? 2 : 1, token);
+            if (row.Realized && !token.IsCancellationRequested)
+                await LoadPdfTextGeometryAsync(row.FirstPage,
+                    row.SecondPage.HasValue ? 2 : 1, token);
         }
         catch (OperationCanceledException) { }
-        catch (Exception) { /* Broken page leaves the row blank, without aborting navigation. */ }
-        finally { row.IsLoading = false; }
+        catch (Exception ex)
+        {
+            failed = true;
+            PerformanceTrace.Event("pdf.continuous.render.error",
+                $"page={row.FirstPage + 1}; {ex.GetType().Name}: {ex.Message}");
+        }
+        finally
+        {
+            row.IsLoading = false;
+            var reload = row.ReloadAfterCurrentLoad;
+            row.ReloadAfterCurrentLoad = false;
+            if (reload && !failed && row.Realized &&
+                !token.IsCancellationRequested && ReferenceEquals(_continuousCts, sourceCts)
+                && ReferenceEquals(_book, pdf))
+            {
+                // Queue on the dispatcher to avoid re-entering the image-loading
+                // method while the recycled container is completing layout.
+                Dispatcher.BeginInvoke(new Action(() => _ = LoadContinuousRowAsync(row)));
+            }
+        }
     }
 
     private bool TryHitContinuousCharacter(Image image, Point point, out (int Page, int Index) hit)
