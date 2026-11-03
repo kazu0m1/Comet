@@ -185,26 +185,44 @@
                 </controls:PageViewport>
                 <ListBox x:Name="PdfContinuousList" Visibility="Collapsed"
                          SizeChanged="PdfContinuousList_SizeChanged"
-                         Background="#151515" BorderThickness="0"
+                         ScrollViewer.ScrollChanged="PdfContinuousList_ScrollChanged"
+                         PreviewMouseLeftButtonDown="PdfContinuousPan_Down"
+                         PreviewMouseMove="PdfContinuousPan_Move"
+                         PreviewMouseLeftButtonUp="PdfContinuousPan_Up"
+                         LostMouseCapture="PdfContinuousPan_LostCapture"
+                         Background="#282828" BorderThickness="0"
                          Foreground="White"
-                         SelectionChanged="PdfContinuousList_SelectionChanged"
                          VirtualizingPanel.IsVirtualizing="True"
                          VirtualizingPanel.VirtualizationMode="Recycling"
                          VirtualizingPanel.ScrollUnit="Pixel"
                          VirtualizingStackPanel.CleanUpVirtualizedItem="PdfContinuous_Cleanup"
                          ScrollViewer.CanContentScroll="True"
-                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                         ScrollViewer.HorizontalScrollBarVisibility="Hidden">
                     <ListBox.ItemContainerStyle>
                         <Style TargetType="ListBoxItem">
                             <Setter Property="HorizontalContentAlignment" Value="Center"/>
                             <Setter Property="Padding" Value="0"/>
+                            <Setter Property="Margin" Value="0"/>
+                            <Setter Property="Background" Value="#282828"/>
                             <Setter Property="BorderThickness" Value="0"/>
+                            <!-- Disable the default selected/hover colors; the
+                                 PDF itself remains the only visual content. -->
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <ContentPresenter Content="{TemplateBinding Content}"
+                                                          ContentTemplate="{TemplateBinding ContentTemplate}"
+                                                          HorizontalAlignment="Center"
+                                                          Margin="0"/>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
                         </Style>
                     </ListBox.ItemContainerStyle>
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <Border Loaded="PdfContinuousRow_Loaded" Margin="0,6,0,6"
-                                    Background="White">
+                            <Border Loaded="PdfContinuousRow_Loaded" Margin="0" BorderThickness="0"
+                                    Background="#282828">
                                 <StackPanel Orientation="Horizontal">
                                     <Grid>
                                         <Image Source="{Binding FirstImage}" Width="{Binding FirstWidth}"
