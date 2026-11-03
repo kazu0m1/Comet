@@ -53,6 +53,10 @@ var stretch = FitCalculator.CalculateScale(new PixelSize(100, 100), new Viewport
 Equal(5.0, stretch, "stretch small images");
 var noStretch = FitCalculator.CalculateScale(new PixelSize(100, 100), new ViewportSize(1000, 500), FitMode.BestFit, false);
 Equal(1.0, noStretch, "do not stretch small images");
+Near(0.7, FitCalculator.FixedPageScale(new PixelSize(1000, 2000), FixedSizeAxis.Height, 1400, true), "fixed height DIP scale");
+Near(1.2, FitCalculator.FixedPageScale(new PixelSize(1000, 2000), FixedSizeAxis.Width, 1200, true), "fixed width DIP scale");
+Near(1.0, FitCalculator.FixedPageScale(new PixelSize(1000, 2000), FixedSizeAxis.Width, 1200, false), "fixed width obeys stretch flag");
+Near(1400.0, AppSettingsNormalizer.Normalize(new AppSettings { FixedSizeDip = double.NaN }).FixedSizeDip, "fixed size rejects NaN");
 
 Near(1.0, DpiScaleCalculator.ManualDipScale(1.0), "manual 100 at 100 percent DPI");
 Near(0.8, DpiScaleCalculator.ManualDipScale(1.25), "manual 100 at 125 percent DPI");

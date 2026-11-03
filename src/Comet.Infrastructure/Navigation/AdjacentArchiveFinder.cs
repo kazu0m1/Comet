@@ -16,7 +16,7 @@ public sealed class AdjacentArchiveFinder
         if (directory is null || !Directory.Exists(directory)) return null;
 
         var archives = Directory.EnumerateFiles(directory, "*", SearchOption.TopDirectoryOnly)
-            .Where(SupportedArchives.IsSupported)
+            .Where(p => SupportedArchives.IsSupported(p) || Path.GetExtension(p).Equals(".pdf", StringComparison.OrdinalIgnoreCase))
             .OrderBy(p => Path.GetFileName(p), NaturalStringComparer.Instance)
             .ToArray();
 
