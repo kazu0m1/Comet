@@ -183,13 +183,13 @@ public partial class MainWindow : Window
         }
     }
 
-    private async Task RenderCurrentAsync(CancellationToken cancellationToken = default)
+    private async Task RenderCurrentAsync(CancellationToken cancellationToken = default, bool prefetchContinuousJump = false)
     {
         if (_book is null || _imageCache is null || _book.Descriptor.Pages.Count == 0)
             return;
         if (IsContinuousPdfView)
         {
-            JumpContinuousToPage(_pageIndex);
+            JumpContinuousToPage(_pageIndex, prefetchContinuousJump);
             var row = _continuousRows.FirstOrDefault(x => x.FirstPage == _pageIndex || x.SecondPage == _pageIndex);
             // ScrollIntoView virtualizes and realizes the row asynchronously.
             // Loading here before WPF realization causes lost second-page
@@ -572,7 +572,9 @@ public partial class MainWindow : Window
         if (_book is null || _book.Descriptor.Pages.Count == 0) return;
         _pageIndex = Math.Clamp(pageIndex, 0, _book.Descriptor.Pages.Count - 1);
         _navigationHistory.Clear();
-        await RenderCurrentAsync();
+        // Explicit thumbnail/outline/page-label/search jumps retain the
+        // three-page prefetch. First document open does not request it.
+        await RenderCurrentAsync(prefetchContinuousJump: true);
     }
 
     private async Task OpenAdjacentArchiveAsync(bool next)
