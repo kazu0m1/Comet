@@ -58,6 +58,9 @@ public sealed class PdfBookSource : IRasterBookSource
     public Task<PdfReply> GetOutlineAsync(CancellationToken token = default)
         => _worker.SendAsync(new { Command = "outline" }, token);
 
+    public Task<PdfReply> GetLinkAsync(int pageIndex, double x, double y, CancellationToken token = default)
+        => _worker.SendAsync(new { Command = "link", Index = pageIndex, X = x, Y = y }, token);
+
     public Task<PdfReply> GetMetadataAsync(CancellationToken token = default)
         => _worker.SendAsync(new { Command = "metadata" }, token);
 

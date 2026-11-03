@@ -100,6 +100,8 @@ public sealed class PdfReply
     public List<PdfCharRect>? Boxes { get; set; }
     public List<PdfOutlineItem>? Outline { get; set; }
     public Dictionary<string,string>? Metadata { get; set; }
+    public int LinkPageIndex { get; set; } = -1;
+    public string? LinkUrl { get; set; }
 }
 public sealed class PdfPageInfo { public float Width { get; set; } public float Height { get; set; } public string Label { get; set; } = ""; }
 public sealed class PdfCharRect { public int Index { get; set; } public double Left { get; set; } public double Right { get; set; } public double Bottom { get; set; } public double Top { get; set; } }
