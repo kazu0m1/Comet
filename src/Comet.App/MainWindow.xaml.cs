@@ -1332,6 +1332,8 @@ public partial class MainWindow : Window
         if (EndPdfSelection())
         {
             if (Viewport.IsMouseCaptured) Viewport.ReleaseMouseCapture();
+            if (_pdfSelectionAnchor == _pdfSelectionEnd)
+                await FollowPdfLinkAsync(e.GetPosition(Viewport));
             e.Handled = true;
             return;
         }
@@ -1348,6 +1350,7 @@ public partial class MainWindow : Window
         }
 
         var position = e.GetPosition(Viewport);
+        if (await FollowPdfLinkAsync(position)) { e.Handled = true; return; }
         if (position.X < Viewport.ActualWidth / 2)
             await NextAsync();
         else
