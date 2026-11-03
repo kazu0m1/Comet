@@ -159,6 +159,7 @@ public partial class MainWindow
         _pdfMatchCursor = (_pdfMatchCursor + direction + _pdfMatches.Count) % _pdfMatches.Count;
         var m = _pdfMatches[_pdfMatchCursor];
         await GoToPageAsync(m.Page);
+        UpdatePdfHighlightRects();
         if (_pdfSearchStatus is not null)
             _pdfSearchStatus.Text = "Result " + (_pdfMatchCursor + 1) + "/" + _pdfMatches.Count +
                 " — page " + (m.Page + 1);

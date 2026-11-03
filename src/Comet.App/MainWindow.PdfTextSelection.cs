@@ -105,6 +105,7 @@ public partial class MainWindow
         _pdfVisibleText.Clear();
         Viewport.PdfHighlightRects = Array.Empty<Rect>();
         Viewport.Refresh();
+        UpdatePdfContinuousHighlights();
     }
 
     private void UpdatePdfHighlightRects()
@@ -151,6 +152,7 @@ public partial class MainWindow
         }
         Viewport.PdfHighlightRects = rects;
         Viewport.Refresh();
+        UpdatePdfContinuousHighlights();
     }
 
     private async Task CopyPdfSelectionAsync()
