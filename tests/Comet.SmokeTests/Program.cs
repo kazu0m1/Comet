@@ -379,7 +379,7 @@ try
     Directory.CreateDirectory(corruptRoot);
     await File.WriteAllTextAsync(Path.Combine(corruptRoot, "settings.json"), "{ definitely not json");
     var corruptSettings = await new JsonSettingsStore(corruptRoot).LoadAsync();
-    Equal(2, corruptSettings.SettingsSchemaVersion, "corrupt settings fallback schema");
+    Equal(3, corruptSettings.SettingsSchemaVersion, "corrupt settings fallback schema");
     Equal(FitMode.BestFit, corruptSettings.FitMode, "corrupt settings fallback fit");
     Equal(true, corruptSettings.ShowThumbnails, "corrupt settings fallback thumbnails");
 
