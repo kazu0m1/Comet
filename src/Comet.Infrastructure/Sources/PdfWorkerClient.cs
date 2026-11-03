@@ -93,6 +93,10 @@ public sealed class PdfReply
     public int PageCount { get; set; }
     public List<PdfPageInfo>? Pages { get; set; }
     public ulong Permissions { get; set; }
+    public double CropLeft { get; set; }
+    public double CropTop { get; set; }
+    public double CropRight { get; set; } = 1;
+    public double CropBottom { get; set; } = 1;
     public string? ImagePath { get; set; }
     public int Width { get; set; }
     public int Height { get; set; }

@@ -7,6 +7,14 @@ public sealed class PdfBookSource : IRasterBookSource
 {
     private readonly PdfWorkerClient _worker;
     private readonly PdfPageInfo[] _pages;
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<int, PdfCropBounds> _cropped = new();
+    private bool _autoCrop;
+    public bool AutoCrop
+    {
+        get => _autoCrop;
+        set { if (_autoCrop != value) { _autoCrop = value; _cropped.Clear(); } }
+    }
+    public PdfCropBounds GetCrop(int index) => _cropped.TryGetValue(index, out var crop) ? crop : PdfCropBounds.Full;
     private int _allRotation;
     private readonly Dictionary<int, int> _pageRotations = new();
     private PdfBookSource(string path, PdfWorkerClient worker, PdfReply info)
@@ -29,6 +37,7 @@ public sealed class PdfBookSource : IRasterBookSource
     {
         _allRotation = ((allRotation % 4) + 4) % 4;
         _pageRotations.Clear();
+        _cropped.Clear();
         if (pageRotations is not null)
             foreach (var (page, degrees) in pageRotations)
                 if ((uint)page < (uint)_pages.Length)
@@ -61,8 +70,9 @@ public sealed class PdfBookSource : IRasterBookSource
     public async ValueTask<byte[]> RenderPageBytesAsync(int pageIndex, int width, CancellationToken token = default)
     {
         if ((uint)pageIndex >= (uint)_pages.Length) throw new ArgumentOutOfRangeException(nameof(pageIndex));
-        var response = await _worker.SendAsync(new { Command = "render", Index = pageIndex, Width = width, Rotation = GetPageRotation(pageIndex) }, token).ConfigureAwait(false);
+        var response = await _worker.SendAsync(new { Command = "render", Index = pageIndex, Width = width, Rotation = GetPageRotation(pageIndex), Crop = AutoCrop }, token).ConfigureAwait(false);
         var filename = response.ImagePath ?? throw new IOException("PDF worker did not return a rendered page");
+        _cropped[pageIndex] = new PdfCropBounds(response.CropLeft, response.CropTop, response.CropRight, response.CropBottom);
         try { return await File.ReadAllBytesAsync(filename, token).ConfigureAwait(false); }
         finally { try { File.Delete(filename); } catch (IOException) { } }
     }
