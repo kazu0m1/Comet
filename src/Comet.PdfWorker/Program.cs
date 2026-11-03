@@ -74,10 +74,9 @@ internal static class Program
                 var dimensions = new List<PageInfo>(count);
                 for (var i = 0; i < count; i++)
                 {
-                    var page = Native.FPDF_LoadPage(_document, i);
-                    if (page == IntPtr.Zero) { dimensions.Add(new PageInfo()); continue; }
-                    try { dimensions.Add(new PageInfo { Width = Native.FPDF_GetPageWidthF(page), Height = Native.FPDF_GetPageHeightF(page), Label = GetPageLabel(i) }); }
-                    finally { Native.FPDF_ClosePage(page); }
+                    // Read page-tree geometry without parsing each page's content.
+                    var valid = Native.FPDF_GetPageSizeByIndexF(_document, i, out var size) != 0;
+                    dimensions.Add(new PageInfo { Width = valid ? size.Width : 0, Height = valid ? size.Height : 0, Label = GetPageLabel(i) });
                 }
                 return new PdfReply { Ok = true, PageCount = count, Pages = dimensions, Permissions = Native.FPDF_GetDocPermissions(_document) };
             case "render":
@@ -216,7 +215,9 @@ internal static class Program
                     boxes = new List<CharRect>(count);
                     for (var i = 0; i < count; i++)
                     {
-                        if (Native.FPDFText_GetCharBox(textPage, i, out var left, out var right, out var bottom, out var top) != 0)
+                        Native.FPDFText_GetCharBox(textPage, i, out var left, out var right, out var bottom, out var top);
+                        if (double.IsFinite(left) && double.IsFinite(right) && double.IsFinite(bottom) &&
+                            double.IsFinite(top) && right > left && top > bottom)
                             boxes.Add(new CharRect { Index = i, Left = left, Right = right, Bottom = bottom, Top = top });
                     }
                 }
@@ -313,6 +314,8 @@ internal static class Native
     [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)] internal static extern void FPDF_CloseDocument(IntPtr doc);
     [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)] internal static extern uint FPDF_GetLastError();
     [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)] internal static extern int FPDF_GetPageCount(IntPtr doc);
+    [StructLayout(LayoutKind.Sequential)] internal struct PdfSize { public float Width; public float Height; }
+    [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)] internal static extern int FPDF_GetPageSizeByIndexF(IntPtr doc, int index, out PdfSize size);
     [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)] internal static extern IntPtr FPDF_LoadPage(IntPtr doc, int index);
     [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)] internal static extern void FPDF_ClosePage(IntPtr page);
     [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)] internal static extern float FPDF_GetPageWidthF(IntPtr page);
@@ -327,7 +330,7 @@ internal static class Native
     [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)] internal static extern void FPDFText_ClosePage(IntPtr textPage);
     [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)] internal static extern int FPDFText_CountChars(IntPtr textPage);
     [DllImport(Lib, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Unicode)] internal static extern int FPDFText_GetText(IntPtr textPage,int start,int count,[Out] char[] chars);
-    [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)] internal static extern int FPDFText_GetCharBox(IntPtr textPage,int index,out double l,out double r,out double b,out double t);
+    [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)] internal static extern void FPDFText_GetCharBox(IntPtr textPage,int index,out double l,out double r,out double b,out double t);
     [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)] internal static extern uint FPDF_GetDocPermissions(IntPtr doc);
     [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)] internal static extern IntPtr FPDFBookmark_GetFirstChild(IntPtr doc,IntPtr bookmark);
     [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)] internal static extern IntPtr FPDFBookmark_GetNextSibling(IntPtr doc,IntPtr bookmark);
