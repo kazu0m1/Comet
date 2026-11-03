@@ -34,6 +34,10 @@
                 <Separator />
                 <MenuItem x:Name="DoublePageMenuItem" IsCheckable="True" InputGestureText="D" Click="DoublePage_Click" />
                 <MenuItem x:Name="MangaModeMenuItem" IsCheckable="True" InputGestureText="M" Click="MangaMode_Click" />
+                <Separator />
+                <MenuItem x:Name="PdfCoverMenuItem" Header="PDF: Cover Alone" IsCheckable="True" Click="PdfCover_Click" />
+                <MenuItem x:Name="PdfRotatePageMenuItem" Header="PDF: Rotate Page Clockwise" Click="PdfRotatePage_Click" />
+                <MenuItem x:Name="PdfRotateAllMenuItem" Header="PDF: Rotate All Pages Clockwise" Click="PdfRotateAll_Click" />
                 <MenuItem x:Name="StretchMenuItem" IsCheckable="True" InputGestureText="Y" Click="Stretch_Click" />
                 <MenuItem x:Name="ThumbnailSidebarMenuItem" IsCheckable="True" Click="ThumbnailSidebar_Click" />
                 <Separator />
