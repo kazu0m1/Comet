@@ -38,6 +38,7 @@
                 <MenuItem x:Name="PdfCoverMenuItem" Header="PDF: Cover Alone" IsCheckable="True" Click="PdfCover_Click" />
                 <MenuItem x:Name="PdfRotatePageMenuItem" Header="PDF: Rotate Page Clockwise" Click="PdfRotatePage_Click" />
                 <MenuItem x:Name="PdfRotateAllMenuItem" Header="PDF: Rotate All Pages Clockwise" Click="PdfRotateAll_Click" />
+                <MenuItem x:Name="PdfContinuousMenuItem" Header="PDF: Continuous Scroll" IsCheckable="True" Click="PdfContinuous_Click" />
                 <MenuItem x:Name="StretchMenuItem" IsCheckable="True" InputGestureText="Y" Click="Stretch_Click" />
                 <MenuItem x:Name="ThumbnailSidebarMenuItem" IsCheckable="True" Click="ThumbnailSidebar_Click" />
                 <Separator />
@@ -181,6 +182,37 @@
                         </ContextMenu>
                     </controls:PageViewport.ContextMenu>
                 </controls:PageViewport>
+                <ListBox x:Name="PdfContinuousList" Visibility="Collapsed"
+                         Background="#151515" BorderThickness="0"
+                         Foreground="White"
+                         SelectionChanged="PdfContinuousList_SelectionChanged"
+                         VirtualizingPanel.IsVirtualizing="True"
+                         VirtualizingPanel.VirtualizationMode="Recycling"
+                         VirtualizingPanel.ScrollUnit="Pixel"
+                         VirtualizingStackPanel.CleanUpVirtualizedItem="PdfContinuous_Cleanup"
+                         ScrollViewer.CanContentScroll="True"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                            <Setter Property="Padding" Value="0"/>
+                            <Setter Property="BorderThickness" Value="0"/>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Border Loaded="PdfContinuousRow_Loaded" Margin="0,6,0,6"
+                                    Background="White">
+                                <StackPanel Orientation="Horizontal">
+                                    <Image Source="{Binding FirstImage}" Width="{Binding FirstWidth}"
+                                           Height="{Binding FirstHeight}" Stretch="Fill"/>
+                                    <Image Source="{Binding SecondImage}" Width="{Binding SecondWidth}"
+                                           Height="{Binding SecondHeight}" Stretch="Fill"/>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
             </Grid>
         </Grid>
     </DockPanel>
