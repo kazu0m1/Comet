@@ -221,8 +221,9 @@
                     </ListBox.ItemContainerStyle>
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <Border Loaded="PdfContinuousRow_Loaded" Margin="0" BorderThickness="0"
-                                    Background="#282828">
+                            <Border Loaded="PdfContinuousRow_Loaded"
+                                    DataContextChanged="PdfContinuousRow_DataContextChanged"
+                                    Margin="0" BorderThickness="0" Background="#282828">
                                 <!-- Grid columns are swapped in RTL manga mode.
                                      Do not mirror/flip the actual PDF image pixels. -->
                                 <Grid>
