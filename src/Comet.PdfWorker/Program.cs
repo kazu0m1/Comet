@@ -81,7 +81,7 @@ internal static class Program
                 return new PdfReply { Ok = true, PageCount = count, Pages = dimensions, Permissions = Native.FPDF_GetDocPermissions(_document) };
             case "render":
                 EnsureOpen();
-                return RenderPage(request.Index, request.Width, request.Rotation);
+                return RenderPage(request.Index, request.Width, request.Rotation, request.Crop);
             case "text":
                 EnsureOpen();
                 return ExtractText(request.Index, request.WithBoxes);
@@ -111,7 +111,7 @@ internal static class Program
         if (_document == IntPtr.Zero) throw new InvalidOperationException("No PDF is open");
     }
 
-    private static PdfReply RenderPage(int index, int requestedWidth, int rotation)
+    private static PdfReply RenderPage(int index, int requestedWidth, int rotation, bool autoCrop)
     {
         var page = Native.FPDF_LoadPage(_document, index);
         if (page == IntPtr.Zero) throw new InvalidDataException("Cannot load page " + index);
@@ -138,22 +138,75 @@ internal static class Program
                 if (stride != w * 4) throw new InvalidDataException("Unsupported PDF bitmap stride");
                 var bytes = new byte[checked(stride * h)];
                 Marshal.Copy(Native.FPDFBitmap_GetBuffer(bitmap), bytes, 0, bytes.Length);
+                var crop = autoCrop ? TryCropWhiteMargins(bytes, w, h) : new RasterCrop(bytes, w, h, 0, 0, 1, 1);
+                bytes = crop.Bytes;
+                var outputWidth = crop.Width;
+                var outputHeight = crop.Height;
                 var filename = Path.Combine(TempRoot, Guid.NewGuid().ToString("N") + ".bmp");
                 using (var stream = File.Create(filename))
                 using (var writer = new BinaryWriter(stream))
                 {
                     writer.Write((ushort)0x4D42); writer.Write(checked(54 + bytes.Length));
                     writer.Write((ushort)0); writer.Write((ushort)0); writer.Write(54);
-                    writer.Write(40); writer.Write(w); writer.Write(-h); // top-down bitmap
+                    writer.Write(40); writer.Write(outputWidth); writer.Write(-outputHeight); // top-down bitmap
                     writer.Write((ushort)1); writer.Write((ushort)32); writer.Write(0);
                     writer.Write(bytes.Length); writer.Write(0); writer.Write(0); writer.Write(0); writer.Write(0);
                     writer.Write(bytes);
                 }
-                return new PdfReply { Ok = true, ImagePath = filename, Width = w, Height = h };
+                return new PdfReply { Ok = true, ImagePath = filename, Width = outputWidth, Height = outputHeight,
+                    CropLeft = crop.Left, CropTop = crop.Top, CropRight = crop.Right, CropBottom = crop.Bottom };
             }
             finally { Native.FPDFBitmap_Destroy(bitmap); }
         }
         finally { Native.FPDF_ClosePage(page); }
+    }
+
+    private readonly record struct RasterCrop(byte[] Bytes, int Width, int Height,
+        double Left, double Top, double Right, double Bottom);
+
+    // Conservative scan: if page content is ambiguous, retain the entire page.
+    // Scan every other pixel for speed and add padding so thin page-edge strokes survive.
+    private static RasterCrop TryCropWhiteMargins(byte[] pixels, int width, int height)
+    {
+        var full = new RasterCrop(pixels, width, height, 0, 0, 1, 1);
+        if (width < 200 || height < 200) return full;
+        var minX = width;
+        var minY = height;
+        var maxX = -1;
+        var maxY = -1;
+        for (var y = 0; y < height; y += 2)
+        {
+            var row = checked(y * width * 4);
+            for (var x = 0; x < width; x += 2)
+            {
+                var i = row + x * 4;
+                if (pixels[i] >= 245 && pixels[i + 1] >= 245 && pixels[i + 2] >= 245)
+                    continue;
+                if (x < minX) minX = x;
+                if (y < minY) minY = y;
+                if (x > maxX) maxX = x;
+                if (y > maxY) maxY = y;
+            }
+        }
+        if (maxX < minX || maxY < minY) return full;
+        var marginX = Math.Max(5, (int)Math.Ceiling(width * 0.008));
+        var marginY = Math.Max(5, (int)Math.Ceiling(height * 0.008));
+        var left = Math.Max(0, minX - marginX);
+        var top = Math.Max(0, minY - marginY);
+        var right = Math.Min(width, maxX + marginX + 2);
+        var bottom = Math.Min(height, maxY + marginY + 2);
+        var cropWidth = right - left;
+        var cropHeight = bottom - top;
+        // Do not clip an almost-full page or a suspiciously tiny content region.
+        if (cropWidth < width / 3 || cropHeight < height / 3 ||
+            (width - cropWidth < width * 0.03 && height - cropHeight < height * 0.03))
+            return full;
+        var dest = new byte[checked(cropWidth * cropHeight * 4)];
+        for (var y = 0; y < cropHeight; y++)
+            Buffer.BlockCopy(pixels, checked(((top + y) * width + left) * 4),
+                dest, checked(y * cropWidth * 4), cropWidth * 4);
+        return new RasterCrop(dest, cropWidth, cropHeight, left / (double)width,
+            top / (double)height, right / (double)width, bottom / (double)height);
     }
 
     private static PdfReply HitLink(int index, double x, double y)
@@ -283,6 +336,7 @@ internal sealed class PdfRequest
     public int Width { get; set; }
     public int Rotation { get; set; }
     public bool WithBoxes { get; set; }
+    public bool Crop { get; set; }
     public double X { get; set; }
     public double Y { get; set; }
 }
@@ -294,6 +348,10 @@ internal sealed class PdfReply
     public int PageCount { get; set; }
     public List<PageInfo>? Pages { get; set; }
     public ulong Permissions { get; set; }
+    public double CropLeft { get; set; }
+    public double CropTop { get; set; }
+    public double CropRight { get; set; } = 1;
+    public double CropBottom { get; set; } = 1;
     public string? ImagePath { get; set; }
     public int Width { get; set; }
     public int Height { get; set; }
