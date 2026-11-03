@@ -38,7 +38,7 @@ Name: "desktopicon"; Description: "Create a desktop shortcut"; Flags: unchecked
 [Registry]
 Root: HKCU; Subkey: "Software\Comet\Capabilities"; ValueType: string; ValueName: "ApplicationName"; ValueData: "Comet"; Tasks: assoc pdfassoc; Flags: uninsdeletekeyifempty
 Root: HKCU; Subkey: "Software\Comet\Capabilities"; ValueType: string; ValueName: "ApplicationDescription"; ValueData: "Fast comic archive and PDF viewer"; Tasks: assoc pdfassoc
-Root: HKCU; Subkey: "Software\Comet\Capabilities\FileAssociations"; ValueType: string; ValueName: ".zip"; ValueData: "Comet.Zip"; Tasks: assoc pdfassoc
+Root: HKCU; Subkey: "Software\Comet\Capabilities\FileAssociations"; ValueType: string; ValueName: ".zip"; ValueData: "Comet.Zip"; Tasks: assoc
 Root: HKCU; Subkey: "Software\Comet\Capabilities\FileAssociations"; ValueType: string; ValueName: ".cbz"; ValueData: "Comet.Cbz"; Tasks: assoc
 Root: HKCU; Subkey: "Software\Comet\Capabilities\FileAssociations"; ValueType: string; ValueName: ".rar"; ValueData: "Comet.Rar"; Tasks: assoc
 Root: HKCU; Subkey: "Software\Comet\Capabilities\FileAssociations"; ValueType: string; ValueName: ".cbr"; ValueData: "Comet.Cbr"; Tasks: assoc
