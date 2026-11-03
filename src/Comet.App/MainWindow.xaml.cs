@@ -12,6 +12,7 @@ using Comet.Core.Models;
 using Comet.Core.Services;
 using Comet.Infrastructure.Navigation;
 using Comet.Infrastructure.Persistence;
+using Comet.Infrastructure.Sources;
 using Comet.Platform.Windows.Imaging;
 
 namespace Comet.App;
@@ -23,6 +24,10 @@ public partial class MainWindow : Window
     private readonly IBookStateStore _stateStore;
     private readonly AdjacentArchiveFinder _archiveFinder;
     private readonly WpfBitmapDecoder _decoder = new();
+    private bool IsPdf => _book is PdfBookSource;
+    private FitMode CurrentFitMode => IsPdf ? _settings.PdfFitMode : _settings.FitMode;
+    private ReadingDirection CurrentReadingDirection => IsPdf ? _settings.PdfReadingDirection : _settings.ReadingDirection;
+    private PageLayoutMode CurrentPageLayoutMode => IsPdf ? _settings.PdfPageLayoutMode : _settings.PageLayoutMode;
     private readonly Localizer _text = new();
     private readonly ZoomSessionState _zoom;
     private readonly DragPanGesture _dragPan = new();
@@ -98,7 +103,7 @@ public partial class MainWindow : Window
 
             var requestedPath = Path.GetFullPath(path);
             var sourceOpenStartedAt = PerformanceTrace.Start();
-            var source = await _sourceFactory.OpenAsync(requestedPath, cancellationToken).ConfigureAwait(true);
+            var source = await OpenWithPasswordIfNeededAsync(requestedPath, cancellationToken).ConfigureAwait(true);
             PerformanceTrace.Elapsed("open.source", sourceOpenStartedAt, Path.GetFileName(requestedPath));
             if (cancellationToken.IsCancellationRequested)
             {
@@ -106,6 +111,9 @@ public partial class MainWindow : Window
                 cancellationToken.ThrowIfCancellationRequested();
             }
             _book = source;
+            _zoom.SetBaseFitMode(CurrentFitMode);
+            ApplySettingsToViewport();
+            UpdateMenuChecks();
             _imageCache = new PageImageCache(source, _decoder);
             _navigationHistory.Clear();
             Title = $"Comet — {source.Descriptor.DisplayName}";
@@ -141,8 +149,8 @@ public partial class MainWindow : Window
                 if (index >= 0) _pageIndex = index;
             }
 
-            if (reason == BookOpenReason.AdjacentPrevious && _settings.PageLayoutMode == PageLayoutMode.DoublePage)
-                _pageIndex = SpreadPlanner.NormalizeStartIndex(_pageIndex, source.Descriptor.Pages.Count, _settings.PageLayoutMode);
+            if (reason == BookOpenReason.AdjacentPrevious && CurrentPageLayoutMode == PageLayoutMode.DoublePage)
+                _pageIndex = SpreadPlanner.NormalizeStartIndex(_pageIndex, source.Descriptor.Pages.Count, CurrentPageLayoutMode);
 
             await RenderCurrentAsync(cancellationToken).ConfigureAwait(true);
             PerformanceTrace.Elapsed("open.first-render", openStartedAt, $"{source.Descriptor.Pages.Count} pages");
@@ -190,7 +198,7 @@ public partial class MainWindow : Window
             Viewport.SecondPage = null;
             _displayedPageCount = 1;
 
-            if (_settings.PageLayoutMode == PageLayoutMode.DoublePage
+            if (CurrentPageLayoutMode == PageLayoutMode.DoublePage
                 && renderPageIndex > 0
                 && renderPageIndex + 1 < _book.Descriptor.Pages.Count
                 && first.PixelWidth <= first.PixelHeight)
@@ -263,14 +271,14 @@ public partial class MainWindow : Window
 
     private int GetDecodeTargetWidth(int pageIndex)
     {
-        if (_settings.FitMode == FitMode.Manual)
+        if (CurrentFitMode == FitMode.Manual)
             return 0;
-        if (_settings.FitMode == FitMode.FixedSize && _settings.FixedSizeAxis == FixedSizeAxis.Width)
+        if (CurrentFitMode == FitMode.FixedSize && _settings.FixedSizeAxis == FixedSizeAxis.Width)
             return (int)Math.Clamp(Math.Ceiling(_settings.FixedSizeDip * VisualTreeHelper.GetDpi(Viewport).DpiScaleX), 512, 4096);
 
         var dpi = VisualTreeHelper.GetDpi(Viewport).DpiScaleX;
         var width = Viewport.ActualWidth > 1 ? Viewport.ActualWidth : 1600;
-        if (_settings.PageLayoutMode == PageLayoutMode.DoublePage && pageIndex > 0)
+        if (CurrentPageLayoutMode == PageLayoutMode.DoublePage && pageIndex > 0)
             width *= 0.58;
         var requested = width * dpi * 1.35 * Math.Max(1.0, _zoom.TemporaryZoomFactor);
         return (int)Math.Clamp(Math.Ceiling(requested), 1200, 4096);
@@ -478,7 +486,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        var manga = _settings.ReadingDirection == ReadingDirection.RightToLeft;
+        var manga = CurrentReadingDirection == ReadingDirection.RightToLeft;
         if (key == Key.Left)
         {
             await MovePageOrArchiveAsync(next: manga);
@@ -512,7 +520,7 @@ public partial class MainWindow : Window
         }
         else
         {
-            _pageIndex = SpreadPlanner.PreviousStartIndex(_pageIndex, _settings.PageLayoutMode);
+            _pageIndex = SpreadPlanner.PreviousStartIndex(_pageIndex, CurrentPageLayoutMode);
         }
         await RenderCurrentAsync();
     }
@@ -573,7 +581,7 @@ public partial class MainWindow : Window
     private void SetFit(FitMode mode)
     {
         _zoom.SetBaseFitMode(mode);
-        _settings = _settings with { FitMode = mode };
+        _settings = IsPdf ? _settings with { PdfFitMode = mode } : _settings with { FitMode = mode };
         Viewport.FitMode = mode;
         Viewport.TemporaryZoomFactor = _zoom.TemporaryZoomFactor;
         Viewport.ResetScroll();
@@ -582,6 +590,40 @@ public partial class MainWindow : Window
         _ = SaveSettingsSafeAsync();
         if (_book is not null)
             _ = RenderCurrentAsync();
+    }
+
+    private async Task<IBookSource> OpenWithPasswordIfNeededAsync(string path, CancellationToken token)
+    {
+        if (!path.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
+            return await _sourceFactory.OpenAsync(path, token).ConfigureAwait(true);
+        for (var attempt = 0; attempt < 3; attempt++)
+        {
+            try { return await PdfBookSource.OpenAsync(path, token).ConfigureAwait(true); }
+            catch (PdfWorkerException ex) when (ex.PdfError == 4)
+            {
+                var password = PromptPdfPassword();
+                if (password is null) throw new OperationCanceledException(token);
+                try { return await PdfBookSource.OpenAsync(path, token, password).ConfigureAwait(true); }
+                catch (PdfWorkerException failure) when (failure.PdfError == 4)
+                {
+                    MessageBox.Show(this, "Incorrect PDF password.", "Comet", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
+        }
+        throw new UnauthorizedAccessException("Incorrect PDF password");
+    }
+
+    private string? PromptPdfPassword()
+    {
+        var window = new Window { Title = "PDF password", Owner = this, Width = 330, Height = 160,
+            ResizeMode = ResizeMode.NoResize, WindowStartupLocation = WindowStartupLocation.CenterOwner };
+        var panel = new StackPanel { Margin = new Thickness(16) };
+        panel.Children.Add(new TextBlock { Text = "Enter the document password:" });
+        var input = new PasswordBox { Margin = new Thickness(0, 8, 0, 8) };
+        var ok = new Button { Content = "Open", Width = 80, HorizontalAlignment = HorizontalAlignment.Right };
+        ok.Click += (_, _) => window.DialogResult = true;
+        panel.Children.Add(input); panel.Children.Add(ok); window.Content = panel;
+        return window.ShowDialog() == true ? input.Password : null;
     }
 
     private void ConfigureFixedSize()
@@ -634,10 +676,10 @@ public partial class MainWindow : Window
 
     private void ToggleManga()
     {
-        var direction = _settings.ReadingDirection == ReadingDirection.RightToLeft
+        var direction = CurrentReadingDirection == ReadingDirection.RightToLeft
             ? ReadingDirection.LeftToRight
             : ReadingDirection.RightToLeft;
-        _settings = _settings with { ReadingDirection = direction };
+        _settings = IsPdf ? _settings with { PdfReadingDirection = direction } : _settings with { ReadingDirection = direction };
         Viewport.ReadingDirection = direction;
         Viewport.ResetScroll();
         UpdateMenuChecks();
@@ -647,10 +689,10 @@ public partial class MainWindow : Window
 
     private async Task ToggleDoublePageAsync()
     {
-        var mode = _settings.PageLayoutMode == PageLayoutMode.DoublePage
+        var mode = CurrentPageLayoutMode == PageLayoutMode.DoublePage
             ? PageLayoutMode.SinglePage
             : PageLayoutMode.DoublePage;
-        _settings = _settings with { PageLayoutMode = mode };
+        _settings = IsPdf ? _settings with { PdfPageLayoutMode = mode } : _settings with { PageLayoutMode = mode };
         if (_book is not null && mode == PageLayoutMode.DoublePage)
             _pageIndex = SpreadPlanner.NormalizeStartIndex(_pageIndex, _book.Descriptor.Pages.Count, mode);
         UpdateMenuChecks();
@@ -703,23 +745,23 @@ public partial class MainWindow : Window
 
     private void ApplySettingsToViewport()
     {
-        Viewport.FitMode = _settings.FitMode;
+        Viewport.FitMode = CurrentFitMode;
         Viewport.FixedSizeDip = _settings.FixedSizeDip;
         Viewport.FixedSizeAxis = _settings.FixedSizeAxis;
-        Viewport.ReadingDirection = _settings.ReadingDirection;
+        Viewport.ReadingDirection = CurrentReadingDirection;
         Viewport.StretchSmallImages = _settings.StretchSmallImages;
         Viewport.TemporaryZoomFactor = _zoom.TemporaryZoomFactor;
     }
 
     private void UpdateMenuChecks()
     {
-        BestFitMenuItem.IsChecked = _settings.FitMode == FitMode.BestFit;
-        FitWidthMenuItem.IsChecked = _settings.FitMode == FitMode.FitWidth;
-        FitHeightMenuItem.IsChecked = _settings.FitMode == FitMode.FitHeight;
-        ManualMenuItem.IsChecked = _settings.FitMode == FitMode.Manual;
-        FixedSizeMenuItem.IsChecked = _settings.FitMode == FitMode.FixedSize;
-        DoublePageMenuItem.IsChecked = _settings.PageLayoutMode == PageLayoutMode.DoublePage;
-        MangaModeMenuItem.IsChecked = _settings.ReadingDirection == ReadingDirection.RightToLeft;
+        BestFitMenuItem.IsChecked = CurrentFitMode == FitMode.BestFit;
+        FitWidthMenuItem.IsChecked = CurrentFitMode == FitMode.FitWidth;
+        FitHeightMenuItem.IsChecked = CurrentFitMode == FitMode.FitHeight;
+        ManualMenuItem.IsChecked = CurrentFitMode == FitMode.Manual;
+        FixedSizeMenuItem.IsChecked = CurrentFitMode == FitMode.FixedSize;
+        DoublePageMenuItem.IsChecked = CurrentPageLayoutMode == PageLayoutMode.DoublePage;
+        MangaModeMenuItem.IsChecked = CurrentReadingDirection == ReadingDirection.RightToLeft;
         StretchMenuItem.IsChecked = _settings.StretchSmallImages;
         ThumbnailSidebarMenuItem.IsChecked = _settings.ShowThumbnails;
         UpdateViewportContextMenu();
@@ -784,12 +826,12 @@ public partial class MainWindow : Window
             item.Header = _text[key];
             item.IsChecked = key switch
             {
-                "BestFit" => _settings.FitMode == FitMode.BestFit,
-                "FitWidth" => _settings.FitMode == FitMode.FitWidth,
-                "FitHeight" => _settings.FitMode == FitMode.FitHeight,
-                "Manual" => _settings.FitMode == FitMode.Manual,
-                "DoublePage" => _settings.PageLayoutMode == PageLayoutMode.DoublePage,
-                "MangaMode" => _settings.ReadingDirection == ReadingDirection.RightToLeft,
+                "BestFit" => CurrentFitMode == FitMode.BestFit,
+                "FitWidth" => CurrentFitMode == FitMode.FitWidth,
+                "FitHeight" => CurrentFitMode == FitMode.FitHeight,
+                "Manual" => CurrentFitMode == FitMode.Manual,
+                "DoublePage" => CurrentPageLayoutMode == PageLayoutMode.DoublePage,
+                "MangaMode" => CurrentReadingDirection == ReadingDirection.RightToLeft,
                 "Stretch" => _settings.StretchSmallImages,
                 "Thumbnails" => _settings.ShowThumbnails,
                 _ => false
@@ -852,7 +894,7 @@ public partial class MainWindow : Window
 
             // MComix reports double-page details in visual left-to-right order.
             // In right-to-left manga mode the second logical page is drawn on the left.
-            if (_settings.ReadingDirection == ReadingDirection.RightToLeft)
+            if (CurrentReadingDirection == ReadingDirection.RightToLeft)
             {
                 metrics.Reverse();
                 pageNames.Reverse();
@@ -1082,7 +1124,7 @@ public partial class MainWindow : Window
 
         if (modifiers.HasFlag(ModifierKeys.Alt) && (key == Key.Left || key == Key.Right))
         {
-            var manga = _settings.ReadingDirection == ReadingDirection.RightToLeft;
+            var manga = CurrentReadingDirection == ReadingDirection.RightToLeft;
             var next = manga ? key == Key.Left : key == Key.Right;
             if (next) await NextAsync(onePage: true); else await PreviousAsync(onePage: true);
             e.Handled = true;
