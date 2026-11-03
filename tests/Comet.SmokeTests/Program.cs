@@ -58,6 +58,14 @@ Near(1.2, FitCalculator.FixedPageScale(new PixelSize(1000, 2000), FixedSizeAxis.
 Near(1.0, FitCalculator.FixedPageScale(new PixelSize(1000, 2000), FixedSizeAxis.Width, 1200, false), "fixed width obeys stretch flag");
 Near(1400.0, AppSettingsNormalizer.Normalize(new AppSettings { FixedSizeDip = double.NaN }).FixedSizeDip, "fixed size rejects NaN");
 
+foreach (var dpi in new[] { 1.0, 1.25, 1.5, 2.0 })
+{
+    var pxTarget = 1400.0;
+    var displayedDip = 1920.0 * FitCalculator.FixedPageScale(
+        new PixelSize(1200, 1920), FixedSizeAxis.Height, pxTarget / dpi, true);
+    Near(pxTarget, displayedDip * dpi, "fixed height absolute pixels at DPI " + dpi);
+}
+
 Near(1.0, DpiScaleCalculator.ManualDipScale(1.0), "manual 100 at 100 percent DPI");
 Near(0.8, DpiScaleCalculator.ManualDipScale(1.25), "manual 100 at 125 percent DPI");
 Near(2.0 / 3.0, DpiScaleCalculator.ManualDipScale(1.5), "manual 100 at 150 percent DPI");

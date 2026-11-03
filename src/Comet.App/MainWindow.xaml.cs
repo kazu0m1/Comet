@@ -686,7 +686,7 @@ public partial class MainWindow : Window
             if (!double.TryParse(size.Text, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var value)
                 || !double.IsFinite(value) || value < 64 || value > 10000)
             {
-                MessageBox.Show(window, japanese ? "64〜10000の数値を指定してください。" : "Enter a size between 64 and 10000 DIP.", "Comet");
+                MessageBox.Show(window, japanese ? "64〜10000の画面ピクセル数を指定してください。" : "Enter a screen size between 64 and 10000 pixels.", "Comet");
                 return;
             }
             _settings = _settings with { FixedSizeDip = value, FixedSizeAxis = axis.SelectedIndex == 0 ? FixedSizeAxis.Width : FixedSizeAxis.Height };
@@ -991,10 +991,14 @@ public partial class MainWindow : Window
             firstSize.Width,
             dpiScale);
 
-        var metrics = new List<string>
-        {
-            $"{firstSize.Width}x{firstSize.Height} ({firstZoom * 100:0.#}%)"
-        };
+        // The PDF raster resolution is arbitrary and changes with zoom. Do not
+        // report it as a PDF's "100% zoom" or use its dimensions to suggest a
+        // 1.4x multiplier when Fixed Size is really an absolute pixel target.
+        var firstRect = Viewport.GetPageRect(0);
+        var firstLabel = _book is PdfBookSource
+            ? $"PDF display: {Math.Round(firstRect.Width * dpiScale):0}x{Math.Round(firstRect.Height * dpiScale):0} px"
+            : $"{firstSize.Width}x{firstSize.Height} ({firstZoom * 100:0.#}%)";
+        var metrics = new List<string> { firstLabel };
         var pageNames = new List<string>
         {
             Path.GetFileName(_book.Descriptor.Pages[_pageIndex].Name)
@@ -1012,7 +1016,10 @@ public partial class MainWindow : Window
                 Viewport.CurrentSecondPageDisplayWidthDip,
                 secondSize.Width,
                 dpiScale);
-            metrics.Add($"{secondSize.Width}x{secondSize.Height} ({secondZoom * 100:0.#}%)");
+            var secondRect = Viewport.GetPageRect(1);
+            metrics.Add(_book is PdfBookSource
+                ? $"PDF display: {Math.Round(secondRect.Width * dpiScale):0}x{Math.Round(secondRect.Height * dpiScale):0} px"
+                : $"{secondSize.Width}x{secondSize.Height} ({secondZoom * 100:0.#}%)");
             pageNames.Add(Path.GetFileName(_book.Descriptor.Pages[_pageIndex + 1].Name));
             fileSizes.Add(FormatBinarySize(_book.Descriptor.Pages[_pageIndex + 1].UncompressedLength));
 

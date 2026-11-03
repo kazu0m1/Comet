@@ -93,6 +93,9 @@ public partial class MainWindow
             bW = Math.Max(pdf.GetPageRotation(second) % 2 == 0 ? b.Width : b.Height, 1);
             bH = Math.Max(pdf.GetPageRotation(second) % 2 == 0 ? b.Height : b.Width, 1);
         }
+        var fixedSizeDpi = Math.Max(0.01,
+            System.Windows.Media.VisualTreeHelper.GetDpi(PdfContinuousList).DpiScaleX);
+        var fixedTargetDip = _settings.FixedSizeDip / fixedSizeDpi;
         var maxWidth = Math.Max(320, PdfContinuousList.ActualWidth - 32);
         var maxHeight = Math.Max(300, PdfContinuousList.ActualHeight - 24);
         var combinedWidth = aW + bW + (bW > 0 ? 10 : 0);
@@ -105,7 +108,7 @@ public partial class MainWindow
             FitMode.FitHeight => sy,
             FitMode.Manual => 96.0 / 72,
             FitMode.FixedSize => (_settings.FixedSizeAxis == FixedSizeAxis.Width
-                ? _settings.FixedSizeDip / aW : _settings.FixedSizeDip / aH),
+                ? fixedTargetDip / aW : fixedTargetDip / aH),
             _ => Math.Min(sx, sy)
         };
         if (!_settings.StretchSmallImages && CurrentFitMode != FitMode.FixedSize)
@@ -117,7 +120,7 @@ public partial class MainWindow
         {
             var secondScale = CurrentFitMode == FitMode.FixedSize
                 ? Math.Clamp((_settings.FixedSizeAxis == FixedSizeAxis.Width
-                    ? _settings.FixedSizeDip / bW : _settings.FixedSizeDip / bH) *
+                    ? fixedTargetDip / bW : fixedTargetDip / bH) *
                     _zoom.TemporaryZoomFactor, 0.05, 24.0) : scale;
             row.SecondWidth = bW * secondScale;
             row.SecondHeight = bH * secondScale;
