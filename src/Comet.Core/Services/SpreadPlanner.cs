@@ -11,6 +11,17 @@ public static class SpreadPlanner
         => direction == ReadingDirection.RightToLeft && hasSecondPage
             ? (1, 0) : (0, 1);
 
+    // A bounded three-page window for explicit page jumps, never for scrolling.
+    // Return logical page indices; right-to-left reading only changes layout.
+    public static int[] JumpNeighborhood(int requestedIndex, int pageCount)
+    {
+        if (pageCount <= 0) return [];
+        var index = Math.Clamp(requestedIndex, 0, pageCount - 1);
+        var start = Math.Max(0, index - 1);
+        var end = Math.Min(pageCount - 1, index + 1);
+        return Enumerable.Range(start, end - start + 1).ToArray();
+    }
+
     public static int NormalizeStartIndex(int requestedIndex, int pageCount, PageLayoutMode layout, bool coverAlone = true)
     {
         if (pageCount <= 0) return 0;
